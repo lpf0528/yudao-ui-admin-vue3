@@ -145,7 +145,7 @@ service.interceptors.response.use(
       }
       data = await new Response(response.data).json()
     }
-    const code = data.code || result_code
+    const code = data.code ?? result_code
     // 获取错误信息
     const msg = data.msg || errorCode[code] || errorCode['default']
     if (ignoreMsgs.indexOf(msg) !== -1) {
@@ -211,7 +211,7 @@ service.interceptors.response.use(
           '<div>5 分钟搭建本地环境</div>'
       })
       return Promise.reject(new Error(msg))
-    } else if (code !== 200) {
+    } else if (code !== 0 && code !== 200) {
       if (msg === '无效的刷新令牌') {
         // hard coding：忽略这个提示，直接登出
         console.log(msg)
