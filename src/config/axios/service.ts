@@ -49,18 +49,13 @@ const service: AxiosInstance = axios.create({
 // request拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // 是否需要设置 token
+    // 是否需要设置 token；命中白名单的接口（如 /login）不带 token
     let isToken = (config!.headers || {}).isToken !== false
-    if (config.url && isToken) {
-      whiteList.some((v) => {
-        if (config.url.includes(v)) {
-          isToken = false
-          return true // 终止循环
-        }
-      })
+    if (isToken && whiteList.some((v) => config.url?.includes(v))) {
+      isToken = false
     }
     if (getAccessToken() && isToken) {
-      config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token
+      config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义 token
     }
     // 设置租户
     if (tenantEnable && tenantEnable === 'true') {
