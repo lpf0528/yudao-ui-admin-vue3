@@ -50,13 +50,16 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 是否需要设置 token
-    let isToken = (config!.headers || {}).isToken === false
-    whiteList.some((v) => {
-      if (config.url && config.url.indexOf(v) > -1) {
-        return (isToken = false)
-      }
-    })
-    if (getAccessToken() && !isToken) {
+    let isToken = (config!.headers || {}).isToken !== false
+    if (config.url && isToken) {
+      whiteList.some((v) => {
+        if (config.url.includes(v)) {
+          isToken = false
+          return true // 终止循环
+        }
+      })
+    }
+    if (getAccessToken() && isToken) {
       config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token
     }
     // 设置租户
