@@ -1,0 +1,196 @@
+name: 构建并推送镜像到腾讯云
+
+on:
+  # push 到以下分支时自动触发
+  push:
+    branches:
+      - master
+    # 只有这些文件变更时才触发（避免无意义构建）
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.vscode/**'
+      - '.image/**'
+
+  # 手动触发，可选构建环境
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: '构建模式 (dev / test / stage / prod)'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - stage
+          - test
+          - dev
+      push_latest:
+        description: '是否同时推送 latest 标签'
+        required: false
+        default: true
+        type: boolean
+
+# 同一分支只保留最新一次运行，旧的自动取消
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # ============================================================
+  # 腾讯云镜像仓库配置
+  # 个人版：ccr.ccs.tencentyun.com
+  # 企业版（TCR）：<registry-name>.tencentcloudcr.com
+  # ============================================================
+  REGISTRY: ${{ secrets.TENCENT_REGISTRY_URL }}
+  IMAGE_NAME: ${{ secrets.TENCENT_REGISTRY_NAMESPACE }}/yudao-ui-admin-vue3
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1：代码检查（可选，如不需要可删除）
+  # ─────────────────────────────────────────────
+  lint:
+    name: 代码检查
+    runs-on: ubuntu-latest
+    # 手动触发时跳过 lint，加快速度
+    if: github.event_name != 'workflow_dispatch'
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+
+  # ─────────────────────────────────────────────
+  # Job 2：构建镜像并推送到腾讯云
+  # ─────────────────────────────────────────────
+  build-and-push:
+    name: 构建并推送镜像
+    runs-on: ubuntu-latest
+    needs: [lint]
+    # lint 跳过时也能正常运行
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      image_full: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+    steps:
+      # 1. 检出代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 配置 Docker Buildx（支持多平台构建 & 缓存）
+      - name: 配置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. 确定构建模式
+      - name: 确定构建模式
+        id: build_mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.build_mode }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            echo "mode=stage" >> $GITHUB_OUTPUT
+          else
+            echo "mode=prod" >> $GITHUB_OUTPUT
+          fi
+
+      # 4. 生成镜像 Tag（含 Git SHA、分支名、日期）
+      - name: 生成镜像元数据
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # push 触发：branch-shortSha（如 master-a1b2c3d）
+            type=sha,prefix=${{ github.ref_name }}-,format=short
+            # 手动触发：mode-shortSha（如 prod-a1b2c3d）
+            type=sha,prefix=${{ steps.build_mode.outputs.mode }}-,format=short,enable=${{ github.event_name == 'workflow_dispatch' }}
+            # master/main 分支额外打 latest
+            type=raw,value=latest,enable=${{ github.ref_name == 'master' || github.ref_name == 'main' || github.event.inputs.push_latest == 'true' }}
+            # 日期标签（便于追溯）
+            type=raw,value=${{ github.ref_name }}-{{date 'YYYYMMDD'}}
+          labels: |
+            org.opencontainers.image.title=yudao-ui-admin-vue3
+            org.opencontainers.image.description=芋道管理后台 Vue3 版本
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            build.mode=${{ steps.build_mode.outputs.mode }}
+
+      # 5. 登录腾讯云镜像仓库
+      - name: 登录腾讯云镜像仓库
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+
+      # 6. 构建并推送（使用 GitHub Actions Cache 加速）
+      - name: 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 构建参数：传入构建模式
+          build-args: |
+            BUILD_MODE=${{ steps.build_mode.outputs.mode }}
+          # 多平台构建（如只需 amd64 可删掉 arm64）
+          platforms: linux/amd64
+          # 利用 GitHub Actions Cache 加速构建
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 7. 输出构建摘要
+      - name: 输出构建结果
+        run: |
+          echo "## 🚀 镜像推送成功" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| 仓库 | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 构建模式 | \`${{ steps.build_mode.outputs.mode }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发分支 | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**标签列表：**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────
+  # Job 3：发布通知（可选，如不需要可删除）
+  # ─────────────────────────────────────────────
+  notify:
+    name: 通知
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: always()
+    steps:
+      - name: 成功通知
+        if: needs.build-and-push.result == 'success'
+        run: |
+          echo "✅ 构建成功：${{ needs.build-and-push.outputs.image_full }}"
+          # 如需接入企业微信/钉钉/飞书通知，在此处添加 curl 请求
+
+      - name: 失败通知
+        if: needs.build-and-push.result == 'failure'
+        run: |
+          echo "❌ 构建失败，请检查 Actions 日志"
+          # 如需接入企业微信/钉钉/飞书通知，在此处添加 curl 请求

@@ -1,0 +1,42 @@
+name: PR 预检
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '.image/**'
+
+jobs:
+  check:
+    name: 构建验证
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 试构建（dev 模式，验证不报错）
+        run: pnpm build:dev
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+
+      - name: 验证产物存在
+        run: |
+          test -f dist/index.html || (echo "❌ 构建产物不存在" && exit 1)
+          echo "✅ 构建成功，产物大小："
+          du -sh dist/
