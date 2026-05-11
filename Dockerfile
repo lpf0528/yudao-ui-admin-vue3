@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-# Node 内存优化
+# Node 内存优化 1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # 统一生产构建
