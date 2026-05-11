@@ -1,24 +1,17 @@
-# =====================================================
-# Stage 1: Build
-# =====================================================
+# ============================================================
+# Stage 1 — 构建阶段
+# ============================================================
 FROM node:20-alpine AS builder
 
-# 安装构建依赖
-RUN apk add --no-cache python3 make g++
-
-# 安装 pnpm
-RUN npm install -g pnpm@9
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
-# 先复制依赖文件（提升缓存命中）
+# 优先复制依赖声明文件，充分利用 Docker 层缓存
 COPY package.json pnpm-lock.yaml ./
-
 RUN pnpm install --frozen-lockfile
 
-# 复制源码
 COPY . .
-
 # Node 内存优化
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
@@ -28,20 +21,27 @@ RUN pnpm build && \
     ls -lh /app/dist && \
     test -f /app/dist/index.html || (echo "❌ 构建失败" && exit 1)
 
-# =====================================================
-# Stage 2: Runtime
-# =====================================================
-FROM nginx:1.27-alpine
 
-# 拷贝前端产物
+# ============================================================
+# Stage 2 — 运行阶段
+# ============================================================
+FROM nginx:1.27-alpine AS runner
+
+RUN rm -rf /usr/share/nginx/html/*
+
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 拷贝运行时 env 注入脚本
-COPY docker/env.sh /docker-entrypoint.d/env.sh
+# BACKEND_HOST 对应 docker-compose 中后端服务的 service 名称
+# 构建时可通过 --build-arg BACKEND_HOST=xxx 覆盖，默认 "server"
+ARG BACKEND_HOST=server
+ENV BACKEND_HOST=${BACKEND_HOST}
 
-# 赋予执行权限
-RUN chmod +x /docker-entrypoint.d/env.sh
+# 使用模板文件，启动时由 envsubst 将 ${BACKEND_HOST} 替换为实际值
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# envsubst 渲染模板 → 写入 conf.d → 启动 Nginx
+CMD ["/bin/sh", "-c", \
+     "envsubst '${BACKEND_HOST}' < /etc/nginx/templates/default.conf.template \
+      > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
