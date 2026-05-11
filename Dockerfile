@@ -1,9 +1,9 @@
 # =====================================================
-# Stage 1: 构建阶段
+# Stage 1: Build
 # =====================================================
 FROM node:20-alpine AS builder
 
-# 安装构建依赖（部分原生模块需要）
+# 安装构建依赖
 RUN apk add --no-cache python3 make g++
 
 # 安装 pnpm
@@ -11,29 +11,36 @@ RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-# 先复制依赖文件，利用 Docker 层缓存
+# 先复制依赖文件（提升缓存命中）
 COPY package.json pnpm-lock.yaml ./
+
 RUN pnpm install --frozen-lockfile
 
-# 复制源码并构建
+# 复制源码
 COPY . .
 
-ARG BUILD_MODE=prod
+# Node 内存优化
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# 该项目构建产物目录为 dist-{mode}，如 dist-prod、dist-dev
-RUN pnpm build:${BUILD_MODE} && \
-    echo "▶ 产物目录：" && ls -lh /app/dist-${BUILD_MODE} && \
-    test -f /app/dist-${BUILD_MODE}/index.html || (echo "❌ 构建失败" && exit 1)
+# 统一生产构建
+RUN pnpm build && \
+    echo "▶ 构建完成" && \
+    ls -lh /app/dist && \
+    test -f /app/dist/index.html || (echo "❌ 构建失败" && exit 1)
 
 # =====================================================
-# Stage 2: 运行阶段
+# Stage 2: Runtime
 # =====================================================
 FROM nginx:1.27-alpine
 
-ARG BUILD_MODE=prod
+# 拷贝前端产物
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-COPY --from=builder /app/dist-${BUILD_MODE} /usr/share/nginx/html
+# 拷贝运行时 env 注入脚本
+COPY docker/env.sh /docker-entrypoint.d/env.sh
+
+# 赋予执行权限
+RUN chmod +x /docker-entrypoint.d/env.sh
 
 EXPOSE 80
 
