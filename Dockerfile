@@ -15,8 +15,21 @@ COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # 统一生产构建
-RUN pnpm build && \
+RUN pnpm pnpm build:prod && \
     echo "▶ 构建完成" && \
     ls -lh /app/dist && \
     test -f /app/dist/index.html || (echo "❌ 构建失败" && exit 1)
 
+# ============================================================
+# Stage 2 — 运行阶段
+# ============================================================
+FROM nginx:1.27-alpine AS runner
+
+RUN rm -rf /usr/share/nginx/html/*
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
