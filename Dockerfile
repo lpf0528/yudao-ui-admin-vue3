@@ -33,3 +33,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+
+
+
+
+# docker run -d --name yudao-ui -p 80:80 eatsleeprun/yudao-ui-admin-vue3:latest
