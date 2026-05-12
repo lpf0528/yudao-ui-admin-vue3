@@ -136,7 +136,53 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+  deploy:
+    name: 部署到服务器
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref_name == 'master' || github.ref_name == 'main'
+    steps:
+      - name: SSH 远程部署
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          request_pty: true
+          script: |
+            IMAGE="docker.io/eatsleeprun/yudao-ui-admin-vue3:latest"
+            CONTAINER="yudao-ui"
 
+            echo "▶ 拉取镜像: $IMAGE"
+            sudo docker pull "$IMAGE" || { echo "❌ 镜像拉取失败，终止部署"; exit 1; }
+
+            echo "▶ 备份旧容器"
+            sudo docker rename "$CONTAINER" "${CONTAINER}-old" 2>/dev/null || true
+
+            echo "▶ 启动新容器"
+            if sudo docker run -d \
+              --name "$CONTAINER" \
+              -p 80:80 \
+              "$IMAGE"; then
+              echo "✅ 启动成功，清理旧容器"
+              sudo docker stop "${CONTAINER}-old" 2>/dev/null || true
+              sudo docker rm   "${CONTAINER}-old" 2>/dev/null || true
+              sudo docker image prune -f
+            else
+              echo "❌ 启动失败，回滚旧容器"
+              sudo docker rm "$CONTAINER" 2>/dev/null || true
+              sudo docker rename "${CONTAINER}-old" "$CONTAINER"
+              sudo docker start "$CONTAINER"
+              exit 1
+            fi
+
+      - name: 输出部署结果
+        run: |
+          echo "## ✅ 前端部署成功" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`docker.io/eatsleeprun/yudao-ui-admin-vue3:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 服务器 | \`${{ secrets.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY
   # ─────────────────────────────────────────────
   # 3. 通知（可选）
   # ─────────────────────────────────────────────
