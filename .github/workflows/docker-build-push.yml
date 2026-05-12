@@ -156,8 +156,9 @@ jobs:
             echo "▶ 拉取镜像: $IMAGE"
             sudo docker pull "$IMAGE" || { echo "❌ 镜像拉取失败，终止部署"; exit 1; }
 
-            echo "▶ 备份旧容器"
+            echo "▶ 备份并停止旧容器"
             sudo docker rename "$CONTAINER" "${CONTAINER}-old" 2>/dev/null || true
+            sudo docker stop "${CONTAINER}-old" 2>/dev/null || true
 
             echo "▶ 启动新容器"
             if sudo docker run -d \
@@ -165,8 +166,7 @@ jobs:
               -p 80:80 \
               "$IMAGE"; then
               echo "✅ 启动成功，清理旧容器"
-              sudo docker stop "${CONTAINER}-old" 2>/dev/null || true
-              sudo docker rm   "${CONTAINER}-old" 2>/dev/null || true
+              sudo docker rm "${CONTAINER}-old" 2>/dev/null || true
               sudo docker image prune -f
             else
               echo "❌ 启动失败，回滚旧容器"
