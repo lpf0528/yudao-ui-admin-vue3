@@ -153,22 +153,22 @@ jobs:
             cd /opt/deployments
 
             echo "▶ 拉取最新镜像"
-            sudo docker compose pull yudao-server
+            sudo docker compose pull yudao-ui
 
             echo "▶ 重启服务"
-            sudo docker compose up -d yudao-server
+            sudo docker compose up -d yudao-ui
 
             echo "▶ 清理旧镜像"
             sudo docker image prune -f
 
-            echo "✅ 后端部署完成"
+            echo "✅ 前端部署完成"
 
       - name: 输出部署结果
         run: |
-          echo "## ✅ 后端部署成功" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ 前端部署成功" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 值 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| 镜像 | \`docker.io/eatsleeprun/yudao-server:latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 镜像 | \`docker.io/eatsleeprun/yudao-ui-admin-vue3:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| 服务器 | \`${{ secrets.SERVER_HOST }}\` |" >> $GITHUB_STEP_SUMMARY
   # ─────────────────────────────────────────────
   # 3. 通知（可选）
