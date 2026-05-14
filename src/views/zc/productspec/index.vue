@@ -24,7 +24,7 @@
           type="primary"
           plain
           @click="openForm('create')"
-          v-hasPermi="['zc:zc-product-spec:create']"
+          v-hasPermi="['zc:product-spec:create']"
         >
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
@@ -33,7 +33,7 @@
           plain
           @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['zc:zc-product-spec:export']"
+          v-hasPermi="['zc:product-spec:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
@@ -42,7 +42,7 @@
             plain
             :disabled="isEmpty(checkedIds)"
             @click="handleDeleteBatch"
-            v-hasPermi="['zc:zc-product-spec:delete']"
+            v-hasPermi="['zc:product-spec:delete']"
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
@@ -78,7 +78,7 @@
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['zc:zc-product-spec:update']"
+            v-hasPermi="['zc:product-spec:update']"
           >
             编辑
           </el-button>
@@ -86,7 +86,7 @@
             link
             type="danger"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['zc:zc-product-spec:delete']"
+            v-hasPermi="['zc:product-spec:delete']"
           >
             删除
           </el-button>
@@ -103,29 +103,29 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <zcProductSpecForm ref="formRef" @success="getList" />
+  <ProductSpecForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { zcProductSpecApi, zcProductSpec } from '@/api/zc/productspec'
-import zcProductSpecForm from './zcProductSpecForm.vue'
+import { ProductSpecApi, ProductSpec } from '@/api/zc/productspec'
+import ProductSpecForm from './ProductSpecForm.vue'
 
 /** 产品规格 列表 */
-defineOptions({ name: 'zcProductSpec' })
+defineOptions({ name: 'ZcProductSpec' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
-const list = ref<zcProductSpec[]>([]) // 列表的数据
+const list = ref<ProductSpec[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  value: undefined
+  value: undefined,
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -134,7 +134,7 @@ const exportLoading = ref(false) // 导出的加载中
 const getList = async () => {
   loading.value = true
   try {
-    const data = await zcProductSpecApi.getzcProductSpecPage(queryParams)
+    const data = await ProductSpecApi.getProductSpecPage(queryParams)
     list.value = data.list
     total.value = data.total
   } finally {
@@ -166,7 +166,7 @@ const handleDelete = async (id: number) => {
     // 删除的二次确认
     await message.delConfirm()
     // 发起删除
-    await zcProductSpecApi.deletezcProductSpec(id)
+    await ProductSpecApi.deleteProductSpec(id)
     message.success(t('common.delSuccess'))
     // 刷新列表
     await getList()
@@ -178,7 +178,7 @@ const handleDeleteBatch = async () => {
   try {
     // 删除的二次确认
     await message.delConfirm()
-    await zcProductSpecApi.deletezcProductSpecList(checkedIds.value);
+    await ProductSpecApi.deleteProductSpecList(checkedIds.value);
     checkedIds.value = [];
     message.success(t('common.delSuccess'))
     await getList();
@@ -186,7 +186,7 @@ const handleDeleteBatch = async () => {
 }
 
 const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: zcProductSpec[]) => {
+const handleRowCheckboxChange = (records: ProductSpec[]) => {
   checkedIds.value = records.map((item) => item.id!);
 }
 
@@ -197,7 +197,7 @@ const handleExport = async () => {
     await message.exportConfirm()
     // 发起导出
     exportLoading.value = true
-    const data = await zcProductSpecApi.exportzcProductSpec(queryParams)
+    const data = await ProductSpecApi.exportProductSpec(queryParams)
     download.excel(data, '产品规格.xls')
   } catch {
   } finally {
@@ -209,4 +209,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>
