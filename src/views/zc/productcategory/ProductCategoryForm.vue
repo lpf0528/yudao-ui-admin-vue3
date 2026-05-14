@@ -36,10 +36,10 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   value: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
-  value: [{ required: true, message: '类别名称不能为空', trigger: 'blur' }]
+  value: [{ required: true, message: '类别名称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -90,7 +90,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     value: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }

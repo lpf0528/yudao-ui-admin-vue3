@@ -43,5 +43,5 @@ export const ProductCategoryApi = {
   // 导出产品类别 Excel
   exportProductCategory: async (params) => {
     return await request.download({ url: `/zc/product-category/export-excel`, params })
-  }
-}
+  },
+}

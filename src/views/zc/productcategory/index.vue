@@ -133,7 +133,7 @@ import { ProductCategoryApi, ProductCategory } from '@/api/zc/productcategory'
 import ProductCategoryForm from './ProductCategoryForm.vue'
 
 /** 产品类别 列表 */
-defineOptions({ name: 'ProductCategory' })
+defineOptions({ name: 'ZcProductCategory' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -146,7 +146,7 @@ const queryParams = reactive({
   pageSize: 10,
   value: undefined,
   note: undefined,
-  createTime: []
+  createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -230,4 +230,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>
