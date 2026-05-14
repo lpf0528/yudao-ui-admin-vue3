@@ -19,21 +19,6 @@
       <el-form-item label="固定地址" prop="address">
         <el-input v-model="formData.address" placeholder="请输入固定地址" />
       </el-form-item>
-      <el-form-item label="省份" prop="province">
-        <el-select v-model="formData.province" placeholder="请选择省份">
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="市区" prop="city">
-        <el-select v-model="formData.city" placeholder="请选择市区">
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="县区" prop="district">
-        <el-select v-model="formData.district" placeholder="请选择县区">
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="送货地址" prop="deliveryAddress">
         <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" />
       </el-form-item>
@@ -43,18 +28,18 @@
       <el-form-item label="联系电话" prop="mobile2">
         <el-input v-model="formData.mobile2" placeholder="请输入联系电话" />
       </el-form-item>
-      <el-form-item label="默认物流 zc_logistics.id" prop="logisticId">
-        <el-select v-model="formData.logisticId" placeholder="请选择默认物流 zc_logistics.id">
+      <el-form-item label="物流" prop="logisticId">
+        <el-select v-model="formData.logisticId" placeholder="请选择物流">
           <el-option label="请选择字典生成" value="" />
         </el-select>
       </el-form-item>
-      <el-form-item label="关联品牌 zc_brand.id" prop="brandId">
-        <el-select v-model="formData.brandId" placeholder="请选择关联品牌 zc_brand.id">
+      <el-form-item label="关联品牌" prop="brandId">
+        <el-select v-model="formData.brandId" placeholder="请选择关联品牌">
           <el-option label="请选择字典生成" value="" />
         </el-select>
       </el-form-item>
-      <el-form-item label="当前账户余额（业务变更必须同步写入 zc_customer_balance_log）" prop="balance">
-        <el-input v-model="formData.balance" placeholder="请输入当前账户余额（业务变更必须同步写入 zc_customer_balance_log）" />
+      <el-form-item label="账户余额" prop="balance">
+        <el-input v-model="formData.balance" placeholder="请输入账户余额" />
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -85,24 +70,18 @@ const formData = ref({
   name: undefined,
   contactName: undefined,
   address: undefined,
-  province: undefined,
-  city: undefined,
-  district: undefined,
   deliveryAddress: undefined,
   mobile: undefined,
   mobile2: undefined,
   logisticId: undefined,
   brandId: undefined,
   balance: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
   shortName: [{ required: true, message: '简称不能为空', trigger: 'blur' }],
   name: [{ required: true, message: '全称不能为空', trigger: 'blur' }],
   contactName: [{ required: true, message: '联系人不能为空', trigger: 'blur' }],
-  deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
-  mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
-  balance: [{ required: true, message: '当前账户余额（业务变更必须同步写入 zc_customer_balance_log）不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -156,16 +135,13 @@ const resetForm = () => {
     name: undefined,
     contactName: undefined,
     address: undefined,
-    province: undefined,
-    city: undefined,
-    district: undefined,
     deliveryAddress: undefined,
     mobile: undefined,
     mobile2: undefined,
     logisticId: undefined,
     brandId: undefined,
     balance: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }

@@ -8,15 +8,12 @@ export interface Customer {
           name?: string; // 全称
           contactName?: string; // 联系人
           address: string; // 固定地址
-          province: string; // 省份
-          city: string; // 市区
-          district: string; // 县区
-          deliveryAddress?: string; // 送货地址
-          mobile?: string; // 手机
+          deliveryAddress: string; // 送货地址
+          mobile: string; // 手机
           mobile2: string; // 联系电话
-          logisticId: number; // 默认物流 zc_logistics.id
-          brandId: number; // 关联品牌 zc_brand.id
-          balance?: number; // 当前账户余额（业务变更必须同步写入 zc_customer_balance_log）
+          logisticId: number; // 物流
+          brandId: number; // 关联品牌
+          balance: number; // 账户余额
           note: string; // 备注
   }
 
@@ -55,5 +52,5 @@ export const CustomerApi = {
   // 导出客户资料 Excel
   exportCustomer: async (params) => {
     return await request.download({ url: `/zc/customer/export-excel`, params })
-  }
-}
+  },
+}
