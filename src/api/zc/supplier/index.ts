@@ -44,5 +44,5 @@ export const SupplierApi = {
   // 导出供应商 Excel
   exportSupplier: async (params) => {
     return await request.download({ url: `/zc/supplier/export-excel`, params })
-  }
-}
+  },
+}

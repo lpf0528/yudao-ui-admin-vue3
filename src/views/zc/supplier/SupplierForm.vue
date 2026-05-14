@@ -40,11 +40,11 @@ const formData = ref({
   id: undefined,
   shortName: undefined,
   name: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
   shortName: [{ required: true, message: '简称不能为空', trigger: 'blur' }],
-  name: [{ required: true, message: '全称不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '全称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -96,7 +96,7 @@ const resetForm = () => {
     id: undefined,
     shortName: undefined,
     name: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }
