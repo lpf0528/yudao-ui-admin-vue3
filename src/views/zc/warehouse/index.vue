@@ -17,35 +17,15 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="负责人（系统用户 ID）" prop="managerId">
+      <el-form-item label="负责人" prop="managerId">
         <el-select
           v-model="queryParams.managerId"
-          placeholder="请选择负责人（系统用户 ID）"
+          placeholder="请选择负责人"
           clearable
           class="!w-240px"
         >
           <el-option label="请选择字典生成" value="" />
         </el-select>
-      </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input
-          v-model="queryParams.note"
-          placeholder="请输入备注"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
@@ -93,8 +73,9 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="仓库名称" align="center" prop="name" />
-      <el-table-column label="负责人（系统用户 ID）" align="center" prop="managerId" />
+      <el-table-column label="负责人" align="center" prop="managerId" />
       <el-table-column label="备注" align="center" prop="note" />
+      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -144,7 +125,7 @@ import { WarehouseApi, Warehouse } from '@/api/zc/warehouse'
 import WarehouseForm from './WarehouseForm.vue'
 
 /** 仓库 列表 */
-defineOptions({ name: 'Warehouse' })
+defineOptions({ name: 'ZcWarehouse' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -157,8 +138,6 @@ const queryParams = reactive({
   pageSize: 10,
   name: undefined,
   managerId: undefined,
-  note: undefined,
-  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -242,4 +221,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>

@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 export interface Warehouse {
           id: number; // 主键
           name?: string; // 仓库名称
-          managerId: number; // 负责人（系统用户 ID）
+          managerId: number; // 负责人
           note: string; // 备注
   }
 
@@ -44,5 +44,5 @@ export const WarehouseApi = {
   // 导出仓库 Excel
   exportWarehouse: async (params) => {
     return await request.download({ url: `/zc/warehouse/export-excel`, params })
-  }
-}
+  },
+}

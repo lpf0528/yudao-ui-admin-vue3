@@ -10,8 +10,8 @@
       <el-form-item label="仓库名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入仓库名称" />
       </el-form-item>
-      <el-form-item label="负责人（系统用户 ID）" prop="managerId">
-        <el-select v-model="formData.managerId" placeholder="请选择负责人（系统用户 ID）">
+      <el-form-item label="负责人" prop="managerId">
+        <el-select v-model="formData.managerId" placeholder="请选择负责人">
           <el-option label="请选择字典生成" value="" />
         </el-select>
       </el-form-item>
@@ -42,10 +42,10 @@ const formData = ref({
   id: undefined,
   name: undefined,
   managerId: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
-  name: [{ required: true, message: '仓库名称不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '仓库名称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -97,7 +97,7 @@ const resetForm = () => {
     id: undefined,
     name: undefined,
     managerId: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }
