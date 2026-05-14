@@ -44,4 +44,4 @@ export const ProductSpecApi = {
   exportProductSpec: async (params) => {
     return await request.download({ url: `/zc/product-spec/export-excel`, params })
   },
-}
+}

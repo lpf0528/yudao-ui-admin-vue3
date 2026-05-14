@@ -209,4 +209,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>
