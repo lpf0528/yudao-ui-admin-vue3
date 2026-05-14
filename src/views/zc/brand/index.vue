@@ -17,53 +17,6 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="Logo URL" prop="logo">
-        <el-input
-          v-model="queryParams.logo"
-          placeholder="请输入Logo URL"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="电话" prop="mobile">
-        <el-input
-          v-model="queryParams.mobile"
-          placeholder="请输入电话"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="地址" prop="address">
-        <el-input
-          v-model="queryParams.address"
-          placeholder="请输入地址"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input
-          v-model="queryParams.note"
-          placeholder="请输入备注"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -114,6 +67,7 @@
       <el-table-column label="电话" align="center" prop="mobile" />
       <el-table-column label="地址" align="center" prop="address" />
       <el-table-column label="备注" align="center" prop="note" />
+      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -163,7 +117,7 @@ import { BrandApi, Brand } from '@/api/zc/brand'
 import BrandForm from './BrandForm.vue'
 
 /** 品牌 列表 */
-defineOptions({ name: 'Brand' })
+defineOptions({ name: 'ZcBrand' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -175,11 +129,6 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
-  logo: undefined,
-  mobile: undefined,
-  address: undefined,
-  note: undefined,
-  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -263,4 +212,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>

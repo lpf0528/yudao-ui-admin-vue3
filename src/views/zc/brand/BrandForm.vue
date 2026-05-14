@@ -11,7 +11,7 @@
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="Logo URL" prop="logo">
-        <el-input v-model="formData.logo" placeholder="请输入Logo URL" />
+        <UploadImg v-model="formData.logo" />
       </el-form-item>
       <el-form-item label="电话" prop="mobile">
         <el-input v-model="formData.mobile" placeholder="请输入电话" />
@@ -48,10 +48,10 @@ const formData = ref({
   logo: undefined,
   mobile: undefined,
   address: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
-  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -105,7 +105,7 @@ const resetForm = () => {
     logo: undefined,
     mobile: undefined,
     address: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }

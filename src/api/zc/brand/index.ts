@@ -46,5 +46,5 @@ export const BrandApi = {
   // 导出品牌 Excel
   exportBrand: async (params) => {
     return await request.download({ url: `/zc/brand/export-excel`, params })
-  }
-}
+  },
+}
