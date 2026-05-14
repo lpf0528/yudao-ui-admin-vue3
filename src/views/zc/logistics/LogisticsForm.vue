@@ -7,11 +7,11 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="编码，例如：shunfeng" prop="code">
-        <el-input v-model="formData.code" placeholder="请输入编码，例如：shunfeng" />
+      <el-form-item label="编码" prop="code">
+        <el-input v-model="formData.code" placeholder="请输入编码" />
       </el-form-item>
-      <el-form-item label="名称，例如：顺丰快递" prop="name">
-        <el-input v-model="formData.name" placeholder="请输入名称，例如：顺丰快递" />
+      <el-form-item label="名称" prop="name">
+        <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="联系人" prop="contactName">
         <el-input v-model="formData.contactName" placeholder="请输入联系人" />
@@ -52,11 +52,11 @@ const formData = ref({
   contactName: undefined,
   mobile: undefined,
   address: undefined,
-  note: undefined
+  note: undefined,
 })
 const formRules = reactive({
-  code: [{ required: true, message: '编码，例如：shunfeng不能为空', trigger: 'blur' }],
-  name: [{ required: true, message: '名称，例如：顺丰快递不能为空', trigger: 'blur' }]
+  code: [{ required: true, message: '编码不能为空', trigger: 'blur' }],
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -111,7 +111,7 @@ const resetForm = () => {
     contactName: undefined,
     mobile: undefined,
     address: undefined,
-    note: undefined
+    note: undefined,
   }
   formRef.value?.resetFields()
 }

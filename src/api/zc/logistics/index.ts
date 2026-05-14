@@ -4,8 +4,8 @@ import type { Dayjs } from 'dayjs';
 /** 物流公司信息 */
 export interface Logistics {
           id: number; // 主键
-          code?: string; // 编码，例如：shunfeng
-          name?: string; // 名称，例如：顺丰快递
+          code?: string; // 编码
+          name?: string; // 名称
           contactName: string; // 联系人
           mobile: string; // 电话
           address: string; // 地址
@@ -47,5 +47,5 @@ export const LogisticsApi = {
   // 导出物流公司 Excel
   exportLogistics: async (params) => {
     return await request.download({ url: `/zc/logistics/export-excel`, params })
-  }
-}
+  },
+}

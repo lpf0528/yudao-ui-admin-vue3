@@ -8,19 +8,19 @@
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="编码，例如：shunfeng" prop="code">
+      <el-form-item label="编码" prop="code">
         <el-input
           v-model="queryParams.code"
-          placeholder="请输入编码，例如：shunfeng"
+          placeholder="请输入编码"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="名称，例如：顺丰快递" prop="name">
+      <el-form-item label="名称" prop="name">
         <el-input
           v-model="queryParams.name"
-          placeholder="请输入名称，例如：顺丰快递"
+          placeholder="请输入名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
@@ -33,44 +33,6 @@
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="电话" prop="mobile">
-        <el-input
-          v-model="queryParams.mobile"
-          placeholder="请输入电话"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="地址" prop="address">
-        <el-input
-          v-model="queryParams.address"
-          placeholder="请输入地址"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input
-          v-model="queryParams.note"
-          placeholder="请输入备注"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
         />
       </el-form-item>
       <el-form-item>
@@ -118,8 +80,8 @@
     >
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="编码，例如：shunfeng" align="center" prop="code" />
-      <el-table-column label="名称，例如：顺丰快递" align="center" prop="name" />
+      <el-table-column label="编码" align="center" prop="code" />
+      <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="联系人" align="center" prop="contactName" />
       <el-table-column label="电话" align="center" prop="mobile" />
       <el-table-column label="地址" align="center" prop="address" />
@@ -173,7 +135,7 @@ import { LogisticsApi, Logistics } from '@/api/zc/logistics'
 import LogisticsForm from './LogisticsForm.vue'
 
 /** 物流公司 列表 */
-defineOptions({ name: 'Logistics' })
+defineOptions({ name: 'ZcLogistics' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -187,10 +149,6 @@ const queryParams = reactive({
   code: undefined,
   name: undefined,
   contactName: undefined,
-  mobile: undefined,
-  address: undefined,
-  note: undefined,
-  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -274,4 +232,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>
