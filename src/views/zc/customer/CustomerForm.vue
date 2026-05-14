@@ -17,10 +17,10 @@
         <el-input v-model="formData.contactName" placeholder="请输入联系人" />
       </el-form-item>
       <el-form-item label="固定地址" prop="address">
-        <el-input v-model="formData.address" placeholder="请输入固定地址" />
+        <el-input v-model="formData.address" type="textarea" placeholder="请输入固定地址" />
       </el-form-item>
       <el-form-item label="送货地址" prop="deliveryAddress">
-        <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" />
+        <el-input v-model="formData.deliveryAddress" type="textarea" placeholder="请输入送货地址" />
       </el-form-item>
       <el-form-item label="手机" prop="mobile">
         <el-input v-model="formData.mobile" placeholder="请输入手机" />
