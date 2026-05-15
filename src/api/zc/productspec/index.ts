@@ -8,6 +8,12 @@ export interface ProductSpec {
           note: string; // 备注
   }
 
+/** 产品规格简单信息（用于下拉） */
+export interface ProductSpecSimpleVO {
+  id: number
+  value: string
+}
+
 // 产品规格 API
 export const ProductSpecApi = {
   // 查询产品规格分页
@@ -43,5 +49,10 @@ export const ProductSpecApi = {
   // 导出产品规格 Excel
   exportProductSpec: async (params) => {
     return await request.download({ url: `/zc/product-spec/export-excel`, params })
+  },
+
+  // 获取产品规格简单列表（用于下拉）
+  getProductSpecSimpleList: async () => {
+    return await request.get({ url: `/zc/product-spec/simple-list` })
   },
 }

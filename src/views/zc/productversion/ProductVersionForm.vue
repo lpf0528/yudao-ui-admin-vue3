@@ -10,17 +10,39 @@
       <el-form-item label="版本名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入版本名称" />
       </el-form-item>
-      <el-form-item label="单位（字典）" prop="unitValue">
-        <el-input v-model="formData.unitValue" placeholder="请输入单位（字典）" />
+      <el-form-item label="单位" prop="unitValue">
+        <el-select v-model="formData.unitValue" placeholder="请输入单位">
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="规格ID" prop="specId">
-        <el-input v-model="formData.specId" placeholder="请输入规格ID" />
-      </el-form-item>
-      <el-form-item label="规格值" prop="specValue">
-        <el-input v-model="formData.specValue" placeholder="请输入规格值" />
+        <el-select
+          v-model="formData.specId"
+          clearable
+          placeholder="请选择规格"
+          class="w-1/1"
+          @change="handleSpecChange"
+          @clear="handleSpecChange(undefined)"
+        >
+          <el-option
+            v-for="item in specList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="类别" prop="categoryId">
-        <el-select v-model="formData.categoryId" clearable placeholder="请选择类别" class="w-1/1"
+        <el-select
+          v-model="formData.categoryId"
+          clearable
+          placeholder="请选择类别"
+          class="w-1/1"
           @change="handleCategoryChange"
           @clear="handleCategoryChange(undefined)"
         >
@@ -72,6 +94,7 @@
 import { getStrDictOptions, getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
 import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
+import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
 
 /** 产品版本 表单 */
 defineOptions({ name: 'ProductVersionForm' })
@@ -84,6 +107,7 @@ const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
+const specList = ref<ProductSpecSimpleVO[]>([]) // 规格列表
 const formData = ref({
   id: undefined,
   name: undefined,
@@ -111,6 +135,8 @@ const open = async (type: string, id?: number) => {
   resetForm()
   // 类别
   categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
+  // 规格
+  specList.value = await ProductSpecApi.getProductSpecSimpleList()
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
@@ -145,6 +171,12 @@ const submitForm = async () => {
   } finally {
     formLoading.value = false
   }
+}
+
+/** 选择规格时同步更新 specValue */
+const handleSpecChange = (val: number | undefined) => {
+  const item = specList.value.find((i) => i.id === val)
+  ;(formData.value as any).specValue = item?.value
 }
 
 /** 选择类别时同步更新 categoryValue */
