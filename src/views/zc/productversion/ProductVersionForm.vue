@@ -21,8 +21,8 @@
       </el-form-item>
       <el-form-item label="类别" prop="categoryId">
         <el-select v-model="formData.categoryId" clearable placeholder="请选择类别" class="w-1/1"
-          @change="(val) => { const item = categoryList.find(i => i.id === val); formData.categoryValue = item?.value ?? undefined }"
-          @clear="formData.categoryValue = undefined"
+          @change="handleCategoryChange"
+          @clear="handleCategoryChange(undefined)"
         >
           <el-option
             v-for="item in categoryList"
@@ -31,9 +31,6 @@
             :value="item.id"
           />
         </el-select>
-      </el-form-item>
-      <el-form-item label="物料类别" prop="categoryValue">
-        <el-input v-model="formData.categoryValue" placeholder="请输入物料类别" />
       </el-form-item>
       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select v-model="formData.sellingPriceType" placeholder="请选择出货价类型">
@@ -49,9 +46,9 @@
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
       <el-form-item label="分类" prop="classify">
-        <el-select v-model="formData.classify" placeholder="请选择分类">
+        <el-select v-model="formData.classify" clearable placeholder="请选择分类">
           <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
+            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -72,7 +69,7 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { getStrDictOptions, getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
 import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
 
@@ -148,6 +145,12 @@ const submitForm = async () => {
   } finally {
     formLoading.value = false
   }
+}
+
+/** 选择类别时同步更新 categoryValue */
+const handleCategoryChange = (val: number | undefined) => {
+  const item = categoryList.value.find((i) => i.id === val)
+  ;(formData.value as any).categoryValue = item?.value
 }
 
 /** 重置表单 */
