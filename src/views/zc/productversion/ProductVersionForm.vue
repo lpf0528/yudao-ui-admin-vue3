@@ -19,8 +19,18 @@
       <el-form-item label="规格值" prop="specValue">
         <el-input v-model="formData.specValue" placeholder="请输入规格值" />
       </el-form-item>
-      <el-form-item label="类别ID" prop="categoryId">
-        <el-input v-model="formData.categoryId" placeholder="请输入类别ID" />
+      <el-form-item label="类别" prop="categoryId">
+        <el-select v-model="formData.categoryId" clearable placeholder="请选择类别" class="w-1/1"
+          @change="(val) => { const item = categoryList.find(i => i.id === val); formData.categoryValue = item?.value ?? undefined }"
+          @clear="formData.categoryValue = undefined"
+        >
+          <el-option
+            v-for="item in categoryList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="物料类别" prop="categoryValue">
         <el-input v-model="formData.categoryValue" placeholder="请输入物料类别" />
@@ -39,7 +49,14 @@
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
       <el-form-item label="分类" prop="classify">
-        <el-input v-model="formData.classify" placeholder="请输入分类" />
+        <el-select v-model="formData.classify" placeholder="请选择分类">
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
         <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
@@ -57,6 +74,7 @@
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
 
 /** 产品版本 表单 */
 defineOptions({ name: 'ProductVersionForm' })
@@ -68,6 +86,7 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
 const formData = ref({
   id: undefined,
   name: undefined,
@@ -93,6 +112,8 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  // 类别
+  categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
   // 修改时，设置数据
   if (id) {
     formLoading.value = true

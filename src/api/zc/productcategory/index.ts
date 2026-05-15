@@ -8,6 +8,12 @@ export interface ProductCategory {
           note: string; // 备注
   }
 
+/** 产品类别简单信息（用于下拉） */
+export interface ProductCategorySimpleVO {
+  id: number
+  value: string
+}
+
 // 产品类别 API
 export const ProductCategoryApi = {
   // 查询产品类别分页
@@ -43,5 +49,10 @@ export const ProductCategoryApi = {
   // 导出产品类别 Excel
   exportProductCategory: async (params) => {
     return await request.download({ url: `/zc/product-category/export-excel`, params })
+  },
+
+  // 获取产品类别简单列表（用于下拉）
+  getProductCategorySimpleList: async () => {
+    return await request.get({ url: `/zc/product-category/simple-list` })
   },
 }

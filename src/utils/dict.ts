@@ -113,6 +113,12 @@ export enum DICT_TYPE {
   TERMINAL = 'terminal', // 终端
   DATE_INTERVAL = 'date_interval', // 数据间隔
 
+  // ===========ZC 模块================
+  ZC_PRODUCT_UNIT = 'zc_product_unit',
+  ZC_SELLING_PRICE_TYPE = 'zc_selling_price_type',
+  ZC_PRODUCT_CLASSIFY = 'zc_product_classify',
+
+
   // ========== SYSTEM 模块 ==========
   SYSTEM_USER_SEX = 'system_user_sex',
   SYSTEM_MENU_TYPE = 'system_menu_type',

@@ -152,13 +152,13 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="版本名称" align="center" prop="name" />
-      <el-table-column label="单位（字典）" align="center" prop="unitValue">
+      <el-table-column label="单位" align="center" prop="unitValue">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_UNIT" :value="scope.row.unitValue" />
         </template>
       </el-table-column>
       <el-table-column label="规格值" align="center" prop="specValue" />
-      <el-table-column label="物料类别" align="center" prop="categoryValue" />
+      <el-table-column label="产品类别" align="center" prop="categoryValue" />
       <el-table-column label="出货价类型" align="center" prop="sellingPriceType">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_SELLING_PRICE_TYPE" :value="scope.row.sellingPriceType" />
