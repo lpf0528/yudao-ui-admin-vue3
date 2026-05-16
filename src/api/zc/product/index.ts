@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 产品简要信息
+ * 接口：GET /zc/product/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface ProductSimpleVO {
+  id: number
+  name: string
+}
+
 /** 货号档案信息 */
 export interface Product {
           id: number; // 主键
@@ -48,5 +57,10 @@ export const ProductApi = {
   // 导出货号档案 Excel
   exportProduct: async (params) => {
     return await request.download({ url: `/zc/product/export-excel`, params })
+  },
+
+  // 查询产品简单列表
+  getProductSimpleList: async () => {
+    return await request.get<ProductSimpleVO[]>({ url: `/zc/product/simple-list` })
   }
 }

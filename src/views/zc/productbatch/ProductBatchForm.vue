@@ -11,18 +11,25 @@
         <el-date-picker
           v-model="formData.inboundDate"
           type="date"
-          value-format="x"
+          value-format="YYYY-MM-DD"
           placeholder="选择入库日期"
         />
       </el-form-item>
       <el-form-item label="产品" prop="productId">
-        <el-input v-model="formData.productId" placeholder="请输入产品" />
+        <el-select v-model="formData.productId" clearable placeholder="请选择产品" class="w-1/1">
+          <el-option
+            v-for="item in props.productList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="入库数量" prop="inboundQuantity">
-        <el-input v-model="formData.inboundQuantity" placeholder="请输入入库数量" />
+        <el-input v-model="formData.inboundQuantity" placeholder="请输入入库数量" @input="formData.quantity = formData.inboundQuantity" />
       </el-form-item>
       <el-form-item label="剩余数量" prop="quantity">
-        <el-input v-model="formData.quantity" placeholder="请输入剩余数量" />
+        <el-input v-model="formData.quantity" placeholder="请输入剩余数量" disabled />
       </el-form-item>
       <el-form-item label="仓库" prop="warehouseId">
         <el-select v-model="formData.warehouseId" clearable placeholder="请选择仓库" class="w-1/1">
@@ -45,7 +52,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
-        <el-input v-model="formData.note" placeholder="请输入备注" />
+        <el-input v-model="formData.note" type="textarea" :rows="3" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -58,11 +65,12 @@
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierSimpleVO } from '@/api/zc/supplier'
+import { ProductSimpleVO } from '@/api/zc/product'
 
 /** 产品批次 表单 */
 defineOptions({ name: 'ProductBatchForm' })
 
-const props = defineProps<{ warehouseList: WarehouseSimpleVO[]; supplierList: SupplierSimpleVO[] }>()
+const props = defineProps<{ warehouseList: WarehouseSimpleVO[]; supplierList: SupplierSimpleVO[]; productList: ProductSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -99,6 +107,10 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       formData.value = await ProductBatchApi.getProductBatch(id)
+      if (Array.isArray(formData.value.inboundDate)) {
+        const [y, m, d] = formData.value.inboundDate as unknown as number[]
+        formData.value.inboundDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` as any
+      }
     } finally {
       formLoading.value = false
     }
