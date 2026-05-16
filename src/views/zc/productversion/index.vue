@@ -77,15 +77,15 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="进货价" prop="inboundPrice">
-        <el-input
-          v-model="queryParams.inboundPrice"
-          placeholder="请输入进货价"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
+<!--      <el-form-item label="进货价" prop="inboundPrice">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.inboundPrice"-->
+<!--          placeholder="请输入进货价"-->
+<!--          clearable-->
+<!--          @keyup.enter="handleQuery"-->
+<!--          class="!w-240px"-->
+<!--        />-->
+<!--      </el-form-item>-->
       <el-form-item label="分类" prop="classify">
         <el-select
           v-model="queryParams.classify"
@@ -102,23 +102,29 @@
         </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input
+        <el-select
           v-model="queryParams.supplierId"
-          placeholder="请输入供应商"
+          placeholder="请选择供应商"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="创建者" prop="creator">
-        <el-input
-          v-model="queryParams.creator"
-          placeholder="请输入创建者"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
+<!--      <el-form-item label="创建者" prop="creator">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.creator"-->
+<!--          placeholder="请输入创建者"-->
+<!--          clearable-->
+<!--          @keyup.enter="handleQuery"-->
+<!--          class="!w-240px"-->
+<!--        />-->
+<!--      </el-form-item>-->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -194,7 +200,9 @@
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_CLASSIFY" :value="scope.row.classify" />
         </template>
       </el-table-column>
-      <el-table-column label="供应商" align="center" prop="supplierId" />
+      <el-table-column label="供应商" align="center" prop="supplierId">
+        <template #default="scope">{{ supplierIdMap[scope.row.supplierId] }}</template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
@@ -235,7 +243,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductVersionForm ref="formRef" :specList="specList" :categoryList="categoryList" @success="getList" />
+  <ProductVersionForm ref="formRef" :specList="specList" :categoryList="categoryList" :supplierList="supplierList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -246,6 +254,7 @@ import download from '@/utils/download'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
 import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
 import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
+import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductVersionForm from './ProductVersionForm.vue'
 
 /** 产品版本 列表 */
@@ -259,11 +268,15 @@ const list = ref<ProductVersion[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const specList = ref<ProductSpecSimpleVO[]>([]) // 规格列表
 const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
+const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
 const specMap = computed(() =>
   Object.fromEntries(specList.value.map((item) => [item.id, item.value]))
 )
 const categoryMap = computed(() =>
   Object.fromEntries(categoryList.value.map((item) => [item.id, item.value]))
+)
+const supplierIdMap = computed(() =>
+  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
 )
 const queryParams = reactive({
   pageNo: 1,
@@ -361,6 +374,7 @@ const handleExport = async () => {
 onMounted(async () => {
   specList.value = await ProductSpecApi.getProductSpecSimpleList()
   categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
+  supplierList.value = await SupplierApi.getSupplierSimpleList()
   await getList()
 })
 </script>

@@ -74,7 +74,14 @@
         </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
+        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
+          <el-option
+            v-for="item in props.supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -91,11 +98,12 @@ import { getStrDictOptions, getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
 import { ProductCategorySimpleVO } from '@/api/zc/productcategory'
 import { ProductSpecSimpleVO } from '@/api/zc/productspec'
+import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 产品版本 表单 */
 defineOptions({ name: 'ProductVersionForm' })
 
-const props = defineProps<{ specList: ProductSpecSimpleVO[]; categoryList: ProductCategorySimpleVO[] }>()
+const props = defineProps<{ specList: ProductSpecSimpleVO[]; categoryList: ProductCategorySimpleVO[]; supplierList: SupplierSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

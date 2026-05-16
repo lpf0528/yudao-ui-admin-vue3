@@ -1,6 +1,12 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 供应商简要信息 */
+export interface SupplierSimpleVO {
+  id: number
+  shortName: string
+}
+
 /** 供应商信息 */
 export interface Supplier {
           id: number; // 主键
@@ -44,5 +50,10 @@ export const SupplierApi = {
   // 导出供应商 Excel
   exportSupplier: async (params) => {
     return await request.download({ url: `/zc/supplier/export-excel`, params })
+  },
+
+  // 查询供应商简单列表
+  getSupplierSimpleList: async () => {
+    return await request.get<SupplierSimpleVO[]>({ url: `/zc/supplier/simple-list` })
   },
 }
