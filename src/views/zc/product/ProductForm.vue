@@ -7,44 +7,23 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="产品名称" prop="name">
-        <el-input v-model="formData.name" placeholder="请输入产品名称" />
+      <el-form-item label="名称" prop="name">
+        <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-select v-model="formData.versionId" clearable placeholder="请选择版本" class="w-1/1">
-          <el-option
-            v-for="item in props.versionList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
+        <el-input v-model="formData.versionId" placeholder="请输入版本" />
       </el-form-item>
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
-      <el-form-item label="A 类销售价" prop="aPrice">
-        <el-input v-model="formData.aPrice" placeholder="请输入A 类销售价" />
+      <el-form-item label="规格" prop="specId">
+        <el-input v-model="formData.specId" placeholder="请输入规格" />
+      </el-form-item>
+      <el-form-item label="一级销售价" prop="onePrice">
+        <el-input v-model="formData.onePrice" placeholder="请输入一级销售价" />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
-          <el-option
-            v-for="item in props.supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="采购类型" prop="purchaseType">
-        <el-select v-model="formData.purchaseType" clearable placeholder="请选择采购类型" class="w-1/1">
-          <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
+        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -58,14 +37,9 @@
 </template>
 <script setup lang="ts">
 import { ProductApi, Product } from '@/api/zc/product'
-import {getStrDictOptions, DICT_TYPE, getIntDictOptions} from '@/utils/dict'
-import { ProductVersion } from '@/api/zc/productversion'
-import { SupplierSimpleVO } from '@/api/zc/supplier'
 
-/** 货号档案 表单 */
+/** 产品 表单 */
 defineOptions({ name: 'ProductForm' })
-
-const props = defineProps<{ versionList: ProductVersion[]; supplierList: SupplierSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -79,14 +53,14 @@ const formData = ref({
   name: undefined,
   versionId: undefined,
   inboundPrice: undefined,
-  aPrice: undefined,
+  specId: undefined,
+  onePrice: undefined,
   supplierId: undefined,
-  purchaseType: getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)[0]?.value,
   note: undefined
 })
 const formRules = reactive({
-  name: [{ required: true, message: '产品名称不能为空', trigger: 'blur' }],
-  purchaseType: [{ required: true, message: '采购类型不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
+  versionId: [{ required: true, message: '版本不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -139,9 +113,9 @@ const resetForm = () => {
     name: undefined,
     versionId: undefined,
     inboundPrice: undefined,
-    aPrice: undefined,
+    specId: undefined,
+    onePrice: undefined,
     supplierId: undefined,
-    purchaseType: getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)[0]?.value,
     note: undefined
   }
   formRef.value?.resetFields()

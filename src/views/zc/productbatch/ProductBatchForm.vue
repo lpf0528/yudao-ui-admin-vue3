@@ -7,52 +7,37 @@
       label-width="100px"
       v-loading="formLoading"
     >
+      <el-form-item label="批号" prop="batchNo">
+        <el-input v-model="formData.batchNo" placeholder="请输入批号" />
+      </el-form-item>
       <el-form-item label="入库日期" prop="inboundDate">
         <el-date-picker
           v-model="formData.inboundDate"
           type="date"
-          value-format="YYYY-MM-DD"
+          value-format="x"
           placeholder="选择入库日期"
         />
       </el-form-item>
       <el-form-item label="产品" prop="productId">
-        <el-select v-model="formData.productId" clearable placeholder="请选择产品" class="w-1/1">
-          <el-option
-            v-for="item in props.productList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
+        <el-input v-model="formData.productId" placeholder="请输入产品" />
+      </el-form-item>
+      <el-form-item label="进货价" prop="inboundPrice">
+        <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
       <el-form-item label="入库数量" prop="inboundQuantity">
-        <el-input v-model="formData.inboundQuantity" placeholder="请输入入库数量" @input="formData.quantity = formData.inboundQuantity" />
+        <el-input v-model="formData.inboundQuantity" placeholder="请输入入库数量" />
       </el-form-item>
       <el-form-item label="剩余数量" prop="quantity">
-        <el-input v-model="formData.quantity" placeholder="请输入剩余数量" disabled />
+        <el-input v-model="formData.quantity" placeholder="请输入剩余数量" />
       </el-form-item>
       <el-form-item label="仓库" prop="warehouseId">
-        <el-select v-model="formData.warehouseId" clearable placeholder="请选择仓库" class="w-1/1">
-          <el-option
-            v-for="item in props.warehouseList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
+        <el-input v-model="formData.warehouseId" placeholder="请输入仓库" />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
-          <el-option
-            v-for="item in props.supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
-          />
-        </el-select>
+        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
       </el-form-item>
       <el-form-item label="备注" prop="note">
-        <el-input v-model="formData.note" type="textarea" :rows="3" placeholder="请输入备注" />
+        <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -63,14 +48,9 @@
 </template>
 <script setup lang="ts">
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
-import { WarehouseSimpleVO } from '@/api/zc/warehouse'
-import { SupplierSimpleVO } from '@/api/zc/supplier'
-import { ProductSimpleVO } from '@/api/zc/product'
 
 /** 产品批次 表单 */
 defineOptions({ name: 'ProductBatchForm' })
-
-const props = defineProps<{ warehouseList: WarehouseSimpleVO[]; supplierList: SupplierSimpleVO[]; productList: ProductSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -81,8 +61,10 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
+  batchNo: undefined,
   inboundDate: undefined,
   productId: undefined,
+  inboundPrice: undefined,
   inboundQuantity: undefined,
   quantity: undefined,
   warehouseId: undefined,
@@ -90,9 +72,11 @@ const formData = ref({
   note: undefined
 })
 const formRules = reactive({
+  batchNo: [{ required: true, message: '批号不能为空', trigger: 'blur' }],
   inboundDate: [{ required: true, message: '入库日期不能为空', trigger: 'blur' }],
   productId: [{ required: true, message: '产品不能为空', trigger: 'blur' }],
-  inboundQuantity: [{ required: true, message: '入库数量不能为空', trigger: 'blur' }]
+  inboundQuantity: [{ required: true, message: '入库数量不能为空', trigger: 'blur' }],
+  quantity: [{ required: true, message: '剩余数量不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -107,10 +91,6 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       formData.value = await ProductBatchApi.getProductBatch(id)
-      if (Array.isArray(formData.value.inboundDate)) {
-        const [y, m, d] = formData.value.inboundDate as unknown as number[]
-        formData.value.inboundDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` as any
-      }
     } finally {
       formLoading.value = false
     }
@@ -146,8 +126,10 @@ const submitForm = async () => {
 const resetForm = () => {
   formData.value = {
     id: undefined,
+    batchNo: undefined,
     inboundDate: undefined,
     productId: undefined,
+    inboundPrice: undefined,
     inboundQuantity: undefined,
     quantity: undefined,
     warehouseId: undefined,

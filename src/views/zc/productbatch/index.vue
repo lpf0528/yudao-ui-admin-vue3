@@ -20,57 +20,40 @@
       <el-form-item label="入库日期" prop="inboundDate">
         <el-date-picker
           v-model="queryParams.inboundDate"
-          value-format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD HH:mm:ss"
           type="daterange"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-220px"
         />
       </el-form-item>
       <el-form-item label="产品" prop="productId">
-        <el-select
+        <el-input
           v-model="queryParams.productId"
-          placeholder="请选择产品"
+          placeholder="请输入产品"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in productList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
       <el-form-item label="仓库" prop="warehouseId">
-        <el-select
+        <el-input
           v-model="queryParams.warehouseId"
-          placeholder="请选择仓库"
+          placeholder="请输入仓库"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in warehouseList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-select
+        <el-input
           v-model="queryParams.supplierId"
-          placeholder="请选择供应商"
+          placeholder="请输入供应商"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -129,20 +112,13 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="批号" align="center" prop="batchNo" />
-      <el-table-column label="入库日期" align="center" prop="inboundDate">
-        <template #default="scope">{{ formatLocalDate(scope.row.inboundDate) }}</template>
-      </el-table-column>
-      <el-table-column label="产品" align="center" prop="productId">
-        <template #default="scope">{{ productIdMap[scope.row.productId] }}</template>
-      </el-table-column>
+      <el-table-column label="入库日期" align="center" prop="inboundDate" />
+      <el-table-column label="产品" align="center" prop="productId" />
+      <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="入库数量" align="center" prop="inboundQuantity" />
       <el-table-column label="剩余数量" align="center" prop="quantity" />
-      <el-table-column label="仓库" align="center" prop="warehouseId">
-        <template #default="scope">{{ warehouseIdMap[scope.row.warehouseId] }}</template>
-      </el-table-column>
-      <el-table-column label="供应商" align="center" prop="supplierId">
-        <template #default="scope">{{ supplierIdMap[scope.row.supplierId] }}</template>
-      </el-table-column>
+      <el-table-column label="仓库" align="center" prop="warehouseId" />
+      <el-table-column label="供应商" align="center" prop="supplierId" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
@@ -182,7 +158,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductBatchForm ref="formRef" :warehouseList="warehouseList" :supplierList="supplierList" :productList="productList" @success="getList" />
+  <ProductBatchForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -190,19 +166,10 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
-import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
-import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
-import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import ProductBatchForm from './ProductBatchForm.vue'
 
 /** 产品批次 列表 */
 defineOptions({ name: 'ZcProductBatch' })
-
-const formatLocalDate = (arr?: number[]) => {
-  if (!Array.isArray(arr) || arr.length < 3) return ''
-  const [y, m, d] = arr
-  return `${String(y).slice(2)}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-}
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -210,18 +177,6 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<ProductBatch[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
-const warehouseList = ref<WarehouseSimpleVO[]>([]) // 仓库列表
-const warehouseIdMap = computed(() =>
-  Object.fromEntries(warehouseList.value.map((item) => [item.id, item.name]))
-)
-const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
-const supplierIdMap = computed(() =>
-  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
-)
-const productList = ref<ProductSimpleVO[]>([]) // 产品列表
-const productIdMap = computed(() =>
-  Object.fromEntries(productList.value.map((item) => [item.id, item.name]))
-)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -311,10 +266,7 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(async () => {
-  warehouseList.value = await WarehouseApi.getWarehouseSimpleList()
-  supplierList.value = await SupplierApi.getSupplierSimpleList()
-  productList.value = await ProductApi.getProductSimpleList()
-  await getList()
+onMounted(() => {
+  getList()
 })
 </script>

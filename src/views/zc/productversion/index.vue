@@ -32,35 +32,14 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="规格" prop="specId">
-        <el-select
-          v-model="queryParams.specId"
-          placeholder="请选择规格"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in specList"
-            :key="item.id"
-            :label="item.value"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="类别" prop="categoryId">
-        <el-select
+      <el-form-item label="类别ID" prop="categoryId">
+        <el-input
           v-model="queryParams.categoryId"
-          placeholder="请选择类别"
+          placeholder="请输入类别ID"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in categoryList"
-            :key="item.id"
-            :label="item.value"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select
@@ -77,15 +56,6 @@
           />
         </el-select>
       </el-form-item>
-<!--      <el-form-item label="进货价" prop="inboundPrice">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.inboundPrice"-->
-<!--          placeholder="请输入进货价"-->
-<!--          clearable-->
-<!--          @keyup.enter="handleQuery"-->
-<!--          class="!w-240px"-->
-<!--        />-->
-<!--      </el-form-item>-->
       <el-form-item label="分类" prop="classify">
         <el-select
           v-model="queryParams.classify"
@@ -94,7 +64,7 @@
           class="!w-240px"
         >
           <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
+            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -102,29 +72,14 @@
         </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-select
+        <el-input
           v-model="queryParams.supplierId"
-          placeholder="请选择供应商"
+          placeholder="请输入供应商"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
-<!--      <el-form-item label="创建者" prop="creator">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.creator"-->
-<!--          placeholder="请输入创建者"-->
-<!--          clearable-->
-<!--          @keyup.enter="handleQuery"-->
-<!--          class="!w-240px"-->
-<!--        />-->
-<!--      </el-form-item>-->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -187,24 +142,21 @@
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_UNIT" :value="scope.row.unitValue" />
         </template>
       </el-table-column>
-      <el-table-column label="规格值" align="center" prop="specValue" />
-      <el-table-column label="产品类别" align="center" prop="categoryValue" />
+      <el-table-column label="类别" align="center" prop="categoryValue" />
       <el-table-column label="出货价类型" align="center" prop="sellingPriceType">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_SELLING_PRICE_TYPE" :value="scope.row.sellingPriceType" />
         </template>
       </el-table-column>
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
+      <el-table-column label="一级类销售价" align="center" prop="onePrice" />
       <el-table-column label="分类" align="center" prop="classify">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_CLASSIFY" :value="scope.row.classify" />
         </template>
       </el-table-column>
-      <el-table-column label="供应商" align="center" prop="supplierId">
-        <template #default="scope">{{ supplierIdMap[scope.row.supplierId] }}</template>
-      </el-table-column>
+      <el-table-column label="供应商" align="center" prop="supplierName" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -243,18 +195,15 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductVersionForm ref="formRef" :specList="specList" :categoryList="categoryList" :supplierList="supplierList" @success="getList" />
+  <ProductVersionForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { getIntDictOptions, getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
-import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
-import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
-import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductVersionForm from './ProductVersionForm.vue'
 
 /** 产品版本 列表 */
@@ -266,31 +215,16 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<ProductVersion[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
-const specList = ref<ProductSpecSimpleVO[]>([]) // 规格列表
-const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
-const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
-const specMap = computed(() =>
-  Object.fromEntries(specList.value.map((item) => [item.id, item.value]))
-)
-const categoryMap = computed(() =>
-  Object.fromEntries(categoryList.value.map((item) => [item.id, item.value]))
-)
-const supplierIdMap = computed(() =>
-  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
-)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
   unitValue: undefined,
-  specId: undefined,
   categoryId: undefined,
   sellingPriceType: undefined,
-  inboundPrice: [],
   classify: undefined,
   supplierId: undefined,
-  creator: undefined,
-  createTime: [],
+  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -371,10 +305,7 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(async () => {
-  specList.value = await ProductSpecApi.getProductSpecSimpleList()
-  categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
-  supplierList.value = await SupplierApi.getSupplierSimpleList()
-  await getList()
+onMounted(() => {
+  getList()
 })
 </script>

@@ -5,14 +5,12 @@ import type { Dayjs } from 'dayjs';
 export interface ProductVersion {
           id: number; // 主键
           name?: string; // 版本名称
-          unitValue: string; // 单位（字典）
-          specId: number; // 规格ID
-          specValue: string; // 规格值
+          unitValue: string; // 单位
           categoryId: number; // 类别ID
-          categoryValue: string; // 物料类别
-          sellingPriceType: string; // 出货价类型
+          sellingPriceType?: string; // 出货价类型
           inboundPrice: number; // 进货价
-          classify: number; // 分类
+          onePrice: number; // 一级类销售价
+          classify?: number; // 分类
           supplierId: number; // 供应商
           note: string; // 备注
   }
@@ -52,10 +50,5 @@ export const ProductVersionApi = {
   // 导出产品版本 Excel
   exportProductVersion: async (params) => {
     return await request.download({ url: `/zc/product-version/export-excel`, params })
-  },
-
-  // 查询产品版本简单列表
-  getProductVersionSimpleList: async () => {
-    return await request.get({ url: `/zc/product-version/simple-list` })
-  },
-}
+  }
+}

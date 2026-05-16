@@ -8,68 +8,52 @@
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="产品名称" prop="name">
+      <el-form-item label="名称" prop="name">
         <el-input
           v-model="queryParams.name"
-          placeholder="请输入产品名称"
+          placeholder="请输入名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-select
-          v-model="queryParams.versionId"
-          placeholder="请选择版本"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in versionList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="进货价" prop="inboundPrice">
         <el-input
-          v-model="queryParams.inboundPrice"
-          placeholder="请输入进货价"
+          v-model="queryParams.versionId"
+          placeholder="请输入版本"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="规格" prop="specId">
+        <el-input
+          v-model="queryParams.specId"
+          placeholder="请输入规格"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-select
+        <el-input
           v-model="queryParams.supplierId"
-          placeholder="请选择供应商"
+          placeholder="请输入供应商"
           clearable
+          @keyup.enter="handleQuery"
           class="!w-240px"
-        >
-          <el-option
-            v-for="item in supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
-      <el-form-item label="采购类型" prop="purchaseType">
-        <el-select
-          v-model="queryParams.purchaseType"
-          placeholder="请选择采购类型"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
+      <el-form-item label="创建时间" prop="createTime">
+        <el-date-picker
+          v-model="queryParams.createTime"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+          class="!w-220px"
+        />
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
@@ -116,22 +100,13 @@
     >
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="产品名称" align="center" prop="name" />
-      <el-table-column label="版本" align="center" prop="versionId">
-        <template #default="scope">{{ versionIdMap[scope.row.versionId] }}</template>
-      </el-table-column>
+      <el-table-column label="名称" align="center" prop="name" />
+      <el-table-column label="版本" align="center" prop="versionId" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="A 类销售价" align="center" prop="aPrice" />
-      <el-table-column label="供应商" align="center" prop="supplierId">
-        <template #default="scope">{{ supplierIdMap[scope.row.supplierId] }}</template>
-      </el-table-column>
-      <el-table-column label="采购类型" align="center" prop="purchaseType">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE" :value="scope.row.purchaseType" />
-        </template>
-      </el-table-column>
+      <el-table-column label="规格" align="center" prop="specId" />
+      <el-table-column label="一级销售价" align="center" prop="onePrice" />
+      <el-table-column label="供应商" align="center" prop="supplierId" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -170,20 +145,17 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductForm ref="formRef" :versionList="versionList" :supplierList="supplierList" @success="getList" />
+  <ProductForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
 import { isEmpty } from '@/utils/is'
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/zc/product'
-import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
-import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductForm from './ProductForm.vue'
 
-/** 货号档案 列表 */
+/** 产品 列表 */
 defineOptions({ name: 'ZcProduct' })
 
 const message = useMessage() // 消息弹窗
@@ -191,23 +163,15 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<Product[]>([]) // 列表的数据
-const versionList = ref<ProductVersion[]>([]) // 版本列表
-const versionIdMap = computed(() =>
-  Object.fromEntries(versionList.value.map((item) => [item.id, item.name]))
-)
-const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
-const supplierIdMap = computed(() =>
-  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
-)
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
   versionId: undefined,
-  inboundPrice: [],
+  specId: undefined,
   supplierId: undefined,
-  purchaseType: undefined
+  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -255,7 +219,7 @@ const handleDelete = async (id: number) => {
   } catch {}
 }
 
-/** 批量删除货号档案 */
+/** 批量删除产品 */
 const handleDeleteBatch = async () => {
   try {
     // 删除的二次确认
@@ -280,7 +244,7 @@ const handleExport = async () => {
     // 发起导出
     exportLoading.value = true
     const data = await ProductApi.exportProduct(queryParams)
-    download.excel(data, '货号档案.xls')
+    download.excel(data, '产品.xls')
   } catch {
   } finally {
     exportLoading.value = false
@@ -288,9 +252,7 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(async () => {
-  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
-  supplierList.value = await SupplierApi.getSupplierSimpleList()
-  await getList()
+onMounted(() => {
+  getList()
 })
 </script>

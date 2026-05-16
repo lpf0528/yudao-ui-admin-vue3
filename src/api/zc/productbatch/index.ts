@@ -4,10 +4,12 @@ import type { Dayjs } from 'dayjs';
 /** 产品批次信息 */
 export interface ProductBatch {
           id: number; // 主键
+          batchNo?: string; // 批号
           inboundDate?: string | Dayjs; // 入库日期
           productId?: number; // 产品
+          inboundPrice: number; // 进货价
           inboundQuantity?: number; // 入库数量
-          quantity: number; // 剩余数量
+          quantity?: number; // 剩余数量
           warehouseId: number; // 仓库
           supplierId: number; // 供应商
           note: string; // 备注
