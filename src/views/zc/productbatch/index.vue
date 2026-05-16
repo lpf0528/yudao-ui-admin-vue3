@@ -72,7 +72,7 @@
         <el-button
           type="primary"
           plain
-          @click="openForm('create')"
+          @click="openForm"
           v-hasPermi="['zc:product-batch:create']"
         >
           <Icon icon="ep:plus" class="mr-5px" /> 新增
@@ -129,14 +129,6 @@
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['zc:product-batch:update']"
-          >
-            编辑
-          </el-button>
           <el-button
             link
             type="danger"
@@ -214,10 +206,10 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 添加/修改操作 */
+/** 新增操作 */
 const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
+const openForm = () => {
+  formRef.value.open()
 }
 
 /** 删除按钮操作 */
