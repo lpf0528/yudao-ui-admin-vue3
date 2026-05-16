@@ -48,4 +48,9 @@ export const LogisticsApi = {
   exportLogistics: async (params) => {
     return await request.download({ url: `/zc/logistics/export-excel`, params })
   },
+
+  // 查询物流公司简单列表
+  getLogisticsSimpleList: async () => {
+    return await request.get({ url: `/zc/logistics/simple-list` })
+  },
 }

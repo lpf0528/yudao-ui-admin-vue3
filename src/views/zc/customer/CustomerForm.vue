@@ -29,8 +29,13 @@
         <el-input v-model="formData.mobile2" placeholder="请输入联系电话" />
       </el-form-item>
       <el-form-item label="物流" prop="logisticId">
-        <el-select v-model="formData.logisticId" placeholder="请选择物流">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-1/1">
+          <el-option
+            v-for="item in props.logisticsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="关联品牌" prop="brandId">
@@ -53,9 +58,12 @@
 </template>
 <script setup lang="ts">
 import { CustomerApi, Customer } from '@/api/zc/customer'
+import { Logistics } from '@/api/zc/logistics'
 
 /** 客户资料 表单 */
 defineOptions({ name: 'CustomerForm' })
+
+const props = defineProps<{ logisticsList: Logistics[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

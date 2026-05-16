@@ -33,7 +33,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in logisticsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="关联品牌" prop="brandId">
@@ -98,7 +103,9 @@
       <el-table-column label="送货地址" align="center" prop="deliveryAddress" />
       <el-table-column label="手机" align="center" prop="mobile" />
       <el-table-column label="联系电话" align="center" prop="mobile2" />
-      <el-table-column label="物流" align="center" prop="logisticId" />
+      <el-table-column label="物流" align="center" prop="logisticId">
+        <template #default="scope">{{ logisticsMap[scope.row.logisticId] }}</template>
+      </el-table-column>
       <el-table-column label="关联品牌" align="center" prop="brandId" />
       <el-table-column label="账户余额" align="center" prop="balance" />
       <el-table-column label="备注" align="center" prop="note" />
@@ -141,7 +148,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <CustomerForm ref="formRef" @success="getList" />
+  <CustomerForm ref="formRef" :logisticsList="logisticsList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -149,6 +156,7 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerApi, Customer } from '@/api/zc/customer'
+import { LogisticsApi, Logistics } from '@/api/zc/logistics'
 import CustomerForm from './CustomerForm.vue'
 
 /** 客户资料 列表 */
@@ -159,6 +167,10 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<Customer[]>([]) // 列表的数据
+const logisticsList = ref<Logistics[]>([]) // 物流列表
+const logisticsMap = computed(() =>
+  Object.fromEntries(logisticsList.value.map((item) => [item.id, item.name]))
+)
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -247,7 +259,8 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  logisticsList.value = await LogisticsApi.getLogisticsSimpleList()
+  await getList()
 })
 </script>
