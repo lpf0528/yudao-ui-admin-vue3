@@ -20,17 +20,15 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="规格ID" prop="specId">
+      <el-form-item label="规格" prop="specId">
         <el-select
           v-model="formData.specId"
           clearable
           placeholder="请选择规格"
           class="w-1/1"
-          @change="handleSpecChange"
-          @clear="handleSpecChange(undefined)"
         >
           <el-option
-            v-for="item in specList"
+            v-for="item in props.specList"
             :key="item.id"
             :label="item.value"
             :value="item.id"
@@ -43,11 +41,9 @@
           clearable
           placeholder="请选择类别"
           class="w-1/1"
-          @change="handleCategoryChange"
-          @clear="handleCategoryChange(undefined)"
         >
           <el-option
-            v-for="item in categoryList"
+            v-for="item in props.categoryList"
             :key="item.id"
             :label="item.value"
             :value="item.id"
@@ -93,11 +89,13 @@
 <script setup lang="ts">
 import { getStrDictOptions, getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
-import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
-import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
+import { ProductCategorySimpleVO } from '@/api/zc/productcategory'
+import { ProductSpecSimpleVO } from '@/api/zc/productspec'
 
 /** 产品版本 表单 */
 defineOptions({ name: 'ProductVersionForm' })
+
+const props = defineProps<{ specList: ProductSpecSimpleVO[]; categoryList: ProductCategorySimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -106,8 +104,6 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
-const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
-const specList = ref<ProductSpecSimpleVO[]>([]) // 规格列表
 const formData = ref({
   id: undefined,
   name: undefined,
@@ -133,10 +129,6 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  // 类别
-  categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
-  // 规格
-  specList.value = await ProductSpecApi.getProductSpecSimpleList()
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
@@ -157,7 +149,12 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as ProductVersion
+    const raw = formData.value as any
+    const data = {
+      ...raw,
+      specId: raw.specId ?? null,
+      categoryId: raw.categoryId ?? null,
+    } as unknown as ProductVersion
     if (formType.value === 'create') {
       await ProductVersionApi.createProductVersion(data)
       message.success(t('common.createSuccess'))
@@ -173,17 +170,21 @@ const submitForm = async () => {
   }
 }
 
-/** 选择规格时同步更新 specValue */
-const handleSpecChange = (val: number | undefined) => {
-  const item = specList.value.find((i) => i.id === val)
-  ;(formData.value as any).specValue = item?.value
-}
+watch(
+  () => (formData.value as any).specId,
+  (val) => {
+    const item = props.specList.find((i) => i.id === val)
+    ;(formData.value as any).specValue = item?.value ?? null
+  }
+)
 
-/** 选择类别时同步更新 categoryValue */
-const handleCategoryChange = (val: number | undefined) => {
-  const item = categoryList.value.find((i) => i.id === val)
-  ;(formData.value as any).categoryValue = item?.value
-}
+watch(
+  () => (formData.value as any).categoryId,
+  (val) => {
+    const item = props.categoryList.find((i) => i.id === val)
+    ;(formData.value as any).categoryValue = item?.value ?? null
+  }
+)
 
 /** 重置表单 */
 const resetForm = () => {

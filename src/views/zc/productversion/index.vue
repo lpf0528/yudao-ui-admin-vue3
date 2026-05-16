@@ -17,32 +17,44 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="单位（字典）" prop="unitValue">
+      <el-form-item label="单位" prop="unitValue">
         <el-input
           v-model="queryParams.unitValue"
-          placeholder="请输入单位（字典）"
+          placeholder="请输入单位"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="规格ID" prop="specId">
-        <el-input
+      <el-form-item label="规格" prop="specId">
+        <el-select
           v-model="queryParams.specId"
-          placeholder="请输入规格ID"
+          placeholder="请选择规格"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in specList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="类别ID" prop="categoryId">
-        <el-input
+      <el-form-item label="类别" prop="categoryId">
+        <el-select
           v-model="queryParams.categoryId"
-          placeholder="请输入类别ID"
+          placeholder="请选择类别"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in categoryList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select
@@ -211,7 +223,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductVersionForm ref="formRef" @success="getList" />
+  <ProductVersionForm ref="formRef" :specList="specList" :categoryList="categoryList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -220,6 +232,8 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
+import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
 import ProductVersionForm from './ProductVersionForm.vue'
 
 /** 产品版本 列表 */
@@ -231,6 +245,14 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<ProductVersion[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const specList = ref<ProductSpecSimpleVO[]>([]) // 规格列表
+const categoryList = ref<ProductCategorySimpleVO[]>([]) // 类别列表
+const specMap = computed(() =>
+  Object.fromEntries(specList.value.map((item) => [item.id, item.value]))
+)
+const categoryMap = computed(() =>
+  Object.fromEntries(categoryList.value.map((item) => [item.id, item.value]))
+)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -324,7 +346,9 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  specList.value = await ProductSpecApi.getProductSpecSimpleList()
+  categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
+  await getList()
 })
 </script>
