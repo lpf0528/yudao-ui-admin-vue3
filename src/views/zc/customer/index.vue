@@ -108,12 +108,8 @@
       <el-table-column label="送货地址" align="center" prop="deliveryAddress" />
       <el-table-column label="手机" align="center" prop="mobile" />
       <el-table-column label="联系电话" align="center" prop="mobile2" />
-      <el-table-column label="物流" align="center" prop="logisticId">
-        <template #default="scope">{{ logisticsMap[scope.row.logisticId] }}</template>
-      </el-table-column>
-      <el-table-column label="关联品牌" align="center" prop="brandId">
-        <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
-      </el-table-column>
+      <el-table-column label="物流" align="center" prop="logisticName" />
+      <el-table-column label="关联品牌" align="center" prop="brandName" />
       <el-table-column label="账户余额" align="center" prop="balance" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="创建者" align="center" prop="creator" />
@@ -176,13 +172,7 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<Customer[]>([]) // 列表的数据
 const logisticsList = ref<Logistics[]>([]) // 物流列表
-const logisticsMap = computed(() =>
-  Object.fromEntries(logisticsList.value.map((item) => [item.id, item.name]))
-)
 const brandList = ref<Brand[]>([]) // 品牌列表
-const brandIdMap = computed(() =>
-  Object.fromEntries(brandList.value.map((item) => [item.id, item.name]))
-)
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
