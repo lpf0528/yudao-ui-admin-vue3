@@ -18,13 +18,19 @@
         />
       </el-form-item>
       <el-form-item label="单位" prop="unitValue">
-        <el-input
+        <el-select
           v-model="queryParams.unitValue"
-          placeholder="请输入单位"
+          placeholder="请选择单位"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="规格" prop="specId">
         <el-select
@@ -81,13 +87,19 @@
         />
       </el-form-item>
       <el-form-item label="分类" prop="classify">
-        <el-input
+        <el-select
           v-model="queryParams.classify"
-          placeholder="请输入分类"
+          placeholder="请选择分类"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
         <el-input
