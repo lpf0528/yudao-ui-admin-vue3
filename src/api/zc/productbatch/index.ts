@@ -32,6 +32,11 @@ export const ProductBatchApi = {
     return await request.post({ url: `/zc/product-batch/create`, data })
   },
 
+  // 批量新增产品批次
+  createProductBatchList: async (data: ProductBatch[]) => {
+    return await request.post({ url: `/zc/product-batch/create-batch`, data })
+  },
+
   // 修改产品批次
   updateProductBatch: async (data: ProductBatch) => {
     return await request.put({ url: `/zc/product-batch/update`, data })

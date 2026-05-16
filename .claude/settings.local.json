@@ -5,7 +5,8 @@
       "Bash(Select-Object FullName)",
       "Skill(update-config)",
       "Read(//c/Users/admin/.claude/**)",
-      "Read(//mnt/d/workplace/yudao-ui-admin-vue3/**)"
+      "Read(//mnt/d/workplace/yudao-ui-admin-vue3/**)",
+      "Bash(Remove-Item *)"
     ]
   }
 }

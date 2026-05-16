@@ -75,10 +75,10 @@
         <el-button
           type="primary"
           plain
-          @click="openForm"
+          @click="openBatchForm"
           v-hasPermi="['zc:product-batch:create']"
         >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
+          <Icon icon="ep:plus" class="mr-5px" /> 批量新增
         </el-button>
         <el-button
           type="success"
@@ -89,15 +89,15 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:product-batch:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+<!--        <el-button-->
+<!--            type="danger"-->
+<!--            plain-->
+<!--            :disabled="isEmpty(checkedIds)"-->
+<!--            @click="handleDeleteBatch"-->
+<!--            v-hasPermi="['zc:product-batch:delete']"-->
+<!--        >-->
+<!--          <Icon icon="ep:delete" class="mr-5px" /> 批量删除-->
+<!--        </el-button>-->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -154,9 +154,9 @@
     />
   </ContentWrap>
 
-  <!-- 表单弹窗：添加/修改 -->
-  <ProductBatchForm
-    ref="formRef"
+  <!-- 批量新增弹窗 -->
+  <ProductBatchBatchForm
+    ref="batchFormRef"
     :productList="productList"
     :warehouseList="warehouseList"
     :supplierList="supplierList"
@@ -172,7 +172,7 @@ import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
-import ProductBatchForm from './ProductBatchForm.vue'
+import ProductBatchBatchForm from './ProductBatchBatchForm.vue'
 
 /** 产品批次 列表 */
 defineOptions({ name: 'ZcProductBatch' })
@@ -223,10 +223,10 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 新增操作 */
-const formRef = ref()
-const openForm = () => {
-  formRef.value.open()
+/** 批量新增操作 */
+const batchFormRef = ref()
+const openBatchForm = () => {
+  batchFormRef.value.open()
 }
 
 /** 删除按钮操作 */
