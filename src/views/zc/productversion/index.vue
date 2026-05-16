@@ -147,7 +147,7 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="版本名称" align="center" prop="name" />
       <el-table-column label="单位" align="center" prop="unitValue">
         <template #default="scope">
