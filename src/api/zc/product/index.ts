@@ -8,6 +8,7 @@ import type { Dayjs } from 'dayjs';
 export interface ProductSimpleVO {
   id: number
   name: string
+  inboundPrice: number
 }
 
 /** 产品信息 */

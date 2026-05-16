@@ -16,7 +16,7 @@
         />
       </el-form-item>
       <el-form-item label="产品" prop="productId">
-        <el-select v-model="formData.productId" clearable placeholder="请选择产品" class="w-1/1">
+        <el-select v-model="formData.productId" clearable placeholder="请选择产品" class="w-1/1" @change="onProductChange">
           <el-option
             v-for="item in props.productList"
             :key="item.id"
@@ -100,6 +100,12 @@ const formRules = reactive({
   productId: [{ required: true, message: '产品不能为空', trigger: 'blur' }],
   inboundQuantity: [{ required: true, message: '入库数量不能为空', trigger: 'blur' }]
 })
+
+/** 选择产品时自动填入进货价 */
+const onProductChange = (id: number | undefined) => {
+  const product = props.productList.find((item) => item.id === id)
+  formData.value.inboundPrice = product?.inboundPrice as any
+}
 
 /** 入库数量变化时同步剩余数量 */
 const onInboundQuantityChange = (val: number | undefined) => {
