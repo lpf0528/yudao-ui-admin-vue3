@@ -29,31 +29,34 @@
         />
       </el-form-item>
       <el-form-item label="产品" prop="productId">
-        <el-input
-          v-model="queryParams.productId"
-          placeholder="请输入产品"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.productId" placeholder="请选择产品" clearable class="!w-240px">
+          <el-option
+            v-for="item in productList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="仓库" prop="warehouseId">
-        <el-input
-          v-model="queryParams.warehouseId"
-          placeholder="请输入仓库"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.warehouseId" placeholder="请选择仓库" clearable class="!w-240px">
+          <el-option
+            v-for="item in warehouseList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input
-          v-model="queryParams.supplierId"
-          placeholder="请输入供应商"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.supplierId" placeholder="请选择供应商" clearable class="!w-240px">
+          <el-option
+            v-for="item in supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -152,7 +155,13 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductBatchForm ref="formRef" @success="getList" />
+  <ProductBatchForm
+    ref="formRef"
+    :productList="productList"
+    :warehouseList="warehouseList"
+    :supplierList="supplierList"
+    @success="getList"
+  />
 </template>
 
 <script setup lang="ts">
@@ -160,6 +169,9 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
+import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
+import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
+import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductBatchForm from './ProductBatchForm.vue'
 
 /** 产品批次 列表 */
@@ -170,6 +182,9 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<ProductBatch[]>([]) // 列表的数据
+const productList = ref<ProductSimpleVO[]>([]) // 产品列表
+const warehouseList = ref<WarehouseSimpleVO[]>([]) // 仓库列表
+const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -260,7 +275,10 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  productList.value = await ProductApi.getProductSimpleList()
+  warehouseList.value = await WarehouseApi.getWarehouseSimpleList()
+  supplierList.value = await SupplierApi.getSupplierSimpleList()
+  await getList()
 })
 </script>
