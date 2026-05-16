@@ -23,8 +23,13 @@
         <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
       </el-form-item>
       <el-form-item label="采购类型" prop="purchaseType">
-        <el-select v-model="formData.purchaseType" placeholder="请选择采购类型">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.purchaseType" clearable placeholder="请选择采购类型" class="w-1/1">
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
@@ -39,6 +44,7 @@
 </template>
 <script setup lang="ts">
 import { ProductApi, Product } from '@/api/zc/product'
+import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 
 /** 货号档案 表单 */
 defineOptions({ name: 'ProductForm' })
@@ -57,11 +63,12 @@ const formData = ref({
   inboundPrice: undefined,
   aPrice: undefined,
   supplierId: undefined,
-  purchaseType: undefined,
+  purchaseType: getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)[0]?.value,
   note: undefined
 })
 const formRules = reactive({
-  name: [{ required: true, message: '产品名称不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '产品名称不能为空', trigger: 'blur' }],
+  purchaseType: [{ required: true, message: '采购类型不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -116,7 +123,7 @@ const resetForm = () => {
     inboundPrice: undefined,
     aPrice: undefined,
     supplierId: undefined,
-    purchaseType: undefined,
+    purchaseType: getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)[0]?.value,
     note: undefined
   }
   formRef.value?.resetFields()

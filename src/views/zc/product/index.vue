@@ -51,7 +51,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -104,7 +109,11 @@
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="A 类销售价" align="center" prop="aPrice" />
       <el-table-column label="供应商" align="center" prop="supplierId" />
-      <el-table-column label="采购类型" align="center" prop="purchaseType" />
+      <el-table-column label="采购类型" align="center" prop="purchaseType">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE" :value="scope.row.purchaseType" />
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
@@ -150,6 +159,7 @@
 
 <script setup lang="ts">
 import { isEmpty } from '@/utils/is'
+import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/zc/product'
