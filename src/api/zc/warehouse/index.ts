@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 仓库简要信息
+ * 接口：GET /zc/warehouse/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface WarehouseSimpleVO {
+  id: number
+  name: string
+}
+
 /** 仓库信息 */
 export interface Warehouse {
           id: number; // 主键
@@ -44,5 +53,10 @@ export const WarehouseApi = {
   // 导出仓库 Excel
   exportWarehouse: async (params) => {
     return await request.download({ url: `/zc/warehouse/export-excel`, params })
+  },
+
+  // 查询仓库简单列表
+  getWarehouseSimpleList: async () => {
+    return await request.get<WarehouseSimpleVO[]>({ url: `/zc/warehouse/simple-list` })
   },
 }

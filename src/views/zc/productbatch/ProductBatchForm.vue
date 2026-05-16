@@ -25,10 +25,24 @@
         <el-input v-model="formData.quantity" placeholder="请输入剩余数量" />
       </el-form-item>
       <el-form-item label="仓库" prop="warehouseId">
-        <el-input v-model="formData.warehouseId" placeholder="请输入仓库" />
+        <el-select v-model="formData.warehouseId" clearable placeholder="请选择仓库" class="w-1/1">
+          <el-option
+            v-for="item in props.warehouseList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
+        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
+          <el-option
+            v-for="item in props.supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -42,9 +56,13 @@
 </template>
 <script setup lang="ts">
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
+import { WarehouseSimpleVO } from '@/api/zc/warehouse'
+import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 产品批次 表单 */
 defineOptions({ name: 'ProductBatchForm' })
+
+const props = defineProps<{ warehouseList: WarehouseSimpleVO[]; supplierList: SupplierSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

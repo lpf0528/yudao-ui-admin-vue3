@@ -1,7 +1,10 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
-/** 供应商简要信息 */
+/** 供应商简要信息
+ * 接口：GET /zc/supplier/simple-list
+ * 返回：{ id: number, shortName: string }[]
+ */
 export interface SupplierSimpleVO {
   id: number
   shortName: string
