@@ -47,4 +47,9 @@ export const BrandApi = {
   exportBrand: async (params) => {
     return await request.download({ url: `/zc/brand/export-excel`, params })
   },
+
+  // 查询品牌简单列表
+  getBrandSimpleList: async () => {
+    return await request.get({ url: `/zc/brand/simple-list` })
+  },
 }

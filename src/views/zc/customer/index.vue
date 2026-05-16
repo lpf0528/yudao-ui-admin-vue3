@@ -48,7 +48,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in brandList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -106,7 +111,9 @@
       <el-table-column label="物流" align="center" prop="logisticId">
         <template #default="scope">{{ logisticsMap[scope.row.logisticId] }}</template>
       </el-table-column>
-      <el-table-column label="关联品牌" align="center" prop="brandId" />
+      <el-table-column label="关联品牌" align="center" prop="brandId">
+        <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
+      </el-table-column>
       <el-table-column label="账户余额" align="center" prop="balance" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="创建者" align="center" prop="creator" />
@@ -148,7 +155,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <CustomerForm ref="formRef" :logisticsList="logisticsList" @success="getList" />
+  <CustomerForm ref="formRef" :logisticsList="logisticsList" :brandList="brandList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -157,6 +164,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerApi, Customer } from '@/api/zc/customer'
 import { LogisticsApi, Logistics } from '@/api/zc/logistics'
+import { BrandApi, Brand } from '@/api/zc/brand'
 import CustomerForm from './CustomerForm.vue'
 
 /** 客户资料 列表 */
@@ -170,6 +178,10 @@ const list = ref<Customer[]>([]) // 列表的数据
 const logisticsList = ref<Logistics[]>([]) // 物流列表
 const logisticsMap = computed(() =>
   Object.fromEntries(logisticsList.value.map((item) => [item.id, item.name]))
+)
+const brandList = ref<Brand[]>([]) // 品牌列表
+const brandIdMap = computed(() =>
+  Object.fromEntries(brandList.value.map((item) => [item.id, item.name]))
 )
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
@@ -260,7 +272,10 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  logisticsList.value = await LogisticsApi.getLogisticsSimpleList()
+  ;[logisticsList.value, brandList.value] = await Promise.all([
+    LogisticsApi.getLogisticsSimpleList(),
+    BrandApi.getBrandSimpleList(),
+  ])
   await getList()
 })
 </script>

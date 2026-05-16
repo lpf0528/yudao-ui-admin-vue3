@@ -39,8 +39,13 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关联品牌" prop="brandId">
-        <el-select v-model="formData.brandId" placeholder="请选择关联品牌">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.brandId" clearable placeholder="请选择关联品牌" class="w-1/1">
+          <el-option
+            v-for="item in props.brandList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="账户余额" prop="balance">
@@ -59,11 +64,12 @@
 <script setup lang="ts">
 import { CustomerApi, Customer } from '@/api/zc/customer'
 import { Logistics } from '@/api/zc/logistics'
+import { Brand } from '@/api/zc/brand'
 
 /** 客户资料 表单 */
 defineOptions({ name: 'CustomerForm' })
 
-const props = defineProps<{ logisticsList: Logistics[] }>()
+const props = defineProps<{ logisticsList: Logistics[]; brandList: Brand[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
