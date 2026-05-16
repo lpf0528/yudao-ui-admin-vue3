@@ -18,31 +18,34 @@
         />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-input
-          v-model="queryParams.versionId"
-          placeholder="请输入版本"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.versionId" placeholder="请选择版本" clearable class="!w-240px">
+          <el-option
+            v-for="item in versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="规格" prop="specId">
-        <el-input
-          v-model="queryParams.specId"
-          placeholder="请输入规格"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.specId" placeholder="请选择规格" clearable class="!w-240px">
+          <el-option
+            v-for="item in specList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input
-          v-model="queryParams.supplierId"
-          placeholder="请输入供应商"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-select v-model="queryParams.supplierId" placeholder="请选择供应商" clearable class="!w-240px">
+          <el-option
+            v-for="item in supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -101,11 +104,17 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="版本" align="center" prop="versionId" />
+      <el-table-column label="版本" align="center" prop="versionId">
+        <template #default="scope">{{ versionMap[scope.row.versionId] }}</template>
+      </el-table-column>
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="规格" align="center" prop="specId" />
+      <el-table-column label="规格" align="center" prop="specId">
+        <template #default="scope">{{ specMap[scope.row.specId] }}</template>
+      </el-table-column>
       <el-table-column label="一级销售价" align="center" prop="onePrice" />
-      <el-table-column label="供应商" align="center" prop="supplierId" />
+      <el-table-column label="供应商" align="center" prop="supplierId">
+        <template #default="scope">{{ supplierMap[scope.row.supplierId] }}</template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
@@ -145,7 +154,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductForm ref="formRef" @success="getList" />
+  <ProductForm ref="formRef" :versionList="versionList" :specList="specList" :supplierList="supplierList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -153,6 +162,9 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/zc/product'
+import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
+import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
+import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductForm from './ProductForm.vue'
 
 /** 产品 列表 */
@@ -175,6 +187,18 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const versionList = ref<ProductVersionSimpleVO[]>([])
+const specList = ref<ProductSpecSimpleVO[]>([])
+const supplierList = ref<SupplierSimpleVO[]>([])
+const versionMap = computed(() =>
+  Object.fromEntries(versionList.value.map((item) => [item.id, item.name]))
+)
+const specMap = computed(() =>
+  Object.fromEntries(specList.value.map((item) => [item.id, item.value]))
+)
+const supplierMap = computed(() =>
+  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
+)
 
 /** 查询列表 */
 const getList = async () => {
@@ -252,7 +276,10 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
+  specList.value = await ProductSpecApi.getProductSpecSimpleList()
+  supplierList.value = await SupplierApi.getSupplierSimpleList()
+  await getList()
 })
 </script>

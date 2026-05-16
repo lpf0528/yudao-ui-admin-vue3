@@ -139,7 +139,11 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as ProductVersion
+    const data = {
+      ...formData.value,
+      categoryId: formData.value.categoryId ?? null,
+      supplierId: formData.value.supplierId ?? null
+    } as unknown as ProductVersion
     if (formType.value === 'create') {
       await ProductVersionApi.createProductVersion(data)
       message.success(t('common.createSuccess'))

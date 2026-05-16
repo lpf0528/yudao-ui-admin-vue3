@@ -53,6 +53,6 @@ export const ProductSpecApi = {
 
   // 获取产品规格简单列表（用于下拉）
   getProductSpecSimpleList: async () => {
-    return await request.get({ url: `/zc/product-spec/simple-list` })
+    return await request.get<ProductSpecSimpleVO[]>({ url: `/zc/product-spec/simple-list` })
   },
 }

@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 产品版本简要信息
+ * 接口：GET /zc/product-version/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface ProductVersionSimpleVO {
+  id: number
+  name: string
+}
+
 /** 产品版本信息 */
 export interface ProductVersion {
           id: number; // 主键
@@ -50,5 +59,10 @@ export const ProductVersionApi = {
   // 导出产品版本 Excel
   exportProductVersion: async (params) => {
     return await request.download({ url: `/zc/product-version/export-excel`, params })
-  }
+  },
+
+  // 查询产品版本简单列表
+  getProductVersionSimpleList: async () => {
+    return await request.get<ProductVersionSimpleVO[]>({ url: `/zc/product-version/simple-list` })
+  },
 }

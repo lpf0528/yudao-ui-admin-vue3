@@ -11,19 +11,40 @@
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-input v-model="formData.versionId" placeholder="请输入版本" />
+        <el-select v-model="formData.versionId" clearable placeholder="请选择版本" class="w-1/1">
+          <el-option
+            v-for="item in props.versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
       <el-form-item label="规格" prop="specId">
-        <el-input v-model="formData.specId" placeholder="请输入规格" />
+        <el-select v-model="formData.specId" clearable placeholder="请选择规格" class="w-1/1">
+          <el-option
+            v-for="item in props.specList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="一级销售价" prop="onePrice">
         <el-input v-model="formData.onePrice" placeholder="请输入一级销售价" />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
+        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
+          <el-option
+            v-for="item in props.supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -37,9 +58,18 @@
 </template>
 <script setup lang="ts">
 import { ProductApi, Product } from '@/api/zc/product'
+import { ProductVersionSimpleVO } from '@/api/zc/productversion'
+import { ProductSpecSimpleVO } from '@/api/zc/productspec'
+import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 产品 表单 */
 defineOptions({ name: 'ProductForm' })
+
+const props = defineProps<{
+  versionList: ProductVersionSimpleVO[]
+  specList: ProductSpecSimpleVO[]
+  supplierList: SupplierSimpleVO[]
+}>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
