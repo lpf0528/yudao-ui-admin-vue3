@@ -73,6 +73,37 @@
 
 ---
 
+## 执行前：补充 API 文件（接口方式）
+
+**读取对应 API 文件**（如 `src/api/zc/warehouse/index.ts`），检查是否已有 `XxxSimpleVO` 接口和 `getXxxSimpleList` 方法：
+
+- **已存在** → 直接使用，跳过此步骤
+- **不存在** → 在 API 文件中补充以下内容，并在接口注释中标注返回格式，方便下次查阅：
+
+```typescript
+/** Xxx简要信息
+ * 接口：GET /zc/xxx/simple-list
+ * 返回：{ id: number, {labelField}: string }[]
+ */
+export interface XxxSimpleVO {
+  id: number
+  {labelField}: string
+}
+```
+
+以及在 `XxxApi` 对象中追加方法：
+
+```typescript
+// 查询Xxx简单列表
+getXxxSimpleList: async () => {
+  return await request.get<XxxSimpleVO[]>({ url: `/zc/xxx/simple-list` })
+},
+```
+
+> 参考：`src/api/zc/warehouse/index.ts` — `WarehouseSimpleVO`（返回 `{ id, name }`）和 `getWarehouseSimpleList`
+
+---
+
 ## 执行前：判断场景
 
 读取目标 `XxxForm.vue` 后，**检查同目录下是否存在 `index.vue`**：
@@ -366,6 +397,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 - **场景 A 表单**：`src/views/zc/customer/CustomerForm.vue`（logisticId 字段，通过 props.logisticsList 接收）
 - **场景 A 列表页**：`src/views/zc/customer/index.vue`（logisticsList + logisticsMap，onMounted 加载，prop 传递）
 - **场景 B**：`src/views/erp/product/product/ProductForm.vue` 第 36-46 行（unitId 字段）及第 135、174、195 行
+- **API 文件补充 SimpleVO + SimpleList**：`src/api/zc/warehouse/index.ts`（WarehouseSimpleVO + getWarehouseSimpleList，含 JSDoc 返回格式注释）；`src/api/zc/supplier/index.ts`（SupplierSimpleVO + getSupplierSimpleList，含 JSDoc 返回格式注释）
 
 ### 字典方式
 - **搜索栏**：`src/views/zc/productversion/index.vue`（unitValue 字段用 `DICT_TYPE.ZC_PRODUCT_UNIT`，classify 字段用 `DICT_TYPE.ZC_PRODUCT_CLASSIFY`）
