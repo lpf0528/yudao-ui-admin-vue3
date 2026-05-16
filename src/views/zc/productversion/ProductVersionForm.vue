@@ -20,8 +20,15 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="类别ID" prop="categoryId">
-        <el-input v-model="formData.categoryId" placeholder="请输入类别ID" />
+      <el-form-item label="类别" prop="categoryId">
+        <el-select v-model="formData.categoryId" clearable placeholder="请选择类别" class="w-1/1">
+          <el-option
+            v-for="item in props.categoryList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select v-model="formData.sellingPriceType" placeholder="请选择出货价类型">
@@ -50,7 +57,14 @@
         </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
+        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
+          <el-option
+            v-for="item in props.supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" type="textarea" placeholder="请输入备注" />
@@ -65,9 +79,13 @@
 <script setup lang="ts">
 import { getIntDictOptions, getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { ProductCategorySimpleVO } from '@/api/zc/productcategory'
+import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 产品版本 表单 */
 defineOptions({ name: 'ProductVersionForm' })
+
+const props = defineProps<{ categoryList: ProductCategorySimpleVO[]; supplierList: SupplierSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

@@ -32,14 +32,20 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="类别ID" prop="categoryId">
-        <el-input
+      <el-form-item label="类别" prop="categoryId">
+        <el-select
           v-model="queryParams.categoryId"
-          placeholder="请输入类别ID"
+          placeholder="请选择类别"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in categoryList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select
@@ -72,13 +78,19 @@
         </el-select>
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input
+        <el-select
           v-model="queryParams.supplierId"
-          placeholder="请输入供应商"
+          placeholder="请选择供应商"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
@@ -195,7 +207,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductVersionForm ref="formRef" @success="getList" />
+  <ProductVersionForm ref="formRef" :categoryList="categoryList" :supplierList="supplierList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -204,6 +216,8 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
+import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductVersionForm from './ProductVersionForm.vue'
 
 /** 产品版本 列表 */
@@ -228,6 +242,8 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const categoryList = ref<ProductCategorySimpleVO[]>([])
+const supplierList = ref<SupplierSimpleVO[]>([])
 
 /** 查询列表 */
 const getList = async () => {
@@ -305,7 +321,9 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  categoryList.value = await ProductCategoryApi.getProductCategorySimpleList()
+  supplierList.value = await SupplierApi.getSupplierSimpleList()
+  await getList()
 })
 </script>
