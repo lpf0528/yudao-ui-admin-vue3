@@ -6,7 +6,8 @@
       "Skill(update-config)",
       "Read(//c/Users/admin/.claude/**)",
       "Read(//mnt/d/workplace/yudao-ui-admin-vue3/**)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(dir \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\api\\\\zc\\\\\")"
     ]
   }
 }

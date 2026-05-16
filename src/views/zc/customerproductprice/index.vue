@@ -85,9 +85,13 @@
             :row-style="{ cursor: 'pointer' }"
             style="width: 100%"
           >
+            <el-table-column type="index" label="序号" width="50px" align="center" />
             <el-table-column label="简称" prop="shortName" min-width="80px" />
-            <el-table-column label="全称" prop="name" min-width="120px" />
-            <el-table-column label="联系人" prop="contactName" min-width="80px" />
+            <el-table-column label="联系人" prop="contactName" min-width="70px" />
+            <el-table-column label="手机号" prop="mobile" min-width="110px" />
+            <el-table-column label="物流" prop="logisticName" min-width="80px" />
+            <el-table-column label="送货地址" prop="deliveryAddress" min-width="100px" />
+            <el-table-column label="关联品牌" prop="brandName" min-width="80px" />
           </el-table>
         </div>
         <div class="panel-footer">
@@ -110,14 +114,8 @@
               <span>{{ selectedCustomer.shortName || selectedCustomer.name }}</span>
               <el-tag type="primary" size="small" class="ml-8px">产品授权价</el-tag>
             </div>
-            <el-button
-              type="primary"
-              plain
-              size="small"
-              @click="addPriceRow"
-              v-hasPermi="['zc:customer-product-price:create']"
-            >
-              <Icon icon="ep:plus" class="mr-4px" /> 新增
+            <el-button type="primary" size="small" @click="saveAll" :loading="saveLoading">
+              <Icon icon="ep:check" class="mr-5px" /> 保存
             </el-button>
           </div>
           <div class="panel-body">
@@ -146,11 +144,16 @@
               </el-table-column>
               <el-table-column label="授权价格" prop="authorizedPrice" min-width="160px">
                 <template #default="{ row }">
-                  <el-input
+                  <el-input-number
                     v-if="row._editing"
                     v-model="row.authorizedPrice"
+                    :precision="2"
+                    :step="0.01"
+                    :min="0"
+                    :controls="false"
                     placeholder="请输入授权价格"
                     size="small"
+                    style="width: 100%"
                   />
                   <span v-else>{{ row.authorizedPrice }}</span>
                 </template>
@@ -179,11 +182,18 @@
                 </template>
               </el-table-column>
             </el-table>
-          </div>
-          <div class="panel-footer panel-footer--right">
-            <el-button type="primary" @click="saveAll" :loading="saveLoading">
-              <Icon icon="ep:check" class="mr-5px" /> 保存
-            </el-button>
+            <div class="mt-8px">
+              <el-button
+                type="primary"
+                plain
+                size="small"
+                @click="addPriceRow"
+                v-hasPermi="['zc:customer-product-price:create']"
+                style="width: 100%"
+              >
+                <Icon icon="ep:plus" class="mr-4px" /> 新增
+              </el-button>
+            </div>
           </div>
         </template>
         <div v-else class="empty-placeholder">
@@ -366,21 +376,21 @@ const saveAll = async () => {
     return
   }
 
+  const invalidRows = dirtyRows.filter((row) => !row.productId || row.authorizedPrice == null)
+  if (invalidRows.length > 0) {
+    message.warning('存在未填写产品或授权价格的行，请补全后再保存')
+    return
+  }
+
   saveLoading.value = true
   try {
-    for (const row of dirtyRows) {
-      const data: CustomerProductPrice = {
-        id: row.id as number,
-        customerId: row.customerId,
-        productId: row.productId,
-        authorizedPrice: row.authorizedPrice,
-      }
-      if (row._isNew) {
-        await CustomerProductPriceApi.createCustomerProductPrice(data)
-      } else {
-        await CustomerProductPriceApi.updateCustomerProductPrice(data)
-      }
-    }
+    const data: CustomerProductPrice[] = dirtyRows.map((row) => ({
+      id: row.id as number,
+      customerId: row.customerId,
+      productId: row.productId,
+      authorizedPrice: row.authorizedPrice,
+    }))
+    await CustomerProductPriceApi.createBatchCustomerProductPrice(data)
     message.success(t('common.updateSuccess'))
     await getPriceList()
   } finally {
@@ -406,7 +416,7 @@ onMounted(async () => {
 }
 
 .split-left {
-  width: 360px;
+  width: 800px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -456,9 +466,10 @@ onMounted(async () => {
   padding: 4px 8px;
 }
 
-.panel-footer--right {
+.panel-footer--left {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
   padding: 12px 16px;
 }
 

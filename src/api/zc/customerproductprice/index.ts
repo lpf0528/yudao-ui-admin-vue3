@@ -41,6 +41,11 @@ export const CustomerProductPriceApi = {
     return await request.delete({ url: `/zc/customer-product-price/delete-list?ids=${ids.join(',')}` })
   },
 
+  // 批量保存客户产品销售授权价
+  createBatchCustomerProductPrice: async (data: CustomerProductPrice[]) => {
+    return await request.post({ url: `/zc/customer-product-price/create-batch`, data })
+  },
+
   // 导出客户产品销售授权价 Excel
   exportCustomerProductPrice: async (params) => {
     return await request.download({ url: `/zc/customer-product-price/export-excel`, params })
