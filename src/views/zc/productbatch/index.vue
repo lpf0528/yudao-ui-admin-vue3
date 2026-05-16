@@ -110,15 +110,17 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="批号" align="center" prop="batchNo" />
       <el-table-column label="入库日期" align="center" prop="inboundDate" />
-      <el-table-column label="产品" align="center" prop="productId" />
+      <el-table-column label="产品" align="center" prop="productName" />
+      <el-table-column label="规格" align="center" prop="specValue" />
+      <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="入库数量" align="center" prop="inboundQuantity" />
       <el-table-column label="剩余数量" align="center" prop="quantity" />
-      <el-table-column label="仓库" align="center" prop="warehouseId" />
-      <el-table-column label="供应商" align="center" prop="supplierId" />
+      <el-table-column label="仓库" align="center" prop="warehouseName" />
+      <el-table-column label="供应商" align="center" prop="supplierName" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
