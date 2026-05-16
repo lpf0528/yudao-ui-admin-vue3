@@ -11,7 +11,14 @@
         <el-input v-model="formData.name" placeholder="请输入产品名称" />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-input v-model="formData.versionId" placeholder="请输入版本" />
+        <el-select v-model="formData.versionId" clearable placeholder="请选择版本" class="w-1/1">
+          <el-option
+            v-for="item in props.versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
@@ -20,12 +27,19 @@
         <el-input v-model="formData.aPrice" placeholder="请输入A 类销售价" />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input v-model="formData.supplierId" placeholder="请输入供应商" />
+        <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
+          <el-option
+            v-for="item in props.supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="采购类型" prop="purchaseType">
         <el-select v-model="formData.purchaseType" clearable placeholder="请选择采购类型" class="w-1/1">
           <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
+            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -44,10 +58,14 @@
 </template>
 <script setup lang="ts">
 import { ProductApi, Product } from '@/api/zc/product'
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import {getStrDictOptions, DICT_TYPE, getIntDictOptions} from '@/utils/dict'
+import { ProductVersion } from '@/api/zc/productversion'
+import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 货号档案 表单 */
 defineOptions({ name: 'ProductForm' })
+
+const props = defineProps<{ versionList: ProductVersion[]; supplierList: SupplierSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

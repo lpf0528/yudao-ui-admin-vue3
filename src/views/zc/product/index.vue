@@ -18,13 +18,19 @@
         />
       </el-form-item>
       <el-form-item label="版本" prop="versionId">
-        <el-input
+        <el-select
           v-model="queryParams.versionId"
-          placeholder="请输入版本"
+          placeholder="请选择版本"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input
@@ -36,13 +42,19 @@
         />
       </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
-        <el-input
+        <el-select
           v-model="queryParams.supplierId"
-          placeholder="请输入供应商"
+          placeholder="请选择供应商"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in supplierList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="采购类型" prop="purchaseType">
         <el-select
@@ -105,10 +117,14 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="产品名称" align="center" prop="name" />
-      <el-table-column label="版本" align="center" prop="versionId" />
+      <el-table-column label="版本" align="center" prop="versionId">
+        <template #default="scope">{{ versionIdMap[scope.row.versionId] }}</template>
+      </el-table-column>
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="A 类销售价" align="center" prop="aPrice" />
-      <el-table-column label="供应商" align="center" prop="supplierId" />
+      <el-table-column label="供应商" align="center" prop="supplierId">
+        <template #default="scope">{{ supplierIdMap[scope.row.supplierId] }}</template>
+      </el-table-column>
       <el-table-column label="采购类型" align="center" prop="purchaseType">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_PURCHASE_TYPE" :value="scope.row.purchaseType" />
@@ -154,7 +170,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductForm ref="formRef" @success="getList" />
+  <ProductForm ref="formRef" :versionList="versionList" :supplierList="supplierList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -163,6 +179,8 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/zc/product'
+import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductForm from './ProductForm.vue'
 
 /** 货号档案 列表 */
@@ -173,6 +191,14 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<Product[]>([]) // 列表的数据
+const versionList = ref<ProductVersion[]>([]) // 版本列表
+const versionIdMap = computed(() =>
+  Object.fromEntries(versionList.value.map((item) => [item.id, item.name]))
+)
+const supplierList = ref<SupplierSimpleVO[]>([]) // 供应商列表
+const supplierIdMap = computed(() =>
+  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
+)
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -262,7 +288,9 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
+  supplierList.value = await SupplierApi.getSupplierSimpleList()
+  await getList()
 })
 </script>

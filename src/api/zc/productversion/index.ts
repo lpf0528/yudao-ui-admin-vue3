@@ -53,4 +53,9 @@ export const ProductVersionApi = {
   exportProductVersion: async (params) => {
     return await request.download({ url: `/zc/product-version/export-excel`, params })
   },
+
+  // 查询产品版本简单列表
+  getProductVersionSimpleList: async () => {
+    return await request.get({ url: `/zc/product-version/simple-list` })
+  },
 }
