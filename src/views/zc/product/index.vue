@@ -102,19 +102,13 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="版本" align="center" prop="versionId">
-        <template #default="scope">{{ versionMap[scope.row.versionId] }}</template>
-      </el-table-column>
+      <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="规格" align="center" prop="specId">
-        <template #default="scope">{{ specMap[scope.row.specId] }}</template>
-      </el-table-column>
+      <el-table-column label="规格" align="center" prop="specValue" />
       <el-table-column label="一级销售价" align="center" prop="onePrice" />
-      <el-table-column label="供应商" align="center" prop="supplierId">
-        <template #default="scope">{{ supplierMap[scope.row.supplierId] }}</template>
-      </el-table-column>
+      <el-table-column label="供应商" align="center" prop="supplierName" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
@@ -190,15 +184,6 @@ const exportLoading = ref(false) // 导出的加载中
 const versionList = ref<ProductVersionSimpleVO[]>([])
 const specList = ref<ProductSpecSimpleVO[]>([])
 const supplierList = ref<SupplierSimpleVO[]>([])
-const versionMap = computed(() =>
-  Object.fromEntries(versionList.value.map((item) => [item.id, item.name]))
-)
-const specMap = computed(() =>
-  Object.fromEntries(specList.value.map((item) => [item.id, item.value]))
-)
-const supplierMap = computed(() =>
-  Object.fromEntries(supplierList.value.map((item) => [item.id, item.shortName]))
-)
 
 /** 查询列表 */
 const getList = async () => {
