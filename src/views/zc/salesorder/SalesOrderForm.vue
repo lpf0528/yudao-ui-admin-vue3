@@ -256,10 +256,10 @@
               <el-form-item label="结构">
                 <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
                   <el-option
-                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_STRUCTURE_TYPE)"
-                    :key="dict.value"
-                    :label="dict.label"
-                    :value="dict.value"
+                    v-for="item in curtainStructureList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
                   />
                 </el-select>
               </el-form-item>
@@ -274,52 +274,52 @@
                 <el-input v-model="structure.width" placeholder="宽" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">
               <el-form-item label="左转角">
                 <el-input v-model="structure.leftCorner" placeholder="左转角" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'rightCorner')">
               <el-form-item label="右转角">
                 <el-input v-model="structure.rightCorner" placeholder="右转角" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pasteDirection')">
               <el-form-item label="粘贴方向">
                 <el-input v-model="structure.pasteDirection" placeholder="粘贴方向" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
               <el-form-item label="安装工艺">
                 <el-input v-model="structure.installProcessId" placeholder="安装工艺" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
               <el-form-item label="打开方式">
                 <el-input v-model="structure.openMethod" placeholder="打开方式" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'processType')">
               <el-form-item label="加工类型">
                 <el-input v-model="structure.processType" placeholder="加工类型" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'shaping')">
               <el-form-item label="是否定型">
                 <el-input v-model="structure.shaping" placeholder="是否定型" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
               <el-form-item label="总褶数">
                 <el-input v-model="structure.pleatsNum" placeholder="总褶数" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsDistance')">
               <el-form-item label="褶距">
                 <el-input v-model="structure.pleatsDistance" placeholder="褶距" />
               </el-form-item>
             </el-col>
-            <el-col :span="3">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'skirtHeight')">
               <el-form-item label="裙摆高度">
                 <el-input v-model="structure.skirtHeight" placeholder="裙摆高度" />
               </el-form-item>
@@ -361,7 +361,14 @@
                   </el-button>
                 </el-col>
                 <el-col :span="3">
-                  <el-input v-model="material.elementId" placeholder="组件类型" size="small" />
+                  <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1">
+                    <el-option
+                      v-for="item in curtainStructureElementList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </el-select>
                 </el-col>
                 <el-col :span="3">
                   <el-input v-model="material.productId" placeholder="货号" size="small" />
@@ -404,6 +411,8 @@ import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
 import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtainpleatratio'
+import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
+import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -433,6 +442,13 @@ const handleCustomerChange = (customerId: number) => {
 
 const curtainList = ref<CurtainSimpleVO[]>([])
 const pleatRatioList = ref<CurtainPleatRatioSimpleVO[]>([])
+const curtainStructureList = ref<CurtainStructureSimpleVO[]>([])
+const curtainStructureElementList = ref<CurtainStructureElementSimpleVO[]>([])
+const hasAttr = (structureId: number | undefined, attr: string) => {
+  if (!structureId) return false
+  const found = curtainStructureList.value.find((s) => s.id === structureId)
+  return found ? found.attributes.includes(attr) : false
+}
 
 const handleCurtainChange = (curtain: CurtainWithStructures, curtainId: number) => {
   const selected = curtainList.value.find((item) => item.id === curtainId)
@@ -497,6 +513,8 @@ const open = async (type: string, id?: number) => {
   resetForm()
   curtainList.value = await CurtainApi.getCurtainSimpleList()
   pleatRatioList.value = await CurtainPleatRatioApi.getCurtainPleatRatioSimpleList()
+  curtainStructureList.value = await CurtainStructureApi.getCurtainStructureSimpleList()
+  curtainStructureElementList.value = await CurtainStructureElementApi.getCurtainStructureElementSimpleList()
   if (id) {
     formLoading.value = true
     try {
