@@ -281,7 +281,7 @@ const saveTemplate = async (curtainId: number) => {
     message.warning('结构不能为空')
     return
   }
-  await CurtainTemplateApi.createCurtainTemplate({ curtainId, structures } as unknown as CurtainTemplate)
+  await CurtainApi.createCurtainTemplate({ curtainId, structures } as unknown as CurtainTemplate)
   message.success('配置成功')
 }
 
@@ -293,7 +293,10 @@ const loadTemplate = async (curtainId: number): Promise<boolean> => {
   try {
     const data = await CurtainApi.getCurtainTemplateByCurtainId(curtainId)
     rowStructures[curtainId] = data?.structures?.length
-      ? data.structures.map((s) => ({ structureId: s.structureId, elementIds: s.elementIds ?? [] }))
+      ? data.structures.map((s) => ({
+          structureId: s.structureId,
+          elementIds: s.elementIds?.map((e) => e.elementId) ?? []
+        }))
       : []
     return true
   } catch {
