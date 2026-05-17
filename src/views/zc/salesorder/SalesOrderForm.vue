@@ -1,5 +1,5 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh">
     <el-form
       ref="formRef"
       :model="formData"
@@ -85,6 +85,7 @@
 
     <el-divider content-position="left">窗帘列表</el-divider>
     <el-button type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
+    <div style="max-height: 50vh; overflow-y: auto; padding-right: 4px">
     <el-card
       v-for="(curtain, idx) in formData.curtains"
       :key="idx"
@@ -230,6 +231,7 @@
         </el-row>
       </div>
     </el-card>
+    </div>
 
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -238,8 +240,7 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { SalesOrderApi, SalesOrder, SalesOrderCurtainApi, SalesOrderCurtain, SalesOrderStructure } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
