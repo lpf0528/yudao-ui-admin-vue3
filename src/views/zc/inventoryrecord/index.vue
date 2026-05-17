@@ -40,14 +40,14 @@
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['zc:inventory-record:create']"
-        >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
-        </el-button>
+<!--        <el-button-->
+<!--          type="primary"-->
+<!--          plain-->
+<!--          @click="openForm('create')"-->
+<!--          v-hasPermi="['zc:inventory-record:create']"-->
+<!--        >-->
+<!--          <Icon icon="ep:plus" class="mr-5px" /> 新增-->
+<!--        </el-button>-->
         <el-button
           type="success"
           plain
@@ -57,15 +57,15 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:inventory-record:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+<!--        <el-button-->
+<!--            type="danger"-->
+<!--            plain-->
+<!--            :disabled="isEmpty(checkedIds)"-->
+<!--            @click="handleDeleteBatch"-->
+<!--            v-hasPermi="['zc:inventory-record:delete']"-->
+<!--        >-->
+<!--          <Icon icon="ep:delete" class="mr-5px" /> 批量删除-->
+<!--        </el-button>-->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -95,26 +95,26 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
-        <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['zc:inventory-record:update']"
-          >
-            编辑
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['zc:inventory-record:delete']"
-          >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
+<!--      <el-table-column label="操作" align="center" min-width="120px">-->
+<!--        <template #default="scope">-->
+<!--          <el-button-->
+<!--            link-->
+<!--            type="primary"-->
+<!--            @click="openForm('update', scope.row.id)"-->
+<!--            v-hasPermi="['zc:inventory-record:update']"-->
+<!--          >-->
+<!--            编辑-->
+<!--          </el-button>-->
+<!--          <el-button-->
+<!--            link-->
+<!--            type="danger"-->
+<!--            @click="handleDelete(scope.row.id)"-->
+<!--            v-hasPermi="['zc:inventory-record:delete']"-->
+<!--          >-->
+<!--            删除-->
+<!--          </el-button>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
     </el-table>
     <!-- 分页 -->
     <Pagination
