@@ -553,10 +553,18 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  curtainList.value = await CurtainApi.getCurtainSimpleList()
-  pleatRatioList.value = await CurtainPleatRatioApi.getCurtainPleatRatioSimpleList()
-  curtainStructureList.value = await CurtainStructureApi.getCurtainStructureSimpleList()
-  curtainStructureElementList.value = await CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+  // 并发加载所有基础数据，避免串行等待
+  ;[
+    curtainList.value,
+    pleatRatioList.value,
+    curtainStructureList.value,
+    curtainStructureElementList.value
+  ] = await Promise.all([
+    CurtainApi.getCurtainSimpleList(),
+    CurtainPleatRatioApi.getCurtainPleatRatioSimpleList(),
+    CurtainStructureApi.getCurtainStructureSimpleList(),
+    CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+  ])
   if (id) {
     formLoading.value = true
     try {
