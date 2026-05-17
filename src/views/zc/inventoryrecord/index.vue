@@ -8,25 +8,43 @@
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="货号" prop="productId">
+      <el-form-item label="产品名称" prop="productName">
         <el-input
-          v-model="queryParams.productId"
-          placeholder="请输入货号"
+          v-model="queryParams.productName"
+          placeholder="请输入产品名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="批次" prop="batchId">
+      <el-form-item label="批次号" prop="batchNo">
         <el-input
-          v-model="queryParams.batchId"
-          placeholder="请输入批次"
+          v-model="queryParams.batchNo"
+          placeholder="请输入批次号"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
+      <el-form-item label="仓库ID" prop="warehouseId">
+        <el-input
+          v-model="queryParams.warehouseId"
+          placeholder="请输入仓库ID"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="版本ID" prop="versionId">
+        <el-input
+          v-model="queryParams.versionId"
+          placeholder="请输入版本ID"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="盘点时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -40,14 +58,6 @@
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-<!--        <el-button-->
-<!--          type="primary"-->
-<!--          plain-->
-<!--          @click="openForm('create')"-->
-<!--          v-hasPermi="['zc:inventory-record:create']"-->
-<!--        >-->
-<!--          <Icon icon="ep:plus" class="mr-5px" /> 新增-->
-<!--        </el-button>-->
         <el-button
           type="success"
           plain
@@ -57,15 +67,6 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-<!--        <el-button-->
-<!--            type="danger"-->
-<!--            plain-->
-<!--            :disabled="isEmpty(checkedIds)"-->
-<!--            @click="handleDeleteBatch"-->
-<!--            v-hasPermi="['zc:inventory-record:delete']"-->
-<!--        >-->
-<!--          <Icon icon="ep:delete" class="mr-5px" /> 批量删除-->
-<!--        </el-button>-->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -78,43 +79,19 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
-        @selection-change="handleRowCheckboxChange"
     >
-    <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="货号" align="center" prop="productId" />
-      <el-table-column label="批次" align="center" prop="batchId" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
+      <el-table-column label="产品名称" align="center" prop="productName" />
+      <el-table-column label="批次号" align="center" prop="batchNo" />
+      <el-table-column label="仓库" align="center" prop="warehouseName" />
+      <el-table-column label="版本名称" align="center" prop="versionName" />
+      <el-table-column label="规格" align="center" prop="specValue" />
       <el-table-column label="盘点前数量" align="center" prop="oldQuantity" />
       <el-table-column label="盘点后数量" align="center" prop="newQuantity" />
+      <el-table-column label="盈亏数量" align="center" prop="diffQuantity" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-<!--      <el-table-column label="操作" align="center" min-width="120px">-->
-<!--        <template #default="scope">-->
-<!--          <el-button-->
-<!--            link-->
-<!--            type="primary"-->
-<!--            @click="openForm('update', scope.row.id)"-->
-<!--            v-hasPermi="['zc:inventory-record:update']"-->
-<!--          >-->
-<!--            编辑-->
-<!--          </el-button>-->
-<!--          <el-button-->
-<!--            link-->
-<!--            type="danger"-->
-<!--            @click="handleDelete(scope.row.id)"-->
-<!--            v-hasPermi="['zc:inventory-record:delete']"-->
-<!--          >-->
-<!--            删除-->
-<!--          </el-button>-->
-<!--        </template>-->
-<!--      </el-table-column>-->
+      <el-table-column label="盘点人" align="center" prop="nickname" />
+      <el-table-column label="盘点时间" align="center" prop="createTime" width="180px" />
     </el-table>
     <!-- 分页 -->
     <Pagination
@@ -125,16 +102,12 @@
     />
   </ContentWrap>
 
-  <!-- 表单弹窗：添加/修改 -->
-  <InventoryRecordForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { InventoryRecordApi, InventoryRecord } from '@/api/zc/inventoryrecord'
-import InventoryRecordForm from './InventoryRecordForm.vue'
 
 /** 盘点记录 列表 */
 defineOptions({ name: 'ZcInventoryRecord' })
@@ -148,8 +121,10 @@ const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  productId: undefined,
-  batchId: undefined,
+  productName: undefined,
+  batchNo: undefined,
+  warehouseId: undefined,
+  versionId: undefined,
   createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
@@ -177,42 +152,6 @@ const handleQuery = () => {
 const resetQuery = () => {
   queryFormRef.value.resetFields()
   handleQuery()
-}
-
-/** 添加/修改操作 */
-const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await InventoryRecordApi.deleteInventoryRecord(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 批量删除盘点记录 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await InventoryRecordApi.deleteInventoryRecordList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: InventoryRecord[]) => {
-  checkedIds.value = records.map((item) => item.id!);
 }
 
 /** 导出按钮操作 */
