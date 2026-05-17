@@ -8,23 +8,33 @@
       v-loading="formLoading"
     >
       <el-form-item label="款式" prop="curtainId">
-        <el-select v-model="formData.curtainId" placeholder="请选择款式">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.curtainId" clearable placeholder="请选择款式" class="w-1/1">
+          <el-option
+            v-for="item in props.curtainList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="结构" prop="structureId">
-        <el-select v-model="formData.structureId" placeholder="请选择结构">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.structureId" clearable placeholder="请选择结构" class="w-1/1">
+          <el-option
+            v-for="item in props.structureList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="配件" prop="elementId">
-        <el-select v-model="formData.elementId" placeholder="请选择配件">
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="单位" prop="unitId">
-        <el-select v-model="formData.unitId" placeholder="请选择单位">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.elementId" clearable placeholder="请选择配件" class="w-1/1">
+          <el-option
+            v-for="item in props.elementList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
     </el-form>
@@ -36,9 +46,18 @@
 </template>
 <script setup lang="ts">
 import { CurtainTemplateApi, CurtainTemplate } from '@/api/zc/curtaintemplate'
+import { CurtainSimpleVO } from '@/api/zc/curtain'
+import { CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
+import { CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 
 /** 窗帘模板 表单 */
 defineOptions({ name: 'CurtainTemplateForm' })
+
+const props = defineProps<{
+  curtainList: CurtainSimpleVO[]
+  structureList: CurtainStructureSimpleVO[]
+  elementList: CurtainStructureElementSimpleVO[]
+}>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -52,7 +71,6 @@ const formData = ref({
   curtainId: undefined,
   structureId: undefined,
   elementId: undefined,
-  unitId: undefined
 })
 const formRules = reactive({
   curtainId: [{ required: true, message: '款式不能为空', trigger: 'change' }],
@@ -109,8 +127,7 @@ const resetForm = () => {
     id: undefined,
     curtainId: undefined,
     structureId: undefined,
-    elementId: undefined,
-    unitId: undefined
+    elementId: undefined
   }
   formRef.value?.resetFields()
 }

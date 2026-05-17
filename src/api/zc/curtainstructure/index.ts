@@ -1,6 +1,16 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 窗帘结构简要信息
+ * 接口：GET /zc/curtain-structure/simple-list
+ * 返回：{ id: number, name: string, attributes: string[] }[]
+ */
+export interface CurtainStructureSimpleVO {
+  id: number
+  name: string
+  attributes: string[]
+}
+
 /** 窗帘结构信息 */
 export interface CurtainStructure {
           id: number; // 主键
@@ -45,5 +55,10 @@ export const CurtainStructureApi = {
   // 导出窗帘结构 Excel
   exportCurtainStructure: async (params) => {
     return await request.download({ url: `/zc/curtain-structure/export-excel`, params })
+  },
+
+  // 查询窗帘结构简单列表
+  getCurtainStructureSimpleList: async () => {
+    return await request.get<CurtainStructureSimpleVO[]>({ url: `/zc/curtain-structure/simple-list` })
   }
 }

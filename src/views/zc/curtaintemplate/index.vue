@@ -15,7 +15,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in curtainList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="结构" prop="structureId">
@@ -25,7 +30,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in structureList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="配件" prop="elementId">
@@ -35,17 +45,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="单位" prop="unitId">
-        <el-select
-          v-model="queryParams.unitId"
-          placeholder="请选择单位"
-          clearable
-          class="!w-240px"
-        >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in elementList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -93,10 +98,15 @@
     >
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="款式" align="center" prop="curtainId" />
-      <el-table-column label="结构" align="center" prop="structureId" />
-      <el-table-column label="配件" align="center" prop="elementId" />
-      <el-table-column label="单位" align="center" prop="unitId" />
+      <el-table-column label="款式" align="center" prop="curtainId">
+        <template #default="scope">{{ curtainIdMap[scope.row.curtainId] }}</template>
+      </el-table-column>
+      <el-table-column label="结构" align="center" prop="structureId">
+        <template #default="scope">{{ structureIdMap[scope.row.structureId] }}</template>
+      </el-table-column>
+      <el-table-column label="配件" align="center" prop="elementId">
+        <template #default="scope">{{ elementIdMap[scope.row.elementId] }}</template>
+      </el-table-column>
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
@@ -136,7 +146,13 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <CurtainTemplateForm ref="formRef" @success="getList" />
+  <CurtainTemplateForm
+    ref="formRef"
+    :curtainList="curtainList"
+    :structureList="structureList"
+    :elementList="elementList"
+    @success="getList"
+  />
 </template>
 
 <script setup lang="ts">
@@ -144,6 +160,9 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainTemplateApi, CurtainTemplate } from '@/api/zc/curtaintemplate'
+import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
+import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
+import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import CurtainTemplateForm from './CurtainTemplateForm.vue'
 
 /** 窗帘模板 列表 */
@@ -155,13 +174,24 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<CurtainTemplate[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const curtainList = ref<CurtainSimpleVO[]>([]) // 款式列表
+const structureList = ref<CurtainStructureSimpleVO[]>([]) // 结构列表
+const elementList = ref<CurtainStructureElementSimpleVO[]>([]) // 配件列表
+const curtainIdMap = computed(() =>
+  Object.fromEntries(curtainList.value.map((item) => [item.id, item.name]))
+)
+const structureIdMap = computed(() =>
+  Object.fromEntries(structureList.value.map((item) => [item.id, item.name]))
+)
+const elementIdMap = computed(() =>
+  Object.fromEntries(elementList.value.map((item) => [item.id, item.name]))
+)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   curtainId: undefined,
   structureId: undefined,
-  elementId: undefined,
-  unitId: undefined
+  elementId: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -242,7 +272,10 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  curtainList.value = await CurtainApi.getCurtainSimpleList()
+  structureList.value = await CurtainStructureApi.getCurtainStructureSimpleList()
+  elementList.value = await CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+  await getList()
 })
 </script>
