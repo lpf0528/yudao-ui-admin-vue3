@@ -37,15 +37,15 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:curtain:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+<!--        <el-button-->
+<!--            type="danger"-->
+<!--            plain-->
+<!--            :disabled="isEmpty(checkedIds)"-->
+<!--            @click="handleDeleteBatch"-->
+<!--            v-hasPermi="['zc:curtain:delete']"-->
+<!--        >-->
+<!--          <Icon icon="ep:delete" class="mr-5px" /> 批量删除-->
+<!--        </el-button>-->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -60,52 +60,76 @@
         :stripe="true"
         :show-overflow-tooltip="true"
         @selection-change="handleRowCheckboxChange"
+        @expand-change="onExpandChange"
     >
       <el-table-column type="selection" width="55" />
       <el-table-column type="expand">
         <template #default="scope">
-          <div class="px-8 py-3 bg-gray-50">
+          <div class="px-8 py-4 bg-slate-100 border-t border-slate-200">
             <div
               v-for="(row, index) in getRowStructures(scope.row.id)"
               :key="index"
-              class="flex gap-2 mb-2 items-center"
+              class="flex gap-2 items-start mb-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-slate-200"
             >
-              <el-select
-                v-model="row.structureId"
-                placeholder="请选择结构"
-                style="width: 160px; flex-shrink: 0"
-                @change="onRowStructureChange(scope.row.id, index)"
-              >
-                <el-option
-                  v-for="s in getAvailableStructures(scope.row.id, index)"
-                  :key="s.id"
-                  :label="s.name"
-                  :value="s.id"
+              <!-- 删除 + 序号 -->
+              <div class="flex items-center gap-1 flex-shrink-0 pt-1">
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  circle
+                  plain
+                  size="small"
+                  @click="removeRowStructure(scope.row.id, index)"
                 />
-              </el-select>
-              <el-select
-                v-model="row.elementIds"
-                multiple
-                collapse-tags
-                collapse-tags-tooltip
-                :max-collapse-tags="5"
-                placeholder="请选择配件"
-                style="flex: 1"
-              >
-                <el-option
-                  v-for="e in elementList"
-                  :key="e.id"
-                  :label="e.name"
-                  :value="e.id"
-                />
-              </el-select>
-              <el-button
-                type="danger"
-                :icon="Delete"
-                circle
-                plain
-                @click="removeRowStructure(scope.row.id, index)"
-              />
+                <span class="text-sm text-gray-600 flex-shrink-0">#{{ index + 1 }}</span>
+              </div>
+              <!-- 结构 + 属性 / 配件 -->
+              <div class="flex-1">
+                <div class="flex gap-2 items-center mb-1">
+                  <el-select
+                    v-model="row.structureId"
+                    placeholder="请选择结构"
+                    style="width: 160px; flex-shrink: 0"
+                    @change="onRowStructureChange(scope.row.id, index)"
+                  >
+                    <el-option
+                      v-for="s in getAvailableStructures(scope.row.id, index)"
+                      :key="s.id"
+                      :label="s.name"
+                      :value="s.id"
+                    />
+                  </el-select>
+                  <span
+                    v-if="getSelectedStructureAttributes(row.structureId).length"
+                    class="text-xs text-gray-500 flex-shrink-0"
+                  >结构属性：</span>
+                  <el-tag
+                    v-for="attr in getSelectedStructureAttributes(row.structureId)"
+                    :key="attr"
+                    class="mr-4px"
+                    size="small"
+                  >{{ getDictLabel(DICT_TYPE.ZC_STRUCTURE_ATTRIBUTES, attr) }}</el-tag>
+                </div>
+                <!-- 配件与属性列对齐：左移 160px(结构宽) + 8px(gap) -->
+                <div class="flex items-center" style="padding-left: 168px">
+                  <el-select
+                    v-model="row.elementIds"
+                    multiple
+                    collapse-tags
+                    collapse-tags-tooltip
+                    :max-collapse-tags="5"
+                    placeholder="请选择配件"
+                    style="flex: 1"
+                  >
+                    <el-option
+                      v-for="e in elementList"
+                      :key="e.id"
+                      :label="e.name"
+                      :value="e.id"
+                    />
+                  </el-select>
+                </div>
+              </div>
             </div>
             <div class="flex gap-2 mt-1">
               <el-button type="primary" plain :icon="Plus" @click="addRowStructure(scope.row.id)">
@@ -144,16 +168,16 @@
             type="primary"
             @click="toggleExpand(scope.row)"
           >
-            配置模板
+            结构/组件配置
           </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['zc:curtain:delete']"
-          >
-            删除
-          </el-button>
+<!--          <el-button-->
+<!--            link-->
+<!--            type="danger"-->
+<!--            @click="handleDelete(scope.row.id)"-->
+<!--            v-hasPermi="['zc:curtain:delete']"-->
+<!--          >-->
+<!--            删除-->
+<!--          </el-button>-->
         </template>
       </el-table-column>
     </el-table>
@@ -171,14 +195,15 @@
 </template>
 
 <script setup lang="ts">
+import { ElLoading } from 'element-plus'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { CurtainApi, Curtain } from '@/api/zc/curtain'
-import { CurtainTemplateApi, CurtainTemplate } from '@/api/zc/curtaintemplate'
+import { CurtainApi, Curtain, CurtainTemplate } from '@/api/zc/curtain'
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 import CurtainForm from './CurtainForm.vue'
 
 /** 窗帘 列表 */
@@ -210,6 +235,8 @@ interface StructureRow {
 
 /** 每行的结构配置，key 为 curtainId */
 const rowStructures = reactive<Record<number, StructureRow[]>>({})
+/** 已加载过模板的 curtainId 集合，防止重复请求 */
+const loadedCurtainIds = new Set<number>()
 
 const getRowStructures = (curtainId: number): StructureRow[] => {
   if (!rowStructures[curtainId]) rowStructures[curtainId] = []
@@ -228,6 +255,11 @@ const getAvailableStructures = (curtainId: number, index: number) => {
 
 const onRowStructureChange = (curtainId: number, index: number) => {
   rowStructures[curtainId][index].elementIds = []
+}
+
+const getSelectedStructureAttributes = (structureId: number | undefined): string[] => {
+  if (!structureId) return []
+  return structureList.value.find((s) => s.id === structureId)?.attributes || []
 }
 
 const addRowStructure = (curtainId: number) => {
@@ -253,9 +285,44 @@ const saveTemplate = async (curtainId: number) => {
   message.success('配置成功')
 }
 
-/** 切换行展开 */
-const toggleExpand = (row: Curtain) => {
-  tableRef.value?.toggleRowExpansion(row)
+/** 加载指定 curtainId 的模板配置，返回是否成功 */
+const loadTemplate = async (curtainId: number): Promise<boolean> => {
+  if (loadedCurtainIds.has(curtainId)) return true
+  loadedCurtainIds.add(curtainId)
+  const loader = ElLoading.service({ target: tableRef.value?.$el, text: '配置加载中...' })
+  try {
+    const data = await CurtainApi.getCurtainTemplateByCurtainId(curtainId)
+    rowStructures[curtainId] = data?.structures?.length
+      ? data.structures.map((s) => ({ structureId: s.structureId, elementIds: s.elementIds ?? [] }))
+      : []
+    return true
+  } catch {
+    loadedCurtainIds.delete(curtainId)
+    rowStructures[curtainId] = []
+    message.error('配置加载失败，请重试')
+    return false
+  } finally {
+    loader.close()
+  }
+}
+
+/** 左侧展开图标点击：先收起，加载成功后再展开 */
+const onExpandChange = async (row: Curtain, expandedRows: Curtain[]) => {
+  const isExpanding = expandedRows.some((r) => r.id === row.id)
+  if (!isExpanding || loadedCurtainIds.has(row.id!)) return
+  tableRef.value?.toggleRowExpansion(row, false)
+  const ok = await loadTemplate(row.id!)
+  if (ok) tableRef.value?.toggleRowExpansion(row, true)
+}
+
+/** 操作列"结构/组件配置"按钮：加载成功后展开 */
+const toggleExpand = async (row: Curtain) => {
+  if (loadedCurtainIds.has(row.id!)) {
+    tableRef.value?.toggleRowExpansion(row)
+    return
+  }
+  const ok = await loadTemplate(row.id!)
+  if (ok) tableRef.value?.toggleRowExpansion(row, true)
 }
 
 /** 查询列表 */

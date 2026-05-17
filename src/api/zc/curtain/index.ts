@@ -21,6 +21,17 @@ export interface Curtain {
           note: string; // 备注
   }
 
+export interface CurtainTemplateStructure {
+  structureId: number
+  elementIds: number[]
+}
+
+/** 窗帘模板信息 */
+export interface CurtainTemplate {
+  id: number
+  curtainId?: number
+  structures?: CurtainTemplateStructure[]
+}
 // 窗帘 API
 export const CurtainApi = {
   // 查询窗帘分页
@@ -61,5 +72,11 @@ export const CurtainApi = {
   // 查询窗帘简单列表
   getCurtainSimpleList: async () => {
     return await request.get<CurtainSimpleVO[]>({ url: `/zc/curtain/simple-list` })
+  },
+
+
+  // 根据 curtainId 查询模板
+  getCurtainTemplateByCurtainId: async (curtainId: number) => {
+    return await request.get<CurtainTemplate>({ url: `/zc/curtain-template/get?curtainId=` + curtainId })
   }
 }
