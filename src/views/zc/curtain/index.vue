@@ -53,6 +53,7 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table
+        ref="tableRef"
         row-key="id"
         v-loading="loading"
         :data="list"
@@ -60,7 +61,61 @@
         :show-overflow-tooltip="true"
         @selection-change="handleRowCheckboxChange"
     >
-    <el-table-column type="selection" width="55" />
+      <el-table-column type="selection" width="55" />
+      <el-table-column type="expand">
+        <template #default="scope">
+          <div class="px-8 py-3 bg-gray-50">
+            <div
+              v-for="(row, index) in getRowStructures(scope.row.id)"
+              :key="index"
+              class="flex gap-2 mb-2 items-center"
+            >
+              <el-select
+                v-model="row.structureId"
+                placeholder="请选择结构"
+                style="width: 160px; flex-shrink: 0"
+                @change="onRowStructureChange(scope.row.id, index)"
+              >
+                <el-option
+                  v-for="s in getAvailableStructures(scope.row.id, index)"
+                  :key="s.id"
+                  :label="s.name"
+                  :value="s.id"
+                />
+              </el-select>
+              <el-select
+                v-model="row.elementIds"
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                :max-collapse-tags="5"
+                placeholder="请选择配件"
+                style="flex: 1"
+              >
+                <el-option
+                  v-for="e in elementList"
+                  :key="e.id"
+                  :label="e.name"
+                  :value="e.id"
+                />
+              </el-select>
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                plain
+                @click="removeRowStructure(scope.row.id, index)"
+              />
+            </div>
+            <div class="flex gap-2 mt-1">
+              <el-button type="primary" plain :icon="Plus" @click="addRowStructure(scope.row.id)">
+                添加结构
+              </el-button>
+              <el-button type="primary" @click="saveTemplate(scope.row.id)">保存</el-button>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="款式名称" align="center" prop="name" />
       <el-table-column label="默认褶倍" align="center" prop="pleatRatioValue" />
@@ -74,7 +129,7 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="150px">
         <template #default="scope">
           <el-button
             link
@@ -83,6 +138,13 @@
             v-hasPermi="['zc:curtain:update']"
           >
             编辑
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            @click="toggleExpand(scope.row)"
+          >
+            配置模板
           </el-button>
           <el-button
             link
@@ -109,28 +171,98 @@
 </template>
 
 <script setup lang="ts">
+import { Delete, Plus } from '@element-plus/icons-vue'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainApi, Curtain } from '@/api/zc/curtain'
+import { CurtainTemplateApi, CurtainTemplate } from '@/api/zc/curtaintemplate'
+import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
+import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import CurtainForm from './CurtainForm.vue'
 
 /** 窗帘 列表 */
 defineOptions({ name: 'ZcCurtain' })
 
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
+const message = useMessage()
+const { t } = useI18n()
 
-const loading = ref(true) // 列表的加载中
-const list = ref<Curtain[]>([]) // 列表的数据
-const total = ref(0) // 列表的总页数
+const loading = ref(true)
+const list = ref<Curtain[]>([])
+const total = ref(0)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined
 })
-const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+const queryFormRef = ref()
+const exportLoading = ref(false)
+const tableRef = ref()
+
+/** 结构/配件下拉数据 */
+const structureList = ref<CurtainStructureSimpleVO[]>([])
+const elementList = ref<CurtainStructureElementSimpleVO[]>([])
+
+interface StructureRow {
+  structureId: number | undefined
+  elementIds: number[]
+}
+
+/** 每行的结构配置，key 为 curtainId */
+const rowStructures = reactive<Record<number, StructureRow[]>>({})
+
+const getRowStructures = (curtainId: number): StructureRow[] => {
+  if (!rowStructures[curtainId]) rowStructures[curtainId] = []
+  return rowStructures[curtainId]
+}
+
+const getAvailableStructures = (curtainId: number, index: number) => {
+  const usedIds = new Set(
+    (rowStructures[curtainId] || [])
+      .filter((_, i) => i !== index)
+      .map((r) => r.structureId)
+      .filter((id) => id !== undefined)
+  )
+  return structureList.value.filter((s) => !usedIds.has(s.id))
+}
+
+const onRowStructureChange = (curtainId: number, index: number) => {
+  rowStructures[curtainId][index].elementIds = []
+}
+
+const addRowStructure = (curtainId: number) => {
+  getRowStructures(curtainId).push({ structureId: undefined, elementIds: [] })
+}
+
+const removeRowStructure = (curtainId: number, index: number) => {
+  rowStructures[curtainId].splice(index, 1)
+}
+
+/** 保存模板 */
+const saveTemplate = async (curtainId: number) => {
+  const structures = rowStructures[curtainId] || []
+  if (structures.length === 0) {
+    message.warning('至少添加一个结构')
+    return
+  }
+  if (structures.some((r) => r.structureId === undefined)) {
+    message.warning('结构不能为空')
+    return
+  }
+  await CurtainTemplateApi.createCurtainTemplate({ curtainId, structures } as unknown as CurtainTemplate)
+  message.success('配置成功')
+}
+
+/** 切换行展开，同时懒加载下拉数据 */
+const toggleExpand = async (row: Curtain) => {
+  if (structureList.value.length === 0) {
+    ;[structureList.value, elementList.value] = await Promise.all([
+      CurtainStructureApi.getCurtainStructureSimpleList(),
+      CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+    ])
+  }
+  tableRef.value?.toggleRowExpansion(row)
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -165,12 +297,9 @@ const openForm = (type: string, id?: number) => {
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
-    // 删除的二次确认
     await message.delConfirm()
-    // 发起删除
     await CurtainApi.deleteCurtain(id)
     message.success(t('common.delSuccess'))
-    // 刷新列表
     await getList()
   } catch {}
 }
@@ -178,26 +307,23 @@ const handleDelete = async (id: number) => {
 /** 批量删除窗帘 */
 const handleDeleteBatch = async () => {
   try {
-    // 删除的二次确认
     await message.delConfirm()
-    await CurtainApi.deleteCurtainList(checkedIds.value);
-    checkedIds.value = [];
+    await CurtainApi.deleteCurtainList(checkedIds.value)
+    checkedIds.value = []
     message.success(t('common.delSuccess'))
-    await getList();
+    await getList()
   } catch {}
 }
 
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (records: Curtain[]) => {
-  checkedIds.value = records.map((item) => item.id!);
+  checkedIds.value = records.map((item) => item.id!)
 }
 
 /** 导出按钮操作 */
 const handleExport = async () => {
   try {
-    // 导出的二次确认
     await message.exportConfirm()
-    // 发起导出
     exportLoading.value = true
     const data = await CurtainApi.exportCurtain(queryParams)
     download.excel(data, '窗帘.xls')
