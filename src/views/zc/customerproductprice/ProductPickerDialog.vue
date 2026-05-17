@@ -33,7 +33,7 @@
       highlight-current-row
       border
       max-height="400"
-      :row-style="{ cursor: 'pointer' }"
+      :row-class-name="getRowClass"
       @current-change="handleCurrentChange"
       @row-dblclick="confirmSelect"
       style="width: 100%"
@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { ProductApi } from '@/api/zc/product'
 import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 
@@ -71,6 +72,7 @@ const loading = ref(false)
 const list = ref<any[]>([])
 const total = ref(0)
 const currentRow = ref<any>(null)
+const disabledIds = ref<number[]>([])
 
 const queryParams = reactive({
   pageNo: 1,
@@ -103,17 +105,31 @@ const resetQuery = () => {
   handleQuery()
 }
 
+const getRowClass = ({ row }: { row: any }) =>
+  disabledIds.value.includes(row.id) ? 'row-disabled' : ''
+
 const handleCurrentChange = (row: any) => {
+  if (!row) return
+  if (disabledIds.value.includes(row.id)) {
+    ElMessage.warning('该商品已添加授权价，不可重复选择')
+    currentRow.value = null
+    return
+  }
   currentRow.value = row
 }
 
 const confirmSelect = (row: any) => {
   if (!row) return
+  if (disabledIds.value.includes(row.id)) {
+    ElMessage.warning('该商品已添加授权价，不可重复选择')
+    return
+  }
   emit('select', row)
   dialogVisible.value = false
 }
 
-const open = async () => {
+const open = async (ids: number[] = []) => {
+  disabledIds.value = ids
   dialogVisible.value = true
   currentRow.value = null
   Object.assign(queryParams, { pageNo: 1, name: undefined, versionId: undefined })
@@ -126,3 +142,14 @@ const open = async () => {
 
 defineExpose({ open })
 </script>
+
+<style>
+.row-disabled {
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+  background-color: #f5f7fa !important;
+}
+.row-disabled:hover > td {
+  background-color: #f5f7fa !important;
+}
+</style>

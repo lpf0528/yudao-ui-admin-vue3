@@ -123,7 +123,7 @@
               <el-table-column label="产品" prop="productName" min-width="200px">
                 <template #default="{ row }">
                   <el-input
-                    v-if="row._editing"
+                    v-if="row._editing && row._isNew"
                     :model-value="row.productName"
                     readonly
                     placeholder="双击选择商品"
@@ -347,7 +347,10 @@ const currentEditingRow = ref<PriceRow | null>(null)
 
 const openProductPicker = (row: PriceRow) => {
   currentEditingRow.value = row
-  pickerDialogRef.value?.open()
+  const disabledIds = priceList.value
+    .filter((r) => r !== row && r.productId)
+    .map((r) => r.productId as number)
+  pickerDialogRef.value?.open(disabledIds)
 }
 
 const handleProductSelect = (product: any) => {
