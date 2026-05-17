@@ -253,14 +253,8 @@ const saveTemplate = async (curtainId: number) => {
   message.success('配置成功')
 }
 
-/** 切换行展开，同时懒加载下拉数据 */
-const toggleExpand = async (row: Curtain) => {
-  if (structureList.value.length === 0) {
-    ;[structureList.value, elementList.value] = await Promise.all([
-      CurtainStructureApi.getCurtainStructureSimpleList(),
-      CurtainStructureElementApi.getCurtainStructureElementSimpleList()
-    ])
-  }
+/** 切换行展开 */
+const toggleExpand = (row: Curtain) => {
   tableRef.value?.toggleRowExpansion(row)
 }
 
@@ -334,7 +328,11 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
+onMounted(async () => {
+  ;[structureList.value, elementList.value] = await Promise.all([
+    CurtainStructureApi.getCurtainStructureSimpleList(),
+    CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+  ])
   getList()
 })
 </script>
