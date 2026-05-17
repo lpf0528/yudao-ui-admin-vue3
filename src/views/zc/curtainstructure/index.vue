@@ -17,21 +17,6 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="结构类型" prop="type">
-        <el-select
-          v-model="queryParams.type"
-          placeholder="请选择结构类型"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_STRUCTURE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -78,9 +63,14 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="结构名称" align="center" prop="name" />
-      <el-table-column label="结构类型" align="center" prop="type">
+      <el-table-column label="结构属性" align="center" prop="attributes" min-width="160px">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_STRUCTURE_TYPE" :value="scope.row.type" />
+          <el-tag
+            v-for="attr in (scope.row.attributes || [])"
+            :key="attr"
+            class="mr-4px mb-4px"
+            size="small"
+          >{{ getDictLabel(DICT_TYPE.ZC_STRUCTURE_ATTRIBUTES, attr) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
@@ -127,12 +117,12 @@
 </template>
 
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainStructureApi, CurtainStructure } from '@/api/zc/curtainstructure'
 import CurtainStructureForm from './CurtainStructureForm.vue'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 
 /** 窗帘结构 列表 */
 defineOptions({ name: 'ZcCurtainStructure' })
@@ -146,8 +136,7 @@ const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  name: undefined,
-  type: undefined
+  name: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中

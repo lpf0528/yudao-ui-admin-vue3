@@ -10,15 +10,14 @@
       <el-form-item label="结构名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入结构名称" />
       </el-form-item>
-      <el-form-item label="结构类型" prop="type">
-        <el-select v-model="formData.type" placeholder="请选择结构类型">
-          <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_STRUCTURE_TYPE)"
+      <el-form-item label="结构属性" prop="attributes">
+        <el-checkbox-group v-model="formData.attributes">
+          <el-checkbox
+            v-for="dict in getDictOptions(DICT_TYPE.ZC_STRUCTURE_ATTRIBUTES)"
             :key="dict.value"
-            :label="dict.label"
             :value="dict.value"
-          />
-        </el-select>
+          >{{ dict.label }}</el-checkbox>
+        </el-checkbox-group>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
@@ -31,8 +30,8 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { CurtainStructureApi, CurtainStructure } from '@/api/zc/curtainstructure'
+import { DICT_TYPE, getDictOptions } from '@/utils/dict'
 
 /** 窗帘结构 表单 */
 defineOptions({ name: 'CurtainStructureForm' })
@@ -47,12 +46,11 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  type: undefined,
+  attributes: [] as string[],
   note: undefined
 })
 const formRules = reactive({
-  name: [{ required: true, message: '结构名称不能为空', trigger: 'blur' }],
-  type: [{ required: true, message: '结构类型不能为空', trigger: 'change' }]
+  name: [{ required: true, message: '结构名称不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -103,7 +101,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    type: undefined,
+    attributes: [],
     note: undefined
   }
   formRef.value?.resetFields()

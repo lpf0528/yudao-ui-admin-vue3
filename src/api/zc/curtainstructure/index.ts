@@ -7,6 +7,7 @@ export interface CurtainStructure {
           name?: string; // 结构名称
           type?: string; // 结构类型
           note: string; // 备注
+          attributes?: string[]; // 窗帘结构属性
   }
 
 // 窗帘结构 API
