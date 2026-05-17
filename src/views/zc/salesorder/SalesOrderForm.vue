@@ -241,6 +241,7 @@
         </el-row>
 
         <el-divider content-position="left">结构列表</el-divider>
+        <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板...">
         <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
         <div
           v-for="(structure, sIdx) in curtain.structures"
@@ -398,6 +399,7 @@
             </template>
           </div>
         </div>
+        </div>
       </el-card>
     </div>
   </Dialog>
@@ -450,11 +452,51 @@ const hasAttr = (structureId: number | undefined, attr: string) => {
   return found ? found.attributes.includes(attr) : false
 }
 
-const handleCurtainChange = (curtain: CurtainWithStructures, curtainId: number) => {
+const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: number) => {
   const selected = curtainList.value.find((item) => item.id === curtainId)
   if (selected) {
     curtain.pleatRatioValue = selected.pleatRatioValue as any
     curtain.pleatsDistance = selected.pleatsDistance as any
+  }
+  if (!curtainId) {
+    curtain.structures = []
+    return
+  }
+  curtain.templateLoading = true
+  try {
+    const template = await CurtainApi.getCurtainTemplateByCurtainId(curtainId)
+    if (template?.structures?.length) {
+      curtain.structures = template.structures.map((tmpl) => ({
+        structureId: tmpl.structureId,
+        height: undefined,
+        width: undefined,
+        leftCorner: undefined,
+        rightCorner: undefined,
+        pasteDirection: undefined,
+        installProcessId: undefined,
+        openMethod: undefined,
+        processType: undefined,
+        shaping: undefined,
+        pleatsNum: undefined,
+        pleatsDistance: undefined,
+        skirtHeight: undefined,
+        note: undefined,
+        materials: tmpl.elementIds.map((elem) => ({
+          elementId: elem.elementId,
+          productId: undefined,
+          batchId: undefined,
+          price: undefined,
+          quantity: undefined,
+          unitValue: undefined,
+          discountRate: undefined,
+          amount: undefined,
+          note: undefined
+        }))
+      }))
+    }
+  } catch (_) {
+  } finally {
+    curtain.templateLoading = false
   }
 }
 
@@ -466,7 +508,7 @@ const dialogTitle = ref('')
 const formLoading = ref(false)
 const formType = ref('')
 type StructureWithMaterials = SalesOrderStructure & { materials: ZCSalesOrderMaterial[] }
-type CurtainWithStructures = SalesOrderCurtain & { structures: StructureWithMaterials[] }
+type CurtainWithStructures = SalesOrderCurtain & { structures: StructureWithMaterials[]; templateLoading?: boolean }
 
 const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
   id: undefined,
@@ -540,7 +582,8 @@ const addCurtain = () => {
     image2: undefined,
     mountings: undefined,
     note: undefined,
-    structures: []
+    structures: [],
+    templateLoading: false
   })
 }
 
