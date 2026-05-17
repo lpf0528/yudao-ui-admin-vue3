@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 褶倍简要信息
+ * 接口：GET /zc/curtain-pleat-ratio/simple-list
+ * 返回：{ id: number, value: number }[]
+ */
+export interface CurtainPleatRatioSimpleVO {
+  id: number
+  value: number
+}
+
 /** 褶倍信息 */
 export interface CurtainPleatRatio {
           id: number; // 主键
@@ -43,5 +52,10 @@ export const CurtainPleatRatioApi = {
   // 导出褶倍 Excel
   exportCurtainPleatRatio: async (params) => {
     return await request.download({ url: `/zc/curtain-pleat-ratio/export-excel`, params })
+  },
+
+  // 查询褶倍简单列表
+  getCurtainPleatRatioSimpleList: async () => {
+    return await request.get<CurtainPleatRatioSimpleVO[]>({ url: `/zc/curtain-pleat-ratio/simple-list` })
   }
 }

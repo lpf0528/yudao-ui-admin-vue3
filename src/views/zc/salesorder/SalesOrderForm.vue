@@ -179,8 +179,15 @@
             </el-form-item>
           </el-col>
           <el-col :span="3">
-            <el-form-item label="褶倍快照">
-              <el-input v-model="curtain.pleatRatioValue" placeholder="请输入褶倍快照" />
+            <el-form-item label="褶倍">
+              <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1">
+                <el-option
+                  v-for="item in pleatRatioList"
+                  :key="item.id"
+                  :label="item.value"
+                  :value="item.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="3">
@@ -375,6 +382,7 @@ import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
+import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtainpleatratio'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -403,6 +411,7 @@ const handleCustomerChange = (customerId: number) => {
 }
 
 const curtainList = ref<CurtainSimpleVO[]>([])
+const pleatRatioList = ref<CurtainPleatRatioSimpleVO[]>([])
 
 const handleCurtainChange = (curtain: CurtainWithStructures, curtainId: number) => {
   const selected = curtainList.value.find((item) => item.id === curtainId)
@@ -466,6 +475,7 @@ const open = async (type: string, id?: number) => {
   formType.value = type
   resetForm()
   curtainList.value = await CurtainApi.getCurtainSimpleList()
+  pleatRatioList.value = await CurtainPleatRatioApi.getCurtainPleatRatioSimpleList()
   if (id) {
     formLoading.value = true
     try {
