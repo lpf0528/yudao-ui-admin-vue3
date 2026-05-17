@@ -229,6 +229,68 @@
             </el-form-item>
           </el-col>
         </el-row>
+
+        <div class="mt-4px pl-4px">
+          <div class="flex items-center mb-2px">
+            <span class="text-xs text-gray-500 mr-8px">用料列表</span>
+            <el-button type="primary" link size="small" @click="addMaterial(structure)">+ 添加用料</el-button>
+          </div>
+          <template v-if="structure.materials.length > 0">
+            <!-- 表头 -->
+            <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
+              <el-col :span="1" />
+              <el-col :span="3">组件类型</el-col>
+              <el-col :span="3">货号</el-col>
+              <el-col :span="3">批次</el-col>
+              <el-col :span="2">单价</el-col>
+              <el-col :span="2">用料</el-col>
+              <el-col :span="2">单位</el-col>
+              <el-col :span="2">折扣率</el-col>
+              <el-col :span="2">小计</el-col>
+              <el-col :span="4">备注</el-col>
+            </el-row>
+            <!-- 每行用料 -->
+            <el-row
+              v-for="(material, mIdx) in structure.materials"
+              :key="mIdx"
+              :gutter="12"
+              class="mb-2px items-center rounded bg-blue-50 px-2px py-2px"
+            >
+              <el-col :span="1" class="flex justify-center">
+                <el-button link type="danger" size="small" @click="removeMaterial(structure, mIdx)">
+                  <Icon icon="ep:delete" />
+                </el-button>
+              </el-col>
+              <el-col :span="3">
+                <el-input v-model="material.elementId" placeholder="组件类型" size="small" />
+              </el-col>
+              <el-col :span="3">
+                <el-input v-model="material.productId" placeholder="货号" size="small" />
+              </el-col>
+              <el-col :span="3">
+                <el-input v-model="material.batchId" placeholder="批次" size="small" />
+              </el-col>
+              <el-col :span="2">
+                <el-input v-model="material.price" placeholder="单价" size="small" />
+              </el-col>
+              <el-col :span="2">
+                <el-input v-model="material.quantity" placeholder="用料" size="small" />
+              </el-col>
+              <el-col :span="2">
+                <el-input v-model="material.unitValue" placeholder="单位" size="small" />
+              </el-col>
+              <el-col :span="2">
+                <el-input v-model="material.discountRate" placeholder="折扣率" size="small" />
+              </el-col>
+              <el-col :span="2">
+                <el-input v-model="material.amount" placeholder="小计" size="small" />
+              </el-col>
+              <el-col :span="4">
+                <el-input v-model="material.note" placeholder="备注" size="small" />
+              </el-col>
+            </el-row>
+          </template>
+        </div>
       </div>
     </el-card>
     </div>
@@ -252,7 +314,8 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
-type CurtainWithStructures = SalesOrderCurtain & { structures: SalesOrderStructure[] }
+type StructureWithMaterials = SalesOrderStructure & { materials: ZCSalesOrderMaterial[] }
+type CurtainWithStructures = SalesOrderCurtain & { structures: StructureWithMaterials[] }
 
 const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
   id: undefined,
@@ -330,7 +393,7 @@ const removeCurtain = (index: number) => {
   formData.value.curtains.splice(index, 1)
 }
 
-const addStructure = (curtain: SalesOrderCurtain & { structures: SalesOrderStructure[] }) => {
+const addStructure = (curtain: CurtainWithStructures) => {
   curtain.structures.push({
     structureId: undefined,
     height: undefined,
@@ -345,15 +408,31 @@ const addStructure = (curtain: SalesOrderCurtain & { structures: SalesOrderStruc
     pleatsNum: undefined,
     pleatsDistance: undefined,
     skirtHeight: undefined,
+    note: undefined,
+    materials: []
+  })
+}
+
+const removeStructure = (curtain: CurtainWithStructures, index: number) => {
+  curtain.structures.splice(index, 1)
+}
+
+const addMaterial = (structure: StructureWithMaterials) => {
+  structure.materials.push({
+    elementId: undefined,
+    productId: undefined,
+    batchId: undefined,
+    price: undefined,
+    quantity: undefined,
+    unitValue: undefined,
+    discountRate: undefined,
+    amount: undefined,
     note: undefined
   })
 }
 
-const removeStructure = (
-  curtain: SalesOrderCurtain & { structures: SalesOrderStructure[] },
-  index: number
-) => {
-  curtain.structures.splice(index, 1)
+const removeMaterial = (structure: StructureWithMaterials, index: number) => {
+  structure.materials.splice(index, 1)
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
