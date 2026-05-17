@@ -1,14 +1,18 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+export interface CurtainTemplateStructure {
+  structureId: number
+  elementIds: number[]
+}
+
 /** 窗帘模板信息 */
 export interface CurtainTemplate {
-          id: number; // 主键
-          curtainId?: number; // 款式
-          structureId?: number; // 结构
-          elementId?: number; // 配件
-          unitId: number; // 单位
-  }
+  id: number
+  curtainId?: number
+  structures?: CurtainTemplateStructure[]
+  unitId?: number
+}
 
 // 窗帘模板 API
 export const CurtainTemplateApi = {
