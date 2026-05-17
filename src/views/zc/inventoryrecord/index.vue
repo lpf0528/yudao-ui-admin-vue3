@@ -26,23 +26,35 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="仓库ID" prop="warehouseId">
-        <el-input
+      <el-form-item label="仓库" prop="warehouseId">
+        <el-select
           v-model="queryParams.warehouseId"
-          placeholder="请输入仓库ID"
+          placeholder="请选择仓库"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in warehouseList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="版本ID" prop="versionId">
-        <el-input
+      <el-form-item label="版本" prop="versionId">
+        <el-select
           v-model="queryParams.versionId"
-          placeholder="请输入版本ID"
+          placeholder="请选择版本"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in productVersionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="盘点时间" prop="createTime">
         <el-date-picker
@@ -105,9 +117,10 @@
 </template>
 
 <script setup lang="ts">
-import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { InventoryRecordApi, InventoryRecord } from '@/api/zc/inventoryrecord'
+import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
+import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 
 /** 盘点记录 列表 */
 defineOptions({ name: 'ZcInventoryRecord' })
@@ -118,6 +131,8 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<InventoryRecord[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const warehouseList = ref<WarehouseSimpleVO[]>([]) // 仓库列表
+const productVersionList = ref<ProductVersionSimpleVO[]>([]) // 版本列表
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -170,7 +185,9 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  warehouseList.value = await WarehouseApi.getWarehouseSimpleList()
+  productVersionList.value = await ProductVersionApi.getProductVersionSimpleList()
+  await getList()
 })
 </script>
