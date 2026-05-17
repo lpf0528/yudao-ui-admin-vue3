@@ -32,30 +32,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="手机" prop="mobile">
-        <el-input
-          v-model="queryParams.mobile"
-          placeholder="请输入手机"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="品牌" prop="brandId">
-        <el-select
-          v-model="queryParams.brandId"
-          placeholder="请选择品牌"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in brandsList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="下单日期" prop="orderDate">
         <el-date-picker
           v-model="queryParams.orderDate"
@@ -65,57 +41,6 @@
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-220px"
-        />
-      </el-form-item>
-      <el-form-item label="物流" prop="logisticId">
-        <el-select
-          v-model="queryParams.logisticId"
-          placeholder="请选择物流"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in logisticsList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="收货人" prop="receiver">
-        <el-input
-          v-model="queryParams.receiver"
-          placeholder="请输入收货人"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="送货地址" prop="deliveryAddress">
-        <el-input
-          v-model="queryParams.deliveryAddress"
-          placeholder="请输入送货地址"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="运费" prop="freight">
-        <el-input
-          v-model="queryParams.freight"
-          placeholder="请输入运费"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="订单类型" prop="types">
-        <el-input
-          v-model="queryParams.types"
-          placeholder="请输入订单类型"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
         />
       </el-form-item>
       <el-form-item label="交付日期" prop="deliveryDate">
@@ -144,10 +69,10 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="状态" prop="status">
+      <el-form-item label="订单状态" prop="status">
         <el-select
           v-model="queryParams.status"
-          placeholder="请选择状态"
+          placeholder="请选择订单状态"
           clearable
           class="!w-240px"
         >
@@ -159,15 +84,13 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="确认时间" prop="confirmTime">
-        <el-date-picker
-          v-model="queryParams.confirmTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+      <el-form-item label="订单类型" prop="types">
+        <el-input
+          v-model="queryParams.types"
+          placeholder="请输入订单类型"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
         />
       </el-form-item>
       <el-form-item label="是否加急" prop="isExpedited">
@@ -180,26 +103,22 @@
           <el-option label="请选择字典生成" value="" />
         </el-select>
       </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input
-          v-model="queryParams.note"
-          placeholder="请输入备注"
+      <el-form-item label="品牌" prop="brandId">
+        <el-select
+          v-model="queryParams.brandId"
+          placeholder="请选择品牌"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in brandsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
+<!--      -->
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
