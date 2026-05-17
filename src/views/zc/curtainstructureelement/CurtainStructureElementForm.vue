@@ -10,6 +10,16 @@
       <el-form-item label="组件名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入组件名称" />
       </el-form-item>
+      <el-form-item label="关联版本" prop="versionId">
+        <el-select v-model="formData.versionId" clearable placeholder="请选择关联版本" class="w-1/1">
+          <el-option
+            v-for="item in props.versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -22,9 +32,12 @@
 </template>
 <script setup lang="ts">
 import { CurtainStructureElementApi, CurtainStructureElement } from '@/api/zc/curtainstructureelement'
+import { ProductVersionSimpleVO } from '@/api/zc/productversion'
 
 /** 窗帘结构组件 表单 */
 defineOptions({ name: 'CurtainStructureElementForm' })
+
+const props = defineProps<{ versionList: ProductVersionSimpleVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -36,7 +49,8 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  note: undefined
+  note: undefined,
+  versionId: undefined
 })
 const formRules = reactive({
   name: [{ required: true, message: '组件名称不能为空', trigger: 'blur' }]
@@ -90,7 +104,8 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    note: undefined
+    note: undefined,
+    versionId: undefined
   }
   formRef.value?.resetFields()
 }
