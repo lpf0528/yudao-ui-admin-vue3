@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 品牌简要信息
+ * 接口：GET /zc/brand/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface BrandSimpleVO {
+  id: number
+  name: string
+}
+
 /** 品牌信息 */
 export interface Brand {
           id: number; // 主键
@@ -50,6 +59,6 @@ export const BrandApi = {
 
   // 查询品牌简单列表
   getBrandSimpleList: async () => {
-    return await request.get({ url: `/zc/brand/simple-list` })
+    return await request.get<BrandSimpleVO[]>({ url: `/zc/brand/simple-list` })
   },
 }

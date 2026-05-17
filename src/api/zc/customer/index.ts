@@ -1,6 +1,22 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 客户简要信息
+ * 接口：GET /zc/customer/simple-list
+ * 返回：{ id, shortName, name, mobile, brandId, logisticId, contactName, deliveryAddress, balance }[]
+ */
+export interface CustomerSimpleVO {
+  id: number
+  shortName: string
+  name: string
+  mobile: string
+  brandId: number
+  logisticId: number
+  contactName: string
+  deliveryAddress: string
+  balance: number
+}
+
 /** 客户资料信息 */
 export interface Customer {
           id: number; // 主键
@@ -52,5 +68,10 @@ export const CustomerApi = {
   // 导出客户资料 Excel
   exportCustomer: async (params) => {
     return await request.download({ url: `/zc/customer/export-excel`, params })
+  },
+
+  // 查询客户简单列表
+  getCustomerSimpleList: async () => {
+    return await request.get<CustomerSimpleVO[]>({ url: `/zc/customer/simple-list` })
   },
 }

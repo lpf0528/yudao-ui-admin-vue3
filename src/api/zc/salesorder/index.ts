@@ -8,6 +8,7 @@ export interface SalesOrderCurtain {
   curtainId?: number
   room?: string
   pleatRatioValue?: string
+  pleatsDistance?: number
   discountRate?: number
   amount?: number
   image1?: string

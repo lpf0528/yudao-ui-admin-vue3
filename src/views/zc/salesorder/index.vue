@@ -18,13 +18,19 @@
         />
       </el-form-item>
       <el-form-item label="客户" prop="customerId">
-        <el-input
+        <el-select
           v-model="queryParams.customerId"
-          placeholder="请输入客户"
+          placeholder="请选择客户"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in customersList"
+            :key="item.id"
+            :label="`${item.shortName}/${item.contactName}`"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="手机" prop="mobile">
         <el-input
@@ -36,13 +42,19 @@
         />
       </el-form-item>
       <el-form-item label="品牌" prop="brandId">
-        <el-input
+        <el-select
           v-model="queryParams.brandId"
-          placeholder="请输入品牌"
+          placeholder="请选择品牌"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in brandsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="下单日期" prop="orderDate">
         <el-date-picker
@@ -56,13 +68,19 @@
         />
       </el-form-item>
       <el-form-item label="物流" prop="logisticId">
-        <el-input
+        <el-select
           v-model="queryParams.logisticId"
-          placeholder="请输入物流"
+          placeholder="请选择物流"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in logisticsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="收货人" prop="receiver">
         <el-input
@@ -228,11 +246,17 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="订单号" align="center" prop="orderNo" />
-      <el-table-column label="客户" align="center" prop="customerId" />
+      <el-table-column label="客户" align="center" prop="customerId">
+        <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
+      </el-table-column>
       <el-table-column label="手机" align="center" prop="mobile" />
-      <el-table-column label="品牌" align="center" prop="brandId" />
+      <el-table-column label="品牌" align="center" prop="brandId">
+        <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
+      </el-table-column>
       <el-table-column label="下单日期" align="center" prop="orderDate" />
-      <el-table-column label="物流" align="center" prop="logisticId" />
+      <el-table-column label="物流" align="center" prop="logisticId">
+        <template #default="scope">{{ logisticIdMap[scope.row.logisticId] }}</template>
+      </el-table-column>
       <el-table-column label="收货人" align="center" prop="receiver" />
       <el-table-column label="送货地址" align="center" prop="deliveryAddress" />
       <el-table-column label="运费" align="center" prop="freight" />
@@ -303,7 +327,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <SalesOrderForm ref="formRef" @success="getList" />
+  <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -312,6 +336,9 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
+import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
 import SalesOrderForm from './SalesOrderForm.vue'
 
 /** 销售订单 列表 */
@@ -323,6 +350,18 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<SalesOrder[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const customersList = ref<CustomerSimpleVO[]>([]) // 客户列表
+const brandsList = ref<BrandSimpleVO[]>([]) // 品牌列表
+const logisticsList = ref<LogisticsSimpleVO[]>([]) // 物流列表
+const customerIdMap = computed(() =>
+  Object.fromEntries(customersList.value.map((item) => [item.id, `${item.shortName}/${item.contactName}`]))
+)
+const brandIdMap = computed(() =>
+  Object.fromEntries(brandsList.value.map((item) => [item.id, item.name]))
+)
+const logisticIdMap = computed(() =>
+  Object.fromEntries(logisticsList.value.map((item) => [item.id, item.name]))
+)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -423,7 +462,12 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  ;[customersList.value, brandsList.value, logisticsList.value] = await Promise.all([
+    CustomerApi.getCustomerSimpleList(),
+    BrandApi.getBrandSimpleList(),
+    LogisticsApi.getLogisticsSimpleList(),
+  ])
+  await getList()
 })
 </script>

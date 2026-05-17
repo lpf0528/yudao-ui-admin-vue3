@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 物流公司简要信息
+ * 接口：GET /zc/logistics/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface LogisticsSimpleVO {
+  id: number
+  name: string
+}
+
 /** 物流公司信息 */
 export interface Logistics {
           id: number; // 主键
@@ -51,6 +60,6 @@ export const LogisticsApi = {
 
   // 查询物流公司简单列表
   getLogisticsSimpleList: async () => {
-    return await request.get({ url: `/zc/logistics/simple-list` })
+    return await request.get<LogisticsSimpleVO[]>({ url: `/zc/logistics/simple-list` })
   },
 }

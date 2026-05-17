@@ -1,6 +1,17 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 窗帘简要信息
+ * 接口：GET /zc/curtain/simple-list
+ * 返回：{ id: number, name: string, pleatRatioValue: number | null, pleatsDistance: number | null }[]
+ */
+export interface CurtainSimpleVO {
+  id: number
+  name: string
+  pleatRatioValue: number | null
+  pleatsDistance: number | null
+}
+
 /** 窗帘信息 */
 export interface Curtain {
           id: number; // 主键
@@ -45,5 +56,10 @@ export const CurtainApi = {
   // 导出窗帘 Excel
   exportCurtain: async (params) => {
     return await request.download({ url: `/zc/curtain/export-excel`, params })
+  },
+
+  // 查询窗帘简单列表
+  getCurtainSimpleList: async () => {
+    return await request.get<CurtainSimpleVO[]>({ url: `/zc/curtain/simple-list` })
   }
 }

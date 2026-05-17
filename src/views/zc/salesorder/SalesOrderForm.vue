@@ -28,25 +28,53 @@
       <el-row :gutter="16">
         <el-col :span="4">
           <el-form-item label="客户" prop="customerId">
-            <el-input v-model="formData.customerId" placeholder="请输入客户" />
+            <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-1/1" @change="handleCustomerChange">
+              <el-option
+                v-for="item in props.customersList"
+                :key="item.id"
+                :label="`${item.shortName}/${item.contactName}`"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">
+          <el-form-item label="账户余额">
+            <span class="text-sm font-medium" :class="selectedCustomerBalance < 0 ? 'text-red-500' : 'text-gray-700'">
+              {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
+            </span>
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
           <el-form-item label="手机" prop="mobile">
             <el-input v-model="formData.mobile" placeholder="请输入手机" />
           </el-form-item>
         </el-col>
         <el-col :span="4">
           <el-form-item label="品牌" prop="brandId">
-            <el-input v-model="formData.brandId" placeholder="请输入品牌" />
+            <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-1/1">
+              <el-option
+                v-for="item in props.brandsList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">
           <el-form-item label="物流" prop="logisticId">
-            <el-input v-model="formData.logisticId" placeholder="请输入物流" />
+            <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-1/1">
+              <el-option
+                v-for="item in props.logisticsList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">
           <el-form-item label="收货人" prop="receiver">
             <el-input v-model="formData.receiver" placeholder="请输入收货人" />
           </el-form-item>
@@ -56,7 +84,7 @@
             <el-date-picker
               v-model="formData.orderDate"
               type="date"
-              value-format="x"
+              value-format="YYYY-MM-DD"
               placeholder="选择下单日期"
               class="!w-full"
             />
@@ -77,7 +105,7 @@
             <el-date-picker
               v-model="formData.deliveryDate"
               type="date"
-              value-format="x"
+              value-format="YYYY-MM-DD"
               placeholder="选择交付日期"
               class="!w-full"
             />
@@ -95,7 +123,7 @@
         </el-col>
         <el-col :span="4">
           <el-form-item label="总金额" prop="totalAmount">
-            <el-input v-model="formData.totalAmount" placeholder="请输入总金额" />
+            <el-input v-model="formData.totalAmount" disabled />
           </el-form-item>
         </el-col>
       </el-row>
@@ -129,7 +157,20 @@
         <el-row :gutter="16">
           <el-col :span="3">
             <el-form-item label="款式">
-              <el-input v-model="curtain.curtainId" placeholder="请输入款式" />
+              <el-select
+                v-model="curtain.curtainId"
+                clearable
+                placeholder="请选择款式"
+                class="w-1/1"
+                @change="(val) => handleCurtainChange(curtain, val)"
+              >
+                <el-option
+                  v-for="item in curtainList"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="3">
@@ -140,6 +181,11 @@
           <el-col :span="3">
             <el-form-item label="褶倍快照">
               <el-input v-model="curtain.pleatRatioValue" placeholder="请输入褶倍快照" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="褶距">
+              <el-input v-model="curtain.pleatsDistance" placeholder="请输入褶距" />
             </el-form-item>
           </el-col>
           <el-col :span="3">
@@ -325,9 +371,46 @@
 
 <script setup lang="ts">
 import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
+import { CustomerSimpleVO } from '@/api/zc/customer'
+import { BrandSimpleVO } from '@/api/zc/brand'
+import { LogisticsSimpleVO } from '@/api/zc/logistics'
+import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
+
+const props = defineProps<{ customersList: CustomerSimpleVO[]; brandsList: BrandSimpleVO[]; logisticsList: LogisticsSimpleVO[] }>()
+
+const selectedCustomerBalance = ref<number | null>(null)
+
+const todayStr = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const handleCustomerChange = (customerId: number) => {
+  const customer = props.customersList.find((item) => item.id === customerId)
+  if (!customer) {
+    selectedCustomerBalance.value = null
+    return
+  }
+  formData.value.mobile = customer.mobile
+  formData.value.brandId = customer.brandId
+  formData.value.logisticId = customer.logisticId
+  formData.value.receiver = customer.contactName
+  formData.value.deliveryAddress = customer.deliveryAddress
+  selectedCustomerBalance.value = customer.balance
+}
+
+const curtainList = ref<CurtainSimpleVO[]>([])
+
+const handleCurtainChange = (curtain: CurtainWithStructures, curtainId: number) => {
+  const selected = curtainList.value.find((item) => item.id === curtainId)
+  if (selected) {
+    curtain.pleatRatioValue = selected.pleatRatioValue as any
+    curtain.pleatsDistance = selected.pleatsDistance as any
+  }
+}
 
 const { t } = useI18n()
 const message = useMessage()
@@ -345,7 +428,7 @@ const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
   customerId: undefined,
   mobile: undefined,
   brandId: undefined,
-  orderDate: undefined,
+  orderDate: todayStr() as any,
   logisticId: undefined,
   receiver: undefined,
   deliveryAddress: undefined,
@@ -367,10 +450,7 @@ const formRules = reactive({
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
-  freight: [{ required: true, message: '运费不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
-  discountAmount: [{ required: true, message: '优惠金额不能为空', trigger: 'blur' }],
-  totalAmount: [{ required: true, message: '总金额不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '状态不能为空', trigger: 'blur' }],
   isExpedited: [{ required: true, message: '是否加急不能为空', trigger: 'blur' }]
@@ -385,6 +465,7 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  curtainList.value = await CurtainApi.getCurtainSimpleList()
   if (id) {
     formLoading.value = true
     try {
@@ -403,6 +484,7 @@ const addCurtain = () => {
     curtainId: undefined,
     room: undefined,
     pleatRatioValue: undefined,
+    pleatsDistance: undefined,
     discountRate: undefined,
     amount: undefined,
     image1: undefined,
@@ -532,7 +614,7 @@ const resetForm = () => {
     customerId: undefined,
     mobile: undefined,
     brandId: undefined,
-    orderDate: undefined,
+    orderDate: todayStr() as any,
     logisticId: undefined,
     receiver: undefined,
     deliveryAddress: undefined,
@@ -548,6 +630,7 @@ const resetForm = () => {
     note: undefined,
     curtains: []
   }
+  selectedCustomerBalance.value = null
   formRef.value?.resetFields()
 }
 </script>
