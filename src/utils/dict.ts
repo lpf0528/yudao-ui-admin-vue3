@@ -120,6 +120,7 @@ export enum DICT_TYPE {
   ZC_PRODUCT_PURCHASE_TYPE = 'zc_product_purchase_type',
   ZC_STRUCTURE_TYPE = 'zc_structure_type',
   ZC_STRUCTURE_ATTRIBUTES = 'zc_structure_attributes',
+  ZC_CURTAIN_MOUNTINGS = 'zc_curtain_mountings',
   ZC_ORDER_PAY_STATUS = 'zc_order_pay_status',
   ZC_ORDER_STATUS = 'zc_order_status',
   ZC_ORDER_TYPE = 'zc_order_type',

@@ -210,24 +210,32 @@
               <el-input v-model="curtain.amount" placeholder="请输入应收金额" />
             </el-form-item>
           </el-col>
-          <el-col :span="3">
-            <el-form-item label="配件多选">
-              <el-input v-model="curtain.mountings" placeholder="请输入配件多选" />
-            </el-form-item>
-          </el-col>
+
           <el-col :span="6">
             <el-form-item label="备注">
-              <el-input v-model="curtain.note" placeholder="请输入备注" type="textarea" :rows="1" />
+              <el-input v-model="curtain.note" placeholder="请输入备注"  :rows="1" />
             </el-form-item>
           </el-col>
           <el-col :span="3">
             <el-form-item label="图片1">
-              <UploadImg v-model="curtain.image1" />
+              <UploadImg v-model="curtain.image1" width="90px" height="90px" />
             </el-form-item>
           </el-col>
           <el-col :span="3">
             <el-form-item label="图片2">
-              <UploadImg v-model="curtain.image2" />
+              <UploadImg v-model="curtain.image2" width="90px" height="90px" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="配件">
+              <el-select v-model="curtain.mountings" multiple clearable placeholder="请选择配件" class="w-1/1">
+                <el-option
+                  v-for="dict in getStrDictOptions(DICT_TYPE.ZC_CURTAIN_MOUNTINGS)"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>

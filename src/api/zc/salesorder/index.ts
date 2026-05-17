@@ -13,7 +13,7 @@ export interface SalesOrderCurtain {
   amount?: number
   image1?: string
   image2?: string
-  mountings?: string
+  mountings?: string[]
   note?: string
 }
 /** 窗帘结构信息 */
