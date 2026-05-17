@@ -1,6 +1,41 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 窗帘行信息 */
+export interface SalesOrderCurtain {
+  id?: number
+  orderId?: number
+  curtainId?: number
+  room?: string
+  pleatRatioValue?: string
+  discountRate?: number
+  amount?: number
+  image1?: string
+  image2?: string
+  mountings?: string
+  note?: string
+}
+/** 窗帘结构信息 */
+export interface SalesOrderStructure {
+  id?: number
+  orderId?: number
+  orderCurtainId?: number
+  structureId?: number
+  height?: number
+  width?: number
+  leftCorner?: number
+  rightCorner?: number
+  pasteDirection?: string
+  installProcessId?: number
+  openMethod?: string
+  processType?: string
+  shaping?: string
+  pleatsNum?: number
+  pleatsDistance?: number
+  skirtHeight?: number
+  note?: string
+}
+
 /** 销售订单信息 */
 export interface SalesOrder {
           id: number; // 主键

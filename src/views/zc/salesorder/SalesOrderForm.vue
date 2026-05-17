@@ -82,6 +82,155 @@
         </el-col>
       </el-row>
     </el-form>
+
+    <el-divider content-position="left">窗帘列表</el-divider>
+    <el-button type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
+    <el-card
+      v-for="(curtain, idx) in formData.curtains"
+      :key="idx"
+      class="mt-8px"
+      shadow="never"
+    >
+      <template #header>
+        <div class="flex justify-between items-center">
+          <span>窗帘 #{{ idx + 1 }}</span>
+          <el-button link type="danger" @click="removeCurtain(idx)">删除</el-button>
+        </div>
+      </template>
+      <el-row :gutter="16">
+        <el-col :span="3">
+          <el-form-item label="款式">
+            <el-input v-model="curtain.curtainId" placeholder="请输入款式" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="房间">
+            <el-input v-model="curtain.room" placeholder="请输入房间" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="褶倍快照">
+            <el-input v-model="curtain.pleatRatioValue" placeholder="请输入褶倍快照" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="折扣率">
+            <el-input v-model="curtain.discountRate" placeholder="请输入折扣率" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="应收金额">
+            <el-input v-model="curtain.amount" placeholder="请输入应收金额" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="配件多选">
+            <el-input v-model="curtain.mountings" placeholder="请输入配件多选" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="备注">
+            <el-input v-model="curtain.note" placeholder="请输入备注" type="textarea" :rows="1" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="图片1">
+            <UploadImg v-model="curtain.image1" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="3">
+          <el-form-item label="图片2">
+            <UploadImg v-model="curtain.image2" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-divider content-position="left">结构列表</el-divider>
+      <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
+      <div
+        v-for="(structure, sIdx) in curtain.structures"
+        :key="sIdx"
+        class="mt-8px border border-solid border-gray-200 rounded p-12px"
+      >
+        <div class="flex justify-between items-center mb-8px">
+          <span class="text-sm font-medium text-gray-600">结构 #{{ sIdx + 1 }}</span>
+          <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
+        </div>
+        <el-row :gutter="16">
+          <el-col :span="3">
+            <el-form-item label="结构">
+              <el-input v-model="structure.structureId" placeholder="结构" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="高">
+              <el-input v-model="structure.height" placeholder="高" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="宽">
+              <el-input v-model="structure.width" placeholder="宽" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="左转角">
+              <el-input v-model="structure.leftCorner" placeholder="左转角" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="右转角">
+              <el-input v-model="structure.rightCorner" placeholder="右转角" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="粘贴方向">
+              <el-input v-model="structure.pasteDirection" placeholder="粘贴方向" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="安装工艺">
+              <el-input v-model="structure.installProcessId" placeholder="安装工艺" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="打开方式">
+              <el-input v-model="structure.openMethod" placeholder="打开方式" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="加工类型">
+              <el-input v-model="structure.processType" placeholder="加工类型" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="是否定型">
+              <el-input v-model="structure.shaping" placeholder="是否定型" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="总褶数">
+              <el-input v-model="structure.pleatsNum" placeholder="总褶数" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="褶距">
+              <el-input v-model="structure.pleatsDistance" placeholder="褶距" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-form-item label="裙摆高度">
+              <el-input v-model="structure.skirtHeight" placeholder="裙摆高度" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item label="备注">
+              <el-input v-model="structure.note" placeholder="备注" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+    </el-card>
+
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
       <el-button @click="dialogVisible = false">取 消</el-button>
@@ -90,7 +239,7 @@
 </template>
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrder, SalesOrderCurtainApi, SalesOrderCurtain, SalesOrderStructure } from '@/api/zc/salesorder'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -102,7 +251,9 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
-const formData = ref({
+type CurtainWithStructures = SalesOrderCurtain & { structures: SalesOrderStructure[] }
+
+const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
   id: undefined,
   orderNo: undefined,
   customerId: undefined,
@@ -121,7 +272,8 @@ const formData = ref({
   status: undefined,
   confirmTime: undefined,
   isExpedited: undefined,
-  note: undefined
+  note: undefined,
+  curtains: []
 })
 const formRules = reactive({
   orderNo: [{ required: true, message: '订单号不能为空', trigger: 'blur' }],
@@ -148,11 +300,59 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await SalesOrderApi.getSalesOrder(id)
+      const order = await SalesOrderApi.getSalesOrder(id)
+      const curtains = await SalesOrderCurtainApi.getSalesOrderCurtainList(id)
+      formData.value = { ...order, curtains: curtains || [] }
     } finally {
       formLoading.value = false
     }
   }
+}
+
+const addCurtain = () => {
+  formData.value.curtains.push({
+    orderId: formData.value.id,
+    curtainId: undefined,
+    room: undefined,
+    pleatRatioValue: undefined,
+    discountRate: undefined,
+    amount: undefined,
+    image1: undefined,
+    image2: undefined,
+    mountings: undefined,
+    note: undefined,
+    structures: []
+  })
+}
+
+const removeCurtain = (index: number) => {
+  formData.value.curtains.splice(index, 1)
+}
+
+const addStructure = (curtain: SalesOrderCurtain & { structures: SalesOrderStructure[] }) => {
+  curtain.structures.push({
+    structureId: undefined,
+    height: undefined,
+    width: undefined,
+    leftCorner: undefined,
+    rightCorner: undefined,
+    pasteDirection: undefined,
+    installProcessId: undefined,
+    openMethod: undefined,
+    processType: undefined,
+    shaping: undefined,
+    pleatsNum: undefined,
+    pleatsDistance: undefined,
+    skirtHeight: undefined,
+    note: undefined
+  })
+}
+
+const removeStructure = (
+  curtain: SalesOrderCurtain & { structures: SalesOrderStructure[] },
+  index: number
+) => {
+  curtain.structures.splice(index, 1)
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
@@ -201,7 +401,8 @@ const resetForm = () => {
     status: undefined,
     confirmTime: undefined,
     isExpedited: undefined,
-    note: undefined
+    note: undefined,
+    curtains: []
   }
   formRef.value?.resetFields()
 }
