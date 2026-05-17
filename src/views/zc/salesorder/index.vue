@@ -85,13 +85,19 @@
         </el-select>
       </el-form-item>
       <el-form-item label="订单类型" prop="types">
-        <el-input
+        <el-select
           v-model="queryParams.types"
-          placeholder="请输入订单类型"
+          placeholder="请选择订单类型"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_ORDER_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="是否加急" prop="isExpedited">
         <el-select
@@ -100,7 +106,8 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option label="是" :value="1" />
+          <el-option label="否" :value="0" />
         </el-select>
       </el-form-item>
       <el-form-item label="品牌" prop="brandId">
@@ -118,7 +125,36 @@
           />
         </el-select>
       </el-form-item>
-<!--      -->
+      <el-form-item label="版本" prop="versionId">
+        <el-select
+          v-model="queryParams.versionId"
+          placeholder="请选择版本"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="item in productVersionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="产品" prop="productId">
+        <el-select
+          v-model="queryParams.productId"
+          placeholder="请选择产品"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="item in productsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -258,6 +294,8 @@ import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
+import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
+import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import SalesOrderForm from './SalesOrderForm.vue'
 
 /** 销售订单 列表 */
@@ -272,6 +310,8 @@ const total = ref(0) // 列表的总页数
 const customersList = ref<CustomerSimpleVO[]>([]) // 客户列表
 const brandsList = ref<BrandSimpleVO[]>([]) // 品牌列表
 const logisticsList = ref<LogisticsSimpleVO[]>([]) // 物流列表
+const productVersionList = ref<ProductVersionSimpleVO[]>([]) // 产品版本列表
+const productsList = ref<ProductSimpleVO[]>([]) // 产品列表
 const customerIdMap = computed(() =>
   Object.fromEntries(customersList.value.map((item) => [item.id, `${item.shortName}/${item.contactName}`]))
 )
@@ -300,10 +340,21 @@ const queryParams = reactive({
   confirmTime: [],
   isExpedited: undefined,
   note: undefined,
-  createTime: []
+  createTime: [],
+  versionId: undefined,
+  productId: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+/** 版本变化时重新加载产品列表，并清空已选产品 */
+watch(
+  () => queryParams.versionId,
+  async (versionId) => {
+    queryParams.productId = undefined
+    productsList.value = await ProductApi.getProductSimpleList(versionId)
+  }
+)
 
 /** 查询列表 */
 const getList = async () => {
@@ -382,10 +433,12 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  ;[customersList.value, brandsList.value, logisticsList.value] = await Promise.all([
+  ;[customersList.value, brandsList.value, logisticsList.value, productVersionList.value, productsList.value] = await Promise.all([
     CustomerApi.getCustomerSimpleList(),
     BrandApi.getBrandSimpleList(),
     LogisticsApi.getLogisticsSimpleList(),
+    ProductVersionApi.getProductVersionSimpleList(),
+    ProductApi.getProductSimpleList(),
   ])
   await getList()
 })

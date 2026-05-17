@@ -60,8 +60,8 @@ export const ProductApi = {
     return await request.download({ url: `/zc/product/export-excel`, params })
   },
 
-  // 查询产品简单列表
-  getProductSimpleList: async () => {
-    return await request.get<ProductSimpleVO[]>({ url: `/zc/product/simple-list` })
+  // 查询产品简单列表，可按版本过滤
+  getProductSimpleList: async (versionId?: number) => {
+    return await request.get<ProductSimpleVO[]>({ url: `/zc/product/simple-list`, params: { versionId } })
   },
 }
