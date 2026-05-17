@@ -241,7 +241,14 @@
           <el-row :gutter="16">
             <el-col :span="3">
               <el-form-item label="结构">
-                <el-input v-model="structure.structureId" placeholder="结构" />
+                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_STRUCTURE_TYPE)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="3">
@@ -377,6 +384,7 @@
 </template>
 
 <script setup lang="ts">
+import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'

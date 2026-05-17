@@ -118,6 +118,10 @@ export enum DICT_TYPE {
   ZC_SELLING_PRICE_TYPE = 'zc_selling_price_type',
   ZC_PRODUCT_CLASSIFY = 'zc_product_classify',
   ZC_PRODUCT_PURCHASE_TYPE = 'zc_product_purchase_type',
+  ZC_STRUCTURE_TYPE = 'zc_structure_type',
+  ZC_ORDER_PAY_STATUS = 'zc_order_pay_status',
+  ZC_ORDER_STATUS = 'zc_order_status',
+  ZC_ORDER_TYPE = 'zc_order_type',
 
 
   // ========== SYSTEM 模块 ==========
