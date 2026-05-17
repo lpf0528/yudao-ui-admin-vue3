@@ -241,7 +241,7 @@
         </el-row>
 
         <el-divider content-position="left">结构列表</el-divider>
-        <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板...">
+        <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板..." style="min-height: 60px">
         <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
         <div
           v-for="(structure, sIdx) in curtain.structures"
