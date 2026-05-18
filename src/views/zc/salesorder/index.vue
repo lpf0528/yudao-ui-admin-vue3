@@ -352,6 +352,7 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const checkedIds = ref<number[]>([]) // 表格勾选的行 ID 列表
 
 /** 版本变化时重新加载产品列表，并清空已选产品 */
 watch(
@@ -417,7 +418,6 @@ const handleDeleteBatch = async () => {
   } catch {}
 }
 
-const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (records: SalesOrder[]) => {
   checkedIds.value = records.map((item) => item.id!);
 }
