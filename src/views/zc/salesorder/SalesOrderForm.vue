@@ -556,7 +556,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
 
 const formData = ref(getInitFormData())
 
-const formRules = reactive({
+const formRules = {
   orderNo: [{ required: true, message: '订单号不能为空', trigger: 'blur' }],
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
@@ -565,7 +565,7 @@ const formRules = reactive({
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '状态不能为空', trigger: 'blur' }],
   isExpedited: [{ required: true, message: '是否加急不能为空', trigger: 'blur' }]
-})
+}
 
 const formRef = ref()
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
