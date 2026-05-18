@@ -242,7 +242,13 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="是否加急" align="center" prop="isExpedited" />
+      <el-table-column label="是否加急" align="center" prop="isExpedited">
+        <template #default="scope">
+          <el-tag :type="scope.row.isExpedited ? 'danger' : 'info'" size="small">
+            {{ scope.row.isExpedited ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
