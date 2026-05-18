@@ -414,7 +414,14 @@
                   <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input v-model="material.unitValue" placeholder="单位" size="small" />
+                  <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
+                    <el-option
+                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
+                      :key="dict.value"
+                      :label="dict.label"
+                      :value="dict.value"
+                    />
+                  </el-select>
                 </el-col>
                 <el-col :span="2">
                   <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
