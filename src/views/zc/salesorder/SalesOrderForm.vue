@@ -531,7 +531,7 @@ const formType = ref('')
 type StructureWithMaterials = SalesOrderStructure & { materials: ZCSalesOrderMaterial[] }
 type CurtainWithStructures = SalesOrderCurtain & { structures: StructureWithMaterials[]; templateLoading?: boolean }
 
-const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
+const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } => ({
   id: undefined,
   orderNo: undefined,
   customerId: undefined,
@@ -553,6 +553,8 @@ const formData = ref<SalesOrder & { curtains: CurtainWithStructures[] }>({
   note: undefined,
   curtains: []
 })
+
+const formData = ref(getInitFormData())
 
 const formRules = reactive({
   orderNo: [{ required: true, message: '订单号不能为空', trigger: 'blur' }],
@@ -807,28 +809,7 @@ const submitForm = async () => {
 }
 
 const resetForm = () => {
-  formData.value = {
-    id: undefined,
-    orderNo: undefined,
-    customerId: undefined,
-    mobile: undefined,
-    brandId: undefined,
-    orderDate: todayStr() as any,
-    logisticId: undefined,
-    receiver: undefined,
-    deliveryAddress: undefined,
-    freight: undefined,
-    types: undefined,
-    discountAmount: undefined,
-    totalAmount: undefined,
-    deliveryDate: undefined,
-    payStatus: undefined,
-    status: undefined,
-    confirmTime: undefined,
-    isExpedited: undefined,
-    note: undefined,
-    curtains: []
-  }
+  formData.value = getInitFormData()
   selectedCustomerBalance.value = null
   formRef.value?.resetFields()
 }
