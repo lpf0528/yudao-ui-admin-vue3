@@ -208,7 +208,7 @@
       <el-table-column label="品牌" align="center" prop="brandId">
         <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
       </el-table-column>
-      <el-table-column label="下单日期" align="center" prop="orderDate" />
+      <el-table-column label="下单日期" align="center" prop="orderDate" :formatter="dateFormatter" width="120px" />
       <el-table-column label="物流" align="center" prop="logisticId">
         <template #default="scope">{{ logisticIdMap[scope.row.logisticId] }}</template>
       </el-table-column>
@@ -224,7 +224,7 @@
       <el-table-column label="总金额" align="center" prop="totalAmount" />
       <el-table-column label="订单金额" align="center" prop="amount" />
       <el-table-column label="已收金额" align="center" prop="amountReceived" />
-      <el-table-column label="交付日期" align="center" prop="deliveryDate" />
+      <el-table-column label="交付日期" align="center" prop="deliveryDate" :formatter="dateFormatter" width="120px" />
       <el-table-column label="结算状态" align="center" prop="payStatus">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="scope.row.payStatus" />
