@@ -326,9 +326,9 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'is_shaping')">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'isShaping')">
               <el-form-item label="是否定型">
-                <el-input v-model="structure.is_shaping" placeholder="是否定型" />
+                <el-input v-model="structure.isShaping" placeholder="是否定型" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
@@ -428,7 +428,7 @@
 
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -497,7 +497,7 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
         installProcessId: undefined,
         openMethod: undefined,
         processType: undefined,
-        is_shaping: undefined,
+        isShaping: undefined,
         pleatsNum: undefined,
         pleatsDistance: undefined,
         skirtHeight: undefined,
@@ -568,6 +568,70 @@ const formRules = reactive({
 const formRef = ref()
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
 
+/**
+ * mountings 后端以 JSON 字符串存储（如 "[\"加铅块\"]"），
+ * 前端 el-select multiple 需要 string[]，做一次安全 parse
+ */
+const parseMountings = (raw: unknown): string[] => {
+  if (Array.isArray(raw)) return raw as string[]
+  if (typeof raw !== 'string' || !raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 将后端 detail 接口返回的 curtains 转换为表单内部结构：
+ * - mountings: JSON 字符串 → string[]
+ * - 补充 templateLoading 等仅前端使用的内部字段
+ */
+const transformDetailCurtains = (
+  details: SalesOrderDetailCurtain[] | undefined
+): CurtainWithStructures[] => {
+  if (!details?.length) return []
+  return details.map((c) => ({
+    id: c.id,
+    orderId: c.orderId,
+    curtainId: c.curtainId,
+    room: c.room,
+    pleatRatioValue: c.pleatRatioValue,
+    pleatsDistance: c.pleatsDistance,
+    discountRate: c.discountRate,
+    amount: c.amount,
+    image1: c.image1,
+    image2: c.image2,
+    mountings: parseMountings(c.mountings),
+    note: c.note,
+    curtainName: c.curtainName,
+    templateLoading: false,
+    structures: (c.structures ?? []).map((s) => ({
+      id: s.id,
+      orderId: s.orderId,
+      orderCurtainId: s.orderCurtainId,
+      structureId: s.structureId,
+      height: s.height,
+      width: s.width,
+      leftCorner: s.leftCorner,
+      rightCorner: s.rightCorner,
+      pasteDirection: s.pasteDirection,
+      installProcessId: s.installProcessId,
+      openMethod: s.openMethod,
+      processType: s.processType,
+      isShaping: s.isShaping,
+      pleatsNum: s.pleatsNum,
+      pleatsDistance: s.pleatsDistance,
+      skirtHeight: s.skirtHeight,
+      note: s.note,
+      structureName: s.structureName,
+      installProcessName: s.installProcessName,
+      materials: (s.materials ?? []).map((m) => ({ ...m }))
+    }))
+  }))
+}
+
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
   dialogVisible.value = true
@@ -586,12 +650,23 @@ const open = async (type: string, id?: number) => {
     CurtainStructureApi.getCurtainStructureSimpleList(),
     CurtainStructureElementApi.getCurtainStructureElementSimpleList()
   ])
+  // 编辑模式：并发拉取订单基础信息 + 三层明细，回填到表单
   if (id) {
     formLoading.value = true
     try {
-      const order = await SalesOrderApi.getSalesOrder(id)
-      const curtains = await SalesOrderCurtainApi.getSalesOrderCurtainList(id)
-      formData.value = { ...order, curtains: curtains || [] }
+      const [order, details] = await Promise.all([
+        SalesOrderApi.getSalesOrder(id),
+        SalesOrderApi.getSalesOrderDetail(id)
+      ])
+      formData.value = {
+        ...(order as SalesOrder),
+        curtains: transformDetailCurtains(details)
+      }
+      // 同步客户余额展示（编辑模式下也需要显示）
+      if (order?.customerId) {
+        const customer = props.customersList.find((item) => item.id === order.customerId)
+        selectedCustomerBalance.value = customer?.balance ?? null
+      }
     } finally {
       formLoading.value = false
     }
@@ -631,7 +706,7 @@ const addStructure = (curtain: CurtainWithStructures) => {
     installProcessId: undefined,
     openMethod: undefined,
     processType: undefined,
-    is_shaping: undefined,
+    isShaping: undefined,
     pleatsNum: undefined,
     pleatsDistance: undefined,
     skirtHeight: undefined,
