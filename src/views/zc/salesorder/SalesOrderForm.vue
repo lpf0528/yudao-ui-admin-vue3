@@ -305,9 +305,9 @@
                 <el-input v-model="structure.processType" placeholder="加工类型" />
               </el-form-item>
             </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'shaping')">
+            <el-col :span="3" v-if="hasAttr(structure.structureId, 'is_shaping')">
               <el-form-item label="是否定型">
-                <el-input v-model="structure.shaping" placeholder="是否定型" />
+                <el-input v-model="structure.is_shaping" placeholder="是否定型" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
