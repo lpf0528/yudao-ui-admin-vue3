@@ -120,7 +120,7 @@
               </el-form-item>
             </el-col>
             <el-col :span="6">
-              <el-form-item label="总金额" prop="totalAmount">
+              <el-form-item label="金额" prop="totalAmount">
                 <el-input v-model="formData.totalAmount" disabled />
               </el-form-item>
             </el-col>
