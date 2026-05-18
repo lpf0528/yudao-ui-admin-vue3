@@ -26,8 +26,14 @@
       <el-row :gutter="16">
         <!-- 左侧 2/3：三行字段 -->
         <el-col :span="16">
-          <!-- 第一行：客户、手机、品牌、下单日期 -->
+          <!-- 第一行：订单号、客户、手机、品牌、下单日期 -->
           <el-row :gutter="16">
+            <el-col :span="6">
+              <el-form-item label="订单号" prop="orderNo">
+                <!-- 订单号由后端自动生成，前端只读展示，创建和编辑均不可修改 -->
+                <el-input v-model="formData.orderNo" disabled placeholder="" />
+              </el-form-item>
+            </el-col>
             <el-col :span="6">
               <el-form-item label="客户" prop="customerId">
                 <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-1/1" @change="handleCustomerChange">
@@ -43,18 +49,6 @@
             <el-col :span="6">
               <el-form-item label="手机" prop="mobile">
                 <el-input v-model="formData.mobile" placeholder="请输入手机" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="6">
-              <el-form-item label="品牌" prop="brandId">
-                <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-1/1">
-                  <el-option
-                    v-for="item in props.brandsList"
-                    :key="item.id"
-                    :label="item.name"
-                    :value="item.id"
-                  />
-                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="6">
@@ -89,20 +83,9 @@
                 <el-input v-model="formData.receiver" placeholder="请输入收货人" />
               </el-form-item>
             </el-col>
-            <el-col :span="6">
+            <el-col :span="12">
               <el-form-item label="送货地址" prop="deliveryAddress">
                 <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="6">
-              <el-form-item label="交付日期" prop="deliveryDate">
-                <el-date-picker
-                  v-model="formData.deliveryDate"
-                  type="date"
-                  value-format="YYYY-MM-DD"
-                  placeholder="选择交付日期"
-                  class="!w-full"
-                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -120,8 +103,8 @@
               </el-form-item>
             </el-col>
             <el-col :span="6">
-              <el-form-item label="金额" prop="totalAmount">
-                <el-input v-model="formData.totalAmount" disabled />
+              <el-form-item label="金额" prop="amount">
+                <el-input v-model="formData.amount" disabled />
               </el-form-item>
             </el-col>
             <el-col :span="6">
@@ -129,6 +112,29 @@
                 <span class="text-sm font-medium" :class="selectedCustomerBalance < 0 ? 'text-red-500' : 'text-gray-700'">
                   {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
                 </span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌" prop="brandId">
+                <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-1/1">
+                  <el-option
+                    v-for="item in props.brandsList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="交付日期" prop="deliveryDate">
+                <el-date-picker
+                  v-model="formData.deliveryDate"
+                  type="date"
+                  value-format="YYYY-MM-DD"
+                  placeholder="选择交付日期"
+                  class="!w-full"
+                />
               </el-form-item>
             </el-col>
           </el-row>
