@@ -563,7 +563,6 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
 const formData = ref(getInitFormData())
 
 const formRules = {
-  orderNo: [{ required: true, message: '订单号不能为空', trigger: 'blur' }],
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
