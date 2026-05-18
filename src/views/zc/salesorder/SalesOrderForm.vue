@@ -632,13 +632,8 @@ const transformDetailCurtains = (
   }))
 }
 
-/** 打开弹窗 */
-const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
-  dialogTitle.value = t('action.' + type)
-  formType.value = type
-  resetForm()
-  // 并发加载所有基础数据，避免串行等待
+/** 挂载时一次性加载不常变动的基础配置数据 */
+onMounted(async () => {
   ;[
     curtainList.value,
     pleatRatioList.value,
@@ -650,6 +645,14 @@ const open = async (type: string, id?: number) => {
     CurtainStructureApi.getCurtainStructureSimpleList(),
     CurtainStructureElementApi.getCurtainStructureElementSimpleList()
   ])
+})
+
+/** 打开弹窗 */
+const open = async (type: string, id?: number) => {
+  dialogVisible.value = true
+  dialogTitle.value = t('action.' + type)
+  formType.value = type
+  resetForm()
   // 编辑模式：并发拉取订单基础信息 + 三层明细，回填到表单
   if (id) {
     formLoading.value = true
