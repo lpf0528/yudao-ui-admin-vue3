@@ -288,7 +288,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" />
+  <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -302,6 +302,7 @@ import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
 import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
+import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import SalesOrderForm from './SalesOrderForm.vue'
 
 /** 销售订单 列表 */
@@ -318,6 +319,7 @@ const brandsList = ref<BrandSimpleVO[]>([]) // 品牌列表
 const logisticsList = ref<LogisticsSimpleVO[]>([]) // 物流列表
 const productVersionList = ref<ProductVersionSimpleVO[]>([]) // 产品版本列表
 const productsList = ref<ProductSimpleVO[]>([]) // 产品列表
+const installProcessList = ref<CurtainInstallProcessSimpleVO[]>([]) // 安装工艺列表
 const customerIdMap = computed(() =>
   Object.fromEntries(customersList.value.map((item) => [item.id, `${item.shortName}/${item.contactName}`]))
 )
@@ -439,12 +441,13 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  ;[customersList.value, brandsList.value, logisticsList.value, productVersionList.value, productsList.value] = await Promise.all([
+  ;[customersList.value, brandsList.value, logisticsList.value, productVersionList.value, productsList.value, installProcessList.value] = await Promise.all([
     CustomerApi.getCustomerSimpleList(),
     BrandApi.getBrandSimpleList(),
     LogisticsApi.getLogisticsSimpleList(),
     ProductVersionApi.getProductVersionSimpleList(),
     ProductApi.getProductSimpleList(),
+    CurtainInstallProcessApi.getCurtainInstallProcessSimpleList(),
   ])
   await getList()
 })

@@ -301,7 +301,14 @@
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
               <el-form-item label="安装工艺">
-                <el-input-number v-model="structure.installProcessId" placeholder="安装工艺" :controls="false" class="!w-full" />
+                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1">
+                  <el-option
+                    v-for="item in props.installProcessList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
@@ -438,11 +445,12 @@ import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
 import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtainpleatratio'
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
+import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
 
-const props = defineProps<{ customersList: CustomerSimpleVO[]; brandsList: BrandSimpleVO[]; logisticsList: LogisticsSimpleVO[] }>()
+const props = defineProps<{ customersList: CustomerSimpleVO[]; brandsList: BrandSimpleVO[]; logisticsList: LogisticsSimpleVO[]; installProcessList: CurtainInstallProcessSimpleVO[] }>()
 
 const selectedCustomerBalance = ref<number | null>(null)
 

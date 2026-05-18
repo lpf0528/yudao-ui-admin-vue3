@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 安装工艺简要信息
+ * 接口：GET /zc/curtain-install-process/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface CurtainInstallProcessSimpleVO {
+  id: number
+  name: string
+}
+
 /** 安装工艺信息 */
 export interface CurtainInstallProcess {
           id: number; // 主键
@@ -10,6 +19,11 @@ export interface CurtainInstallProcess {
 
 // 安装工艺 API
 export const CurtainInstallProcessApi = {
+  // 查询安装工艺简单列表
+  getCurtainInstallProcessSimpleList: async () => {
+    return await request.get<CurtainInstallProcessSimpleVO[]>({ url: `/zc/curtain-install-process/simple-list` })
+  },
+
   // 查询安装工艺分页
   getCurtainInstallProcessPage: async (params: any) => {
     return await request.get({ url: `/zc/curtain-install-process/page`, params })
