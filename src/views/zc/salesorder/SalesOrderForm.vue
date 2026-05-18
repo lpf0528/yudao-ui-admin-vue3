@@ -111,12 +111,12 @@
           <el-row :gutter="16">
             <el-col :span="6">
               <el-form-item label="运费" prop="freight">
-                <el-input v-model="formData.freight" placeholder="请输入运费" />
+                <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="6">
               <el-form-item label="优惠金额" prop="discountAmount">
-                <el-input v-model="formData.discountAmount" placeholder="请输入优惠金额" />
+                <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="6">
@@ -197,17 +197,17 @@
           </el-col>
           <el-col :span="3">
             <el-form-item label="褶距">
-              <el-input v-model="curtain.pleatsDistance" placeholder="请输入褶距" />
+              <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" />
             </el-form-item>
           </el-col>
           <el-col :span="3">
             <el-form-item label="折扣率">
-              <el-input v-model="curtain.discountRate" placeholder="请输入折扣率" />
+              <el-input-number v-model="curtain.discountRate" placeholder="请输入折扣率" :controls="false" class="!w-full" />
             </el-form-item>
           </el-col>
           <el-col :span="3">
             <el-form-item label="应收金额">
-              <el-input v-model="curtain.amount" placeholder="请输入应收金额" />
+              <el-input-number v-model="curtain.amount" placeholder="请输入应收金额" :controls="false" class="!w-full" />
             </el-form-item>
           </el-col>
 
@@ -267,12 +267,12 @@
             </el-col>
             <el-col :span="3">
               <el-form-item label="高">
-                <el-input v-model="structure.height" placeholder="高" />
+                <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="3">
               <el-form-item label="宽">
-                <el-input v-model="structure.width" placeholder="宽" />
+                <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">
@@ -299,7 +299,7 @@
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
               <el-form-item label="安装工艺">
-                <el-input v-model="structure.installProcessId" placeholder="安装工艺" />
+                <el-input-number v-model="structure.installProcessId" placeholder="安装工艺" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
@@ -333,17 +333,17 @@
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
               <el-form-item label="总褶数">
-                <el-input v-model="structure.pleatsNum" placeholder="总褶数" />
+                <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsDistance')">
               <el-form-item label="褶距">
-                <el-input v-model="structure.pleatsDistance" placeholder="褶距" />
+                <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'skirtHeight')">
               <el-form-item label="裙摆高度">
-                <el-input v-model="structure.skirtHeight" placeholder="裙摆高度" />
+                <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" />
               </el-form-item>
             </el-col>
             <el-col :span="9">
@@ -393,25 +393,25 @@
                   </el-select>
                 </el-col>
                 <el-col :span="3">
-                  <el-input v-model="material.productId" placeholder="货号" size="small" />
+                  <el-input-number v-model="material.productId" placeholder="货号" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="3">
-                  <el-input v-model="material.batchId" placeholder="批次" size="small" />
+                  <el-input-number v-model="material.batchId" placeholder="批次" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input v-model="material.price" placeholder="单价" size="small" />
+                  <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input v-model="material.quantity" placeholder="用料" size="small" />
+                  <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
                   <el-input v-model="material.unitValue" placeholder="单位" size="small" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input v-model="material.discountRate" placeholder="折扣率" size="small" />
+                  <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input v-model="material.amount" placeholder="小计" size="small" />
+                  <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="4">
                   <el-input v-model="material.note" placeholder="备注" size="small" />
