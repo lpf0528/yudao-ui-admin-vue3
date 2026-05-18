@@ -287,7 +287,14 @@
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'pasteDirection')">
               <el-form-item label="粘贴方向">
-                <el-input v-model="structure.pasteDirection" placeholder="粘贴方向" />
+                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
@@ -297,12 +304,26 @@
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
               <el-form-item label="打开方式">
-                <el-input v-model="structure.openMethod" placeholder="打开方式" />
+                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'processType')">
               <el-form-item label="加工类型">
-                <el-input v-model="structure.processType" placeholder="加工类型" />
+                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="3" v-if="hasAttr(structure.structureId, 'is_shaping')">
@@ -476,7 +497,7 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
         installProcessId: undefined,
         openMethod: undefined,
         processType: undefined,
-        shaping: undefined,
+        is_shaping: undefined,
         pleatsNum: undefined,
         pleatsDistance: undefined,
         skirtHeight: undefined,
@@ -610,7 +631,7 @@ const addStructure = (curtain: CurtainWithStructures) => {
     installProcessId: undefined,
     openMethod: undefined,
     processType: undefined,
-    shaping: undefined,
+    is_shaping: undefined,
     pleatsNum: undefined,
     pleatsDistance: undefined,
     skirtHeight: undefined,

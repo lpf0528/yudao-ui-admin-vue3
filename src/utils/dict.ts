@@ -124,6 +124,9 @@ export enum DICT_TYPE {
   ZC_ORDER_PAY_STATUS = 'zc_order_pay_status',
   ZC_ORDER_STATUS = 'zc_order_status',
   ZC_ORDER_TYPE = 'zc_order_type',
+  ZC_OPEN_METHOD = 'zc_open_method',
+  ZC_PASTE_DIRECTION = 'zc_paste_direction',
+  ZC_PROCESS_TYPE='zc_process_type',
 
 
   // ========== SYSTEM 模块 ==========

@@ -30,7 +30,7 @@ export interface SalesOrderStructure {
   installProcessId?: number
   openMethod?: string
   processType?: string
-  shaping?: string
+  is_shaping?: string
   pleatsNum?: number
   pleatsDistance?: number
   skirtHeight?: number
