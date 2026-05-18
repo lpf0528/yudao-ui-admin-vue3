@@ -402,10 +402,30 @@
                   </el-select>
                 </el-col>
                 <el-col :span="3">
-                  <el-input-number v-model="material.productId" placeholder="货号" size="small" :controls="false" class="!w-full" />
+                  <!-- 显示产品名称，回车或双击打开批次选择弹窗 -->
+                  <div @dblclick="batchSelectRef?.open(material)">
+                    <el-input
+                      v-model="material.productName"
+                      placeholder="货号(回车/双击选择)"
+                      size="small"
+                      class="!w-full"
+                      readonly
+                      @keyup.enter="batchSelectRef?.open(material)"
+                    />
+                  </div>
                 </el-col>
                 <el-col :span="3">
-                  <el-input-number v-model="material.batchId" placeholder="批次" size="small" :controls="false" class="!w-full" />
+                  <!-- 显示批次号，回车或双击打开批次选择弹窗 -->
+                  <div @dblclick="batchSelectRef?.open(material)">
+                    <el-input
+                      v-model="material.batchNo"
+                      placeholder="批次(回车/双击选择)"
+                      size="small"
+                      class="!w-full"
+                      readonly
+                      @keyup.enter="batchSelectRef?.open(material)"
+                    />
+                  </div>
                 </el-col>
                 <el-col :span="2">
                   <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
@@ -439,6 +459,8 @@
         </div>
       </el-card>
     </div>
+    <!-- 批次选择弹窗 -->
+    <ProductBatchSelectDialog ref="batchSelectRef" />
   </Dialog>
 </template>
 
@@ -453,6 +475,7 @@ import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtai
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
+import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -584,6 +607,7 @@ const formRules = {
 }
 
 const formRef = ref()
+const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
 
 /**
