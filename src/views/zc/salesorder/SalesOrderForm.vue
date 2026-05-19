@@ -867,6 +867,17 @@ const handleAudit = async () => {
 
 const submitForm = async () => {
   await formRef.value.validate()
+  // 至少需要一个窗帘才能保存
+  if (!formData.value.curtains || formData.value.curtains.length === 0) {
+    message.warning('请至少添加一个窗帘')
+    return
+  }
+  // 每个窗帘明细必须选择窗帘（curtainId 不能为空）
+  const emptyCurtainIndex = formData.value.curtains.findIndex((c) => !c.curtainId)
+  if (emptyCurtainIndex !== -1) {
+    message.warning(`第 ${emptyCurtainIndex + 1} 个窗帘明细未选择窗帘，请先选择窗帘`)
+    return
+  }
   formLoading.value = true
   try {
     const data = formData.value as unknown as SalesOrder
