@@ -197,7 +197,11 @@
           </div>
         </template>
         <div v-else class="empty-placeholder">
-          <el-empty description="请从左侧选择客户查看授权价" :image-size="120" />
+          <el-empty :image-size="120">
+            <template #description>
+              <span class="empty-tip">请从左侧选择客户查看授权价</span>
+            </template>
+          </el-empty>
         </div>
       </div>
 
@@ -251,6 +255,8 @@ const getCustomerList = async () => {
 
 const handleQuery = () => {
   customerQueryParams.pageNo = 1
+  selectedCustomer.value = null
+  priceList.value = []
   getCustomerList()
 }
 
@@ -481,6 +487,12 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.empty-tip {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-color-primary);
 }
 </style>
 
