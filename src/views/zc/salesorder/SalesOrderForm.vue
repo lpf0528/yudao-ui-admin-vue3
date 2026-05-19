@@ -147,7 +147,7 @@
 
     <el-divider content-position="left">窗帘列表</el-divider>
     <el-button type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
-    <div style="max-height: 50vh; overflow-y: auto; padding-right: 4px">
+    <div style="max-height: 65vh; overflow-y: auto; padding-right: 4px">
       <el-card
         v-for="(curtain, idx) in formData.curtains"
         :key="idx"
@@ -157,7 +157,7 @@
       >
         <template #header>
           <div class="flex justify-between items-center">
-            <span>窗帘 #{{ idx + 1 }}</span>
+            <span class="text-sm font-semibold">窗帘 #{{ idx + 1 }}</span>
             <el-button link type="danger" @click="removeCurtain(idx)">删除</el-button>
           </div>
         </template>
@@ -209,7 +209,8 @@
           </el-col>
           <el-col :span="3">
             <el-form-item label="金额">
-              <el-input-number v-model="curtain.amount" placeholder="请输入金额" :controls="false" class="!w-full" />
+              <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
+              <el-input-number v-model="curtain.amount" placeholder="金额" :controls="false" class="!w-full" disabled />
             </el-form-item>
           </el-col>
 
@@ -251,7 +252,7 @@
           class="mt-8px border border-solid border-gray-200 rounded p-12px"
         >
           <div class="flex justify-between items-center mb-8px">
-            <span class="text-sm font-medium text-gray-600">结构 #{{ sIdx + 1 }}</span>
+            <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
             <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
           </div>
           <el-row :gutter="16">
@@ -364,8 +365,8 @@
 
           <div class="mt-4px pl-4px">
             <div class="flex items-center mb-2px">
-              <span class="text-xs text-gray-500 mr-8px">用料列表</span>
-              <el-button type="primary" link size="small" @click="addMaterial(structure)">+ 添加用料</el-button>
+              <span class="text-sm font-medium text-gray-600 mr-8px">用料列表</span>
+              <el-button type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
             </div>
             <template v-if="structure.materials.length > 0">
               <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
@@ -783,21 +784,37 @@ const removeMaterial = (structure: StructureWithMaterials, index: number) => {
   structure.materials.splice(index, 1)
 }
 
-/** 监听用料字段变化，自动计算小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1） */
+/** 四舍五入保留两位小数 */
+const round2 = (val: number) => Math.round(val * 100) / 100
+
+/**
+ * 监听整个表单变化，自动计算：
+ * 1. 用料小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1），保留两位小数
+ * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率，保留两位小数
+ * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，保留两位小数
+ */
 watch(
-  () => formData.value.curtains,
-  (curtains) => {
-    curtains.forEach((curtain) => {
+  () => formData.value,
+  (form) => {
+    let orderTotal = 0
+    form.curtains.forEach((curtain) => {
+      let curtainTotal = 0
       curtain.structures.forEach((structure) => {
         structure.materials.forEach((material) => {
           // 单价或用料有值时才计算，避免全空时显示 0
           material.amount =
             material.price != null || material.quantity != null
-              ? (material.price ?? 0) * (material.quantity ?? 0) * (material.discountRate ?? 1)
+              ? round2((material.price ?? 0) * (material.quantity ?? 0) * (material.discountRate ?? 1))
               : undefined
+          curtainTotal += material.amount ?? 0
         })
       })
+      // 窗帘金额 = 所有用料小计之和 × 窗帘折扣率
+      curtain.amount = curtainTotal > 0 ? round2(curtainTotal * (curtain.discountRate ?? 1)) : undefined
+      orderTotal += curtain.amount ?? 0
     })
+    // 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额
+    form.amount = round2(orderTotal + (form.freight ?? 0) - (form.discountAmount ?? 0)) as any
   },
   { deep: true }
 )
