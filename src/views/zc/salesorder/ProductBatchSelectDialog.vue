@@ -58,6 +58,7 @@
       <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="单价" align="center" prop="productPrice" />
+      <el-table-column label="计量单位" align="center" prop="unitValue" />
       <el-table-column label="剩余数量" align="center" prop="quantity" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
       <el-table-column label="供应商" align="center" prop="supplierName" />
@@ -95,6 +96,7 @@ interface ProductBatchRow extends ProductBatch {
   warehouseName?: string // 仓库名称
   supplierName?: string  // 供应商名称
   productPrice?: number  // 产品售价（回填到单价）
+  unitValue?: string     // 计量单位
 }
 
 defineOptions({ name: 'ProductBatchSelectDialog' })
@@ -188,6 +190,7 @@ const handleSelect = async (row: ProductBatchRow) => {
   currentMaterial.value.productName = row.productName
   currentMaterial.value.batchId = row.id
   currentMaterial.value.batchNo = row.batchNo
+  currentMaterial.value.unitValue = row.unitValue
   // 先用 productPrice 初始化，若无则清空
   currentMaterial.value.price = row.productPrice ?? undefined
 
