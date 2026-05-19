@@ -161,6 +161,17 @@ export const SalesOrderApi = {
     return await request.put({ url: `/zc/sales-order/cancel-confirm`, params: { id } })
   },
 
+  /**
+   * 标记销售订单为加急
+   * 对应后端：PUT /zc/sales-order/expedited?orderId=xxx
+   *
+   * @param orderId 销售订单 ID
+   * @returns 是否成功
+   */
+  expeditedSalesOrder: async (orderId: number) => {
+    return await request.put({ url: `/zc/sales-order/expedited`, params: { orderId } })
+  },
+
   // 导出销售订单 Excel
   exportSalesOrder: async (params) => {
     return await request.download({ url: `/zc/sales-order/export-excel`, params })

@@ -13,7 +13,8 @@
       <el-button v-if="formData.id && formData.status === 'confirmed'" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <el-button type="warning" @click="handleExpedite" :disabled="!formData.id || formLoading">
+      <!-- 加急按钮：订单已保存且未加急时显示 -->
+      <el-button v-if="formData.id && !formData.isExpedited" type="warning" @click="handleExpedite" :loading="formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
     </div>
@@ -858,9 +859,10 @@ const handleCancelConfirm = async () => {
 const handleExpedite = async () => {
   formLoading.value = true
   try {
-    formData.value.isExpedited = true
-    await SalesOrderApi.updateSalesOrder(formData.value as unknown as SalesOrder)
+    // 调用专用加急接口，后端负责标记 is_expedited=true
+    await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
     message.success('设置加急成功')
+    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
