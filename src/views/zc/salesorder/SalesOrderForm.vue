@@ -5,9 +5,13 @@
       <el-button type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
-      <!-- 确认订单按钮：仅对已保存的订单（有 id）显示 -->
-      <el-button v-if="formData.id" type="success" @click="handleConfirm" :loading="formLoading">
+      <!-- 确认订单按钮：订单已保存且未确认时显示 -->
+      <el-button v-if="formData.id && formData.status !== 'confirmed'" type="success" @click="handleConfirm" :loading="formLoading">
         <Icon icon="ep:circle-check" class="mr-4px" />确认订单
+      </el-button>
+      <!-- 取消确认按钮：订单已确认时显示 -->
+      <el-button v-if="formData.id && formData.status === 'confirmed'" type="danger" @click="handleCancelConfirm" :loading="formLoading">
+        <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
       <el-button type="warning" @click="handleExpedite" :disabled="!formData.id || formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
@@ -831,6 +835,19 @@ const handleConfirm = async () => {
     // 调用专用确认接口，后端负责状态流转（unconfirmed → confirmed）并扣减客户余额
     await SalesOrderApi.confirmSalesOrder(formData.value.id!)
     message.success('确认订单成功')
+    dialogVisible.value = false
+    emit('success')
+  } finally {
+    formLoading.value = false
+  }
+}
+
+const handleCancelConfirm = async () => {
+  formLoading.value = true
+  try {
+    // 调用取消确认接口，后端负责状态回退（confirmed → unconfirmed）并退回客户余额
+    await SalesOrderApi.cancelConfirmSalesOrder(formData.value.id!)
+    message.success('取消确认成功')
     dialogVisible.value = false
     emit('success')
   } finally {

@@ -150,6 +150,17 @@ export const SalesOrderApi = {
     return await request.put({ url: `/zc/sales-order/confirm`, params: { id } })
   },
 
+  /**
+   * 取消确认销售订单（状态 confirmed → unconfirmed，退回客户余额）
+   * 对应后端：PUT /zc/sales-order/cancel-confirm?id=xxx
+   *
+   * @param id 销售订单 ID
+   * @returns 是否成功
+   */
+  cancelConfirmSalesOrder: async (id: number) => {
+    return await request.put({ url: `/zc/sales-order/cancel-confirm`, params: { id } })
+  },
+
   // 导出销售订单 Excel
   exportSalesOrder: async (params) => {
     return await request.download({ url: `/zc/sales-order/export-excel`, params })
