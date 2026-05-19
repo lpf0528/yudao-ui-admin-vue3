@@ -164,7 +164,7 @@
           @click="openForm('create')"
           v-hasPermi="['zc:sales-order:create']"
         >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
+          <Icon icon="ep:plus" class="mr-5px" /> 成品单
         </el-button>
         <el-button
           type="success"
