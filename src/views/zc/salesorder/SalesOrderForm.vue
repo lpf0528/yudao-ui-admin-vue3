@@ -208,8 +208,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="3">
-            <el-form-item label="应收金额">
-              <el-input-number v-model="curtain.amount" placeholder="请输入应收金额" :controls="false" class="!w-full" />
+            <el-form-item label="金额">
+              <el-input-number v-model="curtain.amount" placeholder="请输入金额" :controls="false" class="!w-full" />
             </el-form-item>
           </el-col>
 
@@ -447,7 +447,8 @@
                   <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
                 </el-col>
                 <el-col :span="2">
-                  <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" />
+                  <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
+                  <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
                 </el-col>
                 <el-col :span="4">
                   <el-input v-model="material.note" placeholder="备注" size="small" />
@@ -781,6 +782,25 @@ const addMaterial = (structure: StructureWithMaterials) => {
 const removeMaterial = (structure: StructureWithMaterials, index: number) => {
   structure.materials.splice(index, 1)
 }
+
+/** 监听用料字段变化，自动计算小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1） */
+watch(
+  () => formData.value.curtains,
+  (curtains) => {
+    curtains.forEach((curtain) => {
+      curtain.structures.forEach((structure) => {
+        structure.materials.forEach((material) => {
+          // 单价或用料有值时才计算，避免全空时显示 0
+          material.amount =
+            material.price != null || material.quantity != null
+              ? (material.price ?? 0) * (material.quantity ?? 0) * (material.discountRate ?? 1)
+              : undefined
+        })
+      })
+    })
+  },
+  { deep: true }
+)
 
 defineExpose({ open })
 
