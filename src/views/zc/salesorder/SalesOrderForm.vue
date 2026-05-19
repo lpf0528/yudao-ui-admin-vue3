@@ -5,14 +5,12 @@
       <el-button type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
-      <el-button type="success" @click="handleConfirm" :disabled="!formData.id || formLoading">
+      <!-- 确认订单按钮：仅对已保存的订单（有 id）显示 -->
+      <el-button v-if="formData.id" type="success" @click="handleConfirm" :loading="formLoading">
         <Icon icon="ep:circle-check" class="mr-4px" />确认订单
       </el-button>
       <el-button type="warning" @click="handleExpedite" :disabled="!formData.id || formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
-      </el-button>
-      <el-button type="danger" @click="handleAudit" :disabled="!formData.id || formLoading">
-        <Icon icon="ep:check" class="mr-4px" />审核
       </el-button>
     </div>
 
@@ -828,13 +826,12 @@ const handleSave = async () => {
 }
 
 const handleConfirm = async () => {
-  await formRef.value.validate()
   formLoading.value = true
   try {
-    formData.value.status = 'confirmed'
-    formData.value.confirmTime = new Date().getTime() as any
-    await SalesOrderApi.updateSalesOrder(formData.value as unknown as SalesOrder)
+    // 调用专用确认接口，后端负责状态流转（unconfirmed → confirmed）并扣减客户余额
+    await SalesOrderApi.confirmSalesOrder(formData.value.id!)
     message.success('确认订单成功')
+    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
@@ -853,17 +850,6 @@ const handleExpedite = async () => {
   }
 }
 
-const handleAudit = async () => {
-  formLoading.value = true
-  try {
-    formData.value.status = 'audited'
-    await SalesOrderApi.updateSalesOrder(formData.value as unknown as SalesOrder)
-    message.success('审核成功')
-    emit('success')
-  } finally {
-    formLoading.value = false
-  }
-}
 
 const submitForm = async () => {
   await formRef.value.validate()
