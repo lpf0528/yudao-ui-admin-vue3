@@ -21,6 +21,10 @@
       <el-button v-if="formData.id" type="info" @click="handlePrintOrder">
         <Icon icon="ep:printer" class="mr-4px" />销售单
       </el-button>
+      <!-- 加工单按钮：订单已保存时显示，点击弹出加工单打印预览 -->
+      <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
+        <Icon icon="ep:document" class="mr-4px" />加工单
+      </el-button>
     </div>
 
     <el-form
@@ -480,6 +484,16 @@
       :curtain-structure-list="curtainStructureList"
       :element-list="curtainStructureElementList"
     />
+    <!-- 加工单打印预览弹窗 -->
+    <SalesOrderProcessingPrintDialog
+      ref="processingPrintDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :logistics-list="props.logisticsList"
+      :curtain-list="curtainList"
+      :curtain-structure-list="curtainStructureList"
+      :element-list="curtainStructureElementList"
+    />
   </Dialog>
 </template>
 
@@ -496,6 +510,7 @@ import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/a
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
+import SalesOrderProcessingPrintDialog from './SalesOrderProcessingPrintDialog.vue'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -629,6 +644,7 @@ const formRules = {
 const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
+const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProcessingPrintDialog>>()
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
 
 /**
@@ -849,6 +865,11 @@ const handleSave = async () => {
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
 const handlePrintOrder = () => {
   printDialogRef.value?.open(formData.value as any)
+}
+
+/** 打开加工单打印预览 */
+const handlePrintProcessing = () => {
+  processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 const handleConfirm = async () => {
