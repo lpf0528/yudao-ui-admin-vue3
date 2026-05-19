@@ -84,6 +84,7 @@ import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
+import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import type { ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
 /** 列表行补充后端返回的展示字段 */
@@ -102,6 +103,8 @@ defineOptions({ name: 'ProductBatchSelectDialog' })
 const dialogVisible = ref(false)
 /** 当前正在编辑的用料行，选中后直接写入该对象 */
 const currentMaterial = ref<ZCSalesOrderMaterial | null>(null)
+/** 当前订单选中的客户 ID，有值时选批次后查询授权价 */
+const currentCustomerId = ref<number | null>(null)
 
 // ======================== 列表数据 ========================
 const loading = ref(false)
@@ -150,10 +153,12 @@ const resetQuery = () => {
 // ======================== 打开弹窗 ========================
 /**
  * 打开批次选择弹窗
- * @param material 当前用料行对象，选中后直接回填
+ * @param material   当前用料行对象，选中后直接回填
+ * @param customerId 当前订单的客户 ID，有值时选批次后查询授权价
  */
-const open = async (material: ZCSalesOrderMaterial) => {
+const open = async (material: ZCSalesOrderMaterial, customerId?: number | null) => {
   currentMaterial.value = material
+  currentCustomerId.value = customerId ?? null
   // 若用料已有货号，预填产品过滤以缩小范围
   queryParams.productId = material.productId ?? undefined
   queryParams.batchNo = undefined
@@ -174,15 +179,33 @@ const open = async (material: ZCSalesOrderMaterial) => {
 defineExpose({ open })
 
 // ======================== 选中批次 ========================
-/** 单击"选择"或双击行：回填 productId/productName/batchId/batchNo/price */
-const handleSelect = (row: ProductBatchRow) => {
+/**
+ * 单击"选择"或双击行：回填基础字段，若已选客户则查询授权价覆盖单价
+ */
+const handleSelect = async (row: ProductBatchRow) => {
   if (!currentMaterial.value) return
   currentMaterial.value.productId = row.productId
   currentMaterial.value.productName = row.productName
   currentMaterial.value.batchId = row.id
   currentMaterial.value.batchNo = row.batchNo
-  // 仅当接口返回 productPrice 时才回填单价，否则清空
+  // 先用 productPrice 初始化，若无则清空
   currentMaterial.value.price = row.productPrice ?? undefined
+
+  // 已选客户且批次关联了产品时，查询该客户的授权价
+  if (currentCustomerId.value && row.productId) {
+    try {
+      const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(
+        currentCustomerId.value,
+        row.productId
+      )
+      if (priceInfo?.authorizedPrice != null) {
+        currentMaterial.value.price = priceInfo.authorizedPrice
+      }
+    } catch {
+      // 查询失败不影响已回填的其他字段，单价保持 productPrice 或空
+    }
+  }
+
   dialogVisible.value = false
 }
 </script>

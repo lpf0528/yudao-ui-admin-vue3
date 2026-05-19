@@ -403,27 +403,27 @@
                 </el-col>
                 <el-col :span="3">
                   <!-- 显示产品名称，回车或双击打开批次选择弹窗 -->
-                  <div @dblclick="batchSelectRef?.open(material)">
+                  <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
                     <el-input
                       v-model="material.productName"
                       placeholder="货号(回车/双击选择)"
                       size="small"
                       class="!w-full"
                       readonly
-                      @keyup.enter="batchSelectRef?.open(material)"
+                      @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
                     />
                   </div>
                 </el-col>
                 <el-col :span="3">
                   <!-- 显示批次号，回车或双击打开批次选择弹窗 -->
-                  <div @dblclick="batchSelectRef?.open(material)">
+                  <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
                     <el-input
                       v-model="material.batchNo"
                       placeholder="批次(回车/双击选择)"
                       size="small"
                       class="!w-full"
                       readonly
-                      @keyup.enter="batchSelectRef?.open(material)"
+                      @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
                     />
                   </div>
                 </el-col>
