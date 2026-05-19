@@ -17,6 +17,10 @@
       <el-button v-if="formData.id && !formData.isExpedited" type="warning" @click="handleExpedite" :loading="formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
+      <!-- 销售单按钮：订单已保存时显示，点击弹出打印预览 -->
+      <el-button v-if="formData.id" type="info" @click="handlePrintOrder">
+        <Icon icon="ep:printer" class="mr-4px" />销售单
+      </el-button>
     </div>
 
     <el-form
@@ -466,6 +470,16 @@
     </div>
     <!-- 批次选择弹窗 -->
     <ProductBatchSelectDialog ref="batchSelectRef" />
+    <!-- 销售单打印预览弹窗 -->
+    <SalesOrderPrintDialog
+      ref="printDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :logistics-list="props.logisticsList"
+      :curtain-list="curtainList"
+      :curtain-structure-list="curtainStructureList"
+      :element-list="curtainStructureElementList"
+    />
   </Dialog>
 </template>
 
@@ -481,6 +495,7 @@ import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtains
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
+import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -613,6 +628,7 @@ const formRules = {
 
 const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
+const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
 
 /**
@@ -828,6 +844,11 @@ const emit = defineEmits(['success'])
 
 const handleSave = async () => {
   await submitForm()
+}
+
+/** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
+const handlePrintOrder = () => {
+  printDialogRef.value?.open(formData.value as any)
 }
 
 const handleConfirm = async () => {
