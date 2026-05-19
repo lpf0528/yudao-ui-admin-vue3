@@ -25,6 +25,10 @@
       <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
+      <!-- 销售单2：请求后端 PDF 接口，在弹窗内预览并打印 -->
+      <el-button v-if="formData.id" type="success" plain @click="handlePrintOrder2" :loading="pdfLoading">
+        <Icon icon="ep:document-checked" class="mr-4px" />销售单2
+      </el-button>
     </div>
 
     <el-form
@@ -494,6 +498,34 @@
       :curtain-structure-list="curtainStructureList"
       :element-list="curtainStructureElementList"
     />
+
+    <!-- 销售单2：后端 PDF 预览弹窗 -->
+    <el-dialog
+      v-model="pdfDialogVisible"
+      title="销售单 PDF 预览"
+      width="90%"
+      top="2vh"
+      :close-on-click-modal="false"
+      @closed="handlePdfDialogClosed"
+    >
+      <template #header>
+        <div class="flex items-center justify-between w-full">
+          <span class="text-base font-semibold">销售单 PDF 预览</span>
+          <div class="flex gap-8px mr-24px">
+            <el-button type="primary" @click="handlePdfPrint">
+              <Icon icon="ep:printer" class="mr-4px" />打印
+            </el-button>
+          </div>
+        </div>
+      </template>
+      <!-- iframe 嵌入 PDF，浏览器原生渲染，支持缩放、翻页 -->
+      <iframe
+        v-if="pdfBlobUrl"
+        :src="pdfBlobUrl"
+        class="pdf-preview-iframe"
+        style="width: 100%; height: 78vh; border: none;"
+      ></iframe>
+    </el-dialog>
   </Dialog>
 </template>
 
@@ -645,6 +677,14 @@ const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProcessingPrintDialog>>()
+/** 销售单2 PDF 预览 dialog 状态 */
+const pdfDialogVisible = ref(false)
+/** 当前 PDF 的 blob object URL，关闭弹窗时需 revoke */
+const pdfBlobUrl = ref<string>('')
+/** PDF 加载中状态（独立于表单 loading，避免互相阻塞） */
+const pdfLoading = ref(false)
+/** 指向 iframe 元素，用于触发 iframe 内打印 */
+const pdfIframeRef = ref<HTMLIFrameElement | null>(null)
 const curtainColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#E67E22']
 
 /**
@@ -870,6 +910,38 @@ const handlePrintOrder = () => {
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
   processingPrintDialogRef.value?.open(formData.value as any)
+}
+
+/**
+ * 销售单2：请求后端 export-pdf 接口，将返回的 Blob 转为 object URL 后
+ * 在 iframe 中预览，浏览器原生 PDF 渲染支持缩放、翻页和打印。
+ */
+const handlePrintOrder2 = async () => {
+  if (!formData.value.id) return
+  pdfLoading.value = true
+  try {
+    const blob = await SalesOrderApi.exportSalesOrderPdf(formData.value.id)
+    // 释放上次的 URL，防止内存泄漏
+    if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
+    pdfBlobUrl.value = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+    pdfDialogVisible.value = true
+  } finally {
+    pdfLoading.value = false
+  }
+}
+
+/** 关闭 PDF 弹窗时释放 blob URL */
+const handlePdfDialogClosed = () => {
+  if (pdfBlobUrl.value) {
+    URL.revokeObjectURL(pdfBlobUrl.value)
+    pdfBlobUrl.value = ''
+  }
+}
+
+/** 触发 iframe 内的打印（调用浏览器打印对话框，可选择打印机） */
+const handlePdfPrint = () => {
+  const iframe = document.querySelector('.pdf-preview-iframe') as HTMLIFrameElement
+  iframe?.contentWindow?.print()
 }
 
 const handleConfirm = async () => {

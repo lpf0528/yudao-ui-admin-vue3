@@ -175,5 +175,16 @@ export const SalesOrderApi = {
   // 导出销售订单 Excel
   exportSalesOrder: async (params) => {
     return await request.download({ url: `/zc/sales-order/export-excel`, params })
+  },
+
+  /**
+   * 导出销售订单 PDF（含全量明细：窗帘行→结构行→用料明细）
+   * 对应后端：GET /zc/sales-order/export-pdf
+   *
+   * @param id 销售订单 ID
+   * @returns PDF 文件 Blob
+   */
+  exportSalesOrderPdf: async (id: number): Promise<Blob> => {
+    return await request.download({ url: `/zc/sales-order/export-pdf`, params: { id } })
   }
 }
