@@ -59,6 +59,8 @@
           v-model="queryParams.payStatus"
           placeholder="请选择结算状态"
           clearable
+          multiple
+          collapse-tags
           class="!w-240px"
         >
           <el-option
@@ -125,36 +127,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="版本" prop="versionId">
-        <el-select
-          v-model="queryParams.versionId"
-          placeholder="请选择版本"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in productVersionList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="产品" prop="productId">
-        <el-select
-          v-model="queryParams.productId"
-          placeholder="请选择产品"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in productsList"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -206,49 +178,23 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="订单号" align="center" prop="orderNo" />
-      <el-table-column label="客户" align="center" prop="customerId">
-        <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
-      </el-table-column>
-      <el-table-column label="手机" align="center" prop="mobile" />
-      <el-table-column label="品牌" align="center" prop="brandId">
-        <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
-      </el-table-column>
-      <el-table-column label="下单日期" align="center" prop="orderDate" :formatter="dateFormatter" width="120px" />
-      <el-table-column label="物流" align="center" prop="logisticId">
-        <template #default="scope">{{ logisticIdMap[scope.row.logisticId] }}</template>
-      </el-table-column>
-      <el-table-column label="收货人" align="center" prop="receiver" />
-      <el-table-column label="送货地址" align="center" prop="deliveryAddress" />
-      <el-table-column label="运费" align="center" prop="freight" />
-      <el-table-column label="订单类型" align="center" prop="types">
+      <el-table-column label="序号" type="index" align="center" width="60" />
+      <el-table-column label="订单类型" align="center" prop="types" min-width="90px">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_ORDER_TYPE" :value="scope.row.types" />
         </template>
       </el-table-column>
-      <el-table-column label="优惠金额" align="center" prop="discountAmount" />
-      <el-table-column label="总金额" align="center" prop="totalAmount" />
-      <el-table-column label="订单金额" align="center" prop="amount" />
-      <el-table-column label="已收金额" align="center" prop="amountReceived" />
-      <el-table-column label="交付日期" align="center" prop="deliveryDate" :formatter="dateFormatter" width="120px" />
-      <el-table-column label="结算状态" align="center" prop="payStatus">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="scope.row.payStatus" />
-        </template>
+      <el-table-column label="订单号" align="center" prop="orderNo" min-width="180px"/>
+      <el-table-column label="客户" align="center" prop="customerName" min-width="160px"/>
+
+      <el-table-column label="下单日期" align="center" prop="orderDate" width="110px">
+        <template #default="scope">{{ scope.row.orderDate?.substring(0, 10) }}</template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_ORDER_STATUS" :value="scope.row.status" />
-        </template>
+      <el-table-column label="交付日期" align="center" prop="deliveryDate" width="110px">
+        <template #default="scope">{{ scope.row.deliveryDate?.substring(0, 10) }}</template>
       </el-table-column>
-      <el-table-column
-        label="确认时间"
-        align="center"
-        prop="confirmTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+
+
       <el-table-column label="是否加急" align="center" prop="isExpedited">
         <template #default="scope">
           <el-tag :type="scope.row.isExpedited ? 'danger' : 'info'" size="small">
@@ -256,6 +202,34 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="状态" align="center" prop="status" min-width="90px">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ZC_ORDER_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
+      <el-table-column label="结算状态" align="center" prop="payStatus" min-width="90px">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="scope.row.payStatus" />
+        </template>
+      </el-table-column>
+      <el-table-column label="品牌" align="center" prop="brandId" min-width="100px">
+        <template #default="scope">{{ brandIdMap[scope.row.brandId] }}</template>
+      </el-table-column>
+      <el-table-column label="物流" align="center" prop="logisticName" min-width="100px"/>
+
+      <el-table-column label="运费" align="center" prop="freight" />
+      <el-table-column label="总金额" align="center" prop="totalAmount" />
+      <el-table-column label="优惠金额" align="center" prop="discountAmount" />
+      <el-table-column label="订单金额" align="center" prop="amount" />
+      <el-table-column label="已收金额" align="center" prop="amountReceived" />
+      <el-table-column
+        label="确认时间"
+        align="center"
+        prop="confirmTime"
+        :formatter="dateFormatter"
+        width="180px"
+      />
+
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
@@ -264,7 +238,7 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="120px" fixed="right">
         <template #default="scope">
           <el-button
             link
@@ -310,8 +284,6 @@ import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
-import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
-import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import SalesOrderForm from './SalesOrderForm.vue'
 import CollectionDialog from './CollectionDialog.vue'
@@ -328,17 +300,10 @@ const total = ref(0) // 列表的总页数
 const customersList = ref<CustomerSimpleVO[]>([]) // 客户列表
 const brandsList = ref<BrandSimpleVO[]>([]) // 品牌列表
 const logisticsList = ref<LogisticsSimpleVO[]>([]) // 物流列表
-const productVersionList = ref<ProductVersionSimpleVO[]>([]) // 产品版本列表
-const productsList = ref<ProductSimpleVO[]>([]) // 产品列表
 const installProcessList = ref<CurtainInstallProcessSimpleVO[]>([]) // 安装工艺列表
-const customerIdMap = computed(() =>
-  Object.fromEntries(customersList.value.map((item) => [item.id, `${item.shortName}/${item.contactName}`]))
-)
+
 const brandIdMap = computed(() =>
   Object.fromEntries(brandsList.value.map((item) => [item.id, item.name]))
-)
-const logisticIdMap = computed(() =>
-  Object.fromEntries(logisticsList.value.map((item) => [item.id, item.name]))
 )
 const queryParams = reactive({
   pageNo: 1,
@@ -354,27 +319,16 @@ const queryParams = reactive({
   freight: undefined,
   types: undefined,
   deliveryDate: [],
-  payStatus: undefined,
+  payStatus: [] as string[],
   status: undefined,
   confirmTime: [],
   isExpedited: undefined,
   note: undefined,
-  createTime: [],
-  versionId: undefined,
-  productId: undefined
+  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const checkedIds = ref<number[]>([]) // 表格勾选的行 ID 列表
-
-/** 版本变化时重新加载产品列表，并清空已选产品 */
-watch(
-  () => queryParams.versionId,
-  async (versionId) => {
-    queryParams.productId = undefined
-    productsList.value = await ProductApi.getProductSimpleList(versionId)
-  }
-)
 
 /** 查询列表 */
 const getList = async () => {
