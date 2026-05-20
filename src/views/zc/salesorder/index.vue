@@ -184,6 +184,13 @@
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
+        <el-button
+          type="warning"
+          plain
+          @click="openCollectionDialog"
+        >
+          <Icon icon="ep:wallet" class="mr-5px" /> 新增收款
+        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -289,6 +296,9 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
+
+  <!-- 收款弹窗 -->
+  <CollectionDialog ref="collectionDialogRef" :customersList="customersList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -304,6 +314,7 @@ import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversi
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import SalesOrderForm from './SalesOrderForm.vue'
+import CollectionDialog from './CollectionDialog.vue'
 
 /** 销售订单 列表 */
 defineOptions({ name: 'ZcSalesOrder' })
@@ -393,6 +404,12 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 打开新增收款弹窗 */
+const collectionDialogRef = ref()
+const openCollectionDialog = () => {
+  collectionDialogRef.value.open()
 }
 
 /** 删除按钮操作 */
