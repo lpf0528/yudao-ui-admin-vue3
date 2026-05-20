@@ -31,16 +31,6 @@ export const BillMethodsApi = {
     return await request.put({ url: `/zc/bill-methods/update`, data })
   },
 
-  // 删除收款方式
-  deleteBillMethods: async (id: number) => {
-    return await request.delete({ url: `/zc/bill-methods/delete?id=` + id })
-  },
-
-  /** 批量删除收款方式 */
-  deleteBillMethodsList: async (ids: number[]) => {
-    return await request.delete({ url: `/zc/bill-methods/delete-list?ids=${ids.join(',')}` })
-  },
-
   // 导出收款方式 Excel
   exportBillMethods: async (params) => {
     return await request.download({ url: `/zc/bill-methods/export-excel`, params })
