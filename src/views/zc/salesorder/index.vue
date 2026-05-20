@@ -412,12 +412,10 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  ;[customersList.value, brandsList.value, logisticsList.value, productVersionList.value, productsList.value, installProcessList.value] = await Promise.all([
+  ;[customersList.value, brandsList.value, logisticsList.value, installProcessList.value] = await Promise.all([
     CustomerApi.getCustomerSimpleList(),
     BrandApi.getBrandSimpleList(),
     LogisticsApi.getLogisticsSimpleList(),
-    ProductVersionApi.getProductVersionSimpleList(),
-    ProductApi.getProductSimpleList(),
     CurtainInstallProcessApi.getCurtainInstallProcessSimpleList(),
   ])
   await getList()
