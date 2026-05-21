@@ -34,9 +34,9 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="收款日期" prop="collectionDate">
+          <el-form-item label="收款日期" prop="billDate">
             <el-date-picker
-              v-model="formData.collectionDate"
+              v-model="formData.billDate"
               type="date"
               value-format="YYYY-MM-DD"
               placeholder="请选择收款日期"
@@ -45,9 +45,9 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="收支方式" prop="paymentId">
+          <el-form-item label="收支方式" prop="billMethodId">
             <el-select
-              v-model="formData.paymentId"
+              v-model="formData.billMethodId"
               placeholder="请选择收支方式"
               clearable
               class="!w-full"
@@ -73,9 +73,9 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="实收金额" prop="amount">
+          <el-form-item label="实收金额" prop="actualAmount">
             <el-input-number
-              v-model="formData.amount"
+              v-model="formData.actualAmount"
               :min="0"
               :precision="2"
               placeholder="请输入实收金额"
@@ -83,7 +83,6 @@
             />
           </el-form-item>
         </el-col>
-
         <el-col :span="6">
           <el-form-item label="备注" prop="note">
             <el-input v-model="formData.note" placeholder="请输入备注" class="!w-full" />
@@ -91,12 +90,12 @@
         </el-col>
         <el-col :span="6">
           <el-form-item label="附件1">
-            <UploadImg v-model="formData.image1" width="90px" height="90px" />
+            <UploadImg v-model="attachment1" width="90px" height="90px" />
           </el-form-item>
         </el-col>
         <el-col :span="6">
           <el-form-item label="附件2">
-            <UploadImg v-model="formData.image2" width="90px" height="90px" />
+            <UploadImg v-model="attachment2" width="90px" height="90px" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -112,31 +111,43 @@
       <div v-else-if="orderList.length === 0" class="text-center text-gray-400 py-20px text-sm">
         该客户暂无未结清的已确认订单
       </div>
-      <el-table v-else :data="orderList" size="small" border>
-        <el-table-column label="订单号" prop="orderNo" min-width="140" />
-        <el-table-column label="下单日期" prop="orderDate" width="110">
-          <template #default="{ row }">{{ formatDate(row.orderDate) }}</template>
-        </el-table-column>
-        <el-table-column label="订单金额" prop="amount" width="110" align="right" />
-        <el-table-column label="已收金额" prop="amountReceived" width="110" align="right" />
-        <el-table-column label="结算状态" prop="payStatus" width="100" align="center">
-          <template #default="{ row }">
-            <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="row.payStatus" />
-          </template>
-        </el-table-column>
-        <el-table-column label="本次收款" width="150" align="center">
-          <template #default="{ row }">
-            <el-input-number
-              v-model="allocMap[row.id]"
-              :min="0"
-              :precision="2"
-              size="small"
-              class="!w-full"
-              @change="syncAllocs"
-            />
-          </template>
-        </el-table-column>
-      </el-table>
+      <template v-else>
+        <div class="mb-8px">
+          <el-button type="primary" size="small" @click="handleAllocate">分摊到明细</el-button>
+        </div>
+        <el-table
+          ref="orderTableRef"
+          :data="orderList"
+          size="small"
+          border
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" width="45" />
+          <el-table-column label="结算状态" prop="payStatus" width="100" align="center">
+            <template #default="{ row }">
+              <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="row.payStatus" />
+            </template>
+          </el-table-column>
+          <el-table-column label="本次收款" width="150" align="center">
+            <template #default="{ row }">
+              <el-input-number
+                v-model="allocMap[row.id]"
+                :min="0"
+                :precision="2"
+                size="small"
+                class="!w-full"
+                @change="syncOrderItems"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="订单号" prop="orderNo" min-width="140" />
+          <el-table-column label="下单日期" prop="orderDate" width="110">
+            <template #default="{ row }">{{ formatDate(row.orderDate) }}</template>
+          </el-table-column>
+          <el-table-column label="订单金额" prop="amount" width="110" align="right" />
+          <el-table-column label="已收金额" prop="amountReceived" width="110" align="right" />
+        </el-table>
+      </template>
     </el-form>
 
     <template #footer>
@@ -149,14 +160,14 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { DICT_TYPE } from '@/utils/dict'
-import { ZcCollectionApi, ZcCollectionSaveVO } from '@/api/zc/finance/collection'
+import { ZcBillsApi, ZcBillsSaveReqVO } from '@/api/zc/finance/collection'
 import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
 import { BillMethodsApi, BillMethods } from '@/api/zc/bill_methods'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import { UploadImg } from '@/components/UploadFile'
 
 // ======================== Props / Emits ========================
-const props = defineProps<{
+defineProps<{
   customersList: CustomerSimpleVO[]
 }>()
 const emit = defineEmits(['success'])
@@ -168,22 +179,25 @@ const submitLoading = ref(false)
 
 // ======================== 表单数据 ========================
 const formRef = ref()
-const formData = reactive<ZcCollectionSaveVO>({
-  collectionDate: dayjs().format('YYYY-MM-DD'),
-  customerId: undefined as unknown as number,
-  amount: undefined as unknown as number,
+/** 两个附件字段，提交时合并为 attachments 数组 */
+const attachment1 = ref<string>('')
+const attachment2 = ref<string>('')
+
+const formData = reactive<ZcBillsSaveReqVO>({
+  billDate: dayjs().format('YYYY-MM-DD'),
+  customerId: undefined,
+  actualAmount: undefined as unknown as number,
   discountAmount: 0,
-  paymentId: undefined,
-  image1: undefined,
-  image2: undefined,
+  billMethodId: undefined as unknown as number,
   note: undefined,
-  allocs: []
+  attachments: [],
+  orderItems: []
 })
 
 const formRules = {
-  customerId: [{ required: true, message: '请选择客户', trigger: 'change' }],
-  collectionDate: [{ required: true, message: '请选择收款日期', trigger: 'change' }],
-  amount: [{ required: true, message: '请输入实收金额', trigger: 'blur' }]
+  billDate: [{ required: true, message: '请选择收款日期', trigger: 'change' }],
+  actualAmount: [{ required: true, message: '请输入实收金额', trigger: 'blur' }],
+  billMethodId: [{ required: true, message: '请选择收支方式', trigger: 'change' }]
 }
 
 // ======================== 订单列表 ========================
@@ -192,12 +206,53 @@ const orderList = ref<SalesOrder[]>([])
 const ordersLoading = ref(false)
 /** 每条订单对应的本次收款金额，key 为 orderId */
 const allocMap = reactive<Record<number, number | undefined>>({})
+/** 当前勾选的订单行 */
+const selectedOrders = ref<SalesOrder[]>([])
+const orderTableRef = ref()
 
-/** 客户切换时重新加载订单 */
+const handleSelectionChange = (rows: SalesOrder[]) => {
+  selectedOrders.value = rows
+}
+
+/**
+ * 将实收金额按订单显示顺序依次分摊到已勾选的订单
+ * 每笔订单最多分摊其未结余额（订单金额 - 已收金额），余额不足则继续分摊到下一笔
+ */
+const handleAllocate = () => {
+  if (!formData.actualAmount || formData.actualAmount <= 0) {
+    message.warning('请先填写实收金额')
+    return
+  }
+  if (selectedOrders.value.length === 0) {
+    message.warning('请先勾选要分摊的订单')
+    return
+  }
+  // 按 orderList 顺序过滤出已勾选的订单，保证从上到下分摊
+  const orderedSelected = orderList.value.filter((o) =>
+    selectedOrders.value.some((s) => s.id === o.id)
+  )
+  let remaining = formData.actualAmount
+  for (const order of orderedSelected) {
+    if (order.id == null) continue
+    if (remaining <= 0) {
+      allocMap[order.id] = 0
+      continue
+    }
+    const unpaid = Math.max(0, (order.amount ?? 0) - (order.amountReceived ?? 0))
+    // 若订单未结余额为 0（数据异常），则将剩余全部分摊到该笔
+    const alloc = unpaid > 0 ? Math.min(remaining, unpaid) : remaining
+    allocMap[order.id] = Math.round(alloc * 100) / 100
+    remaining = Math.round((remaining - alloc) * 100) / 100
+  }
+  syncOrderItems()
+}
+
+/** 客户切换时重新加载订单并清空已选状态 */
 const handleCustomerChange = async (customerId: number | undefined) => {
   orderList.value = []
+  selectedOrders.value = []
   Object.keys(allocMap).forEach((k) => delete allocMap[Number(k)])
-  formData.allocs = []
+  formData.orderItems = []
   if (!customerId) return
 
   ordersLoading.value = true
@@ -215,16 +270,15 @@ const handleCustomerChange = async (customerId: number | undefined) => {
   }
 }
 
-/** 将 allocMap 同步回 formData.allocs */
-const syncAllocs = () => {
-  formData.allocs = Object.entries(allocMap)
+/** 将 allocMap 同步回 formData.orderItems */
+const syncOrderItems = () => {
+  formData.orderItems = Object.entries(allocMap)
     .filter(([, v]) => v != null && v > 0)
-    .map(([k, v]) => ({ orderId: Number(k), payAmount: v as number }))
+    .map(([k, v]) => ({ orderId: Number(k), allocatedAmount: v as number }))
 }
 
 // ======================== 收支方式 ========================
 const billMethodsList = ref<BillMethods[]>([])
-
 
 const loadBillMethods = async () => {
   const data = await BillMethodsApi.getBillMethodsPage({ pageNo: 1, pageSize: 200 })
@@ -243,18 +297,18 @@ const open = async () => {
   dialogVisible.value = true
   formLoading.value = true
   try {
-    // 重置表单（image 字段用空字符串触发 UploadFile 内部清空）
     Object.assign(formData, {
-      collectionDate: dayjs().format('YYYY-MM-DD'),
+      billDate: dayjs().format('YYYY-MM-DD'),
       customerId: undefined,
-      amount: undefined,
+      actualAmount: undefined,
       discountAmount: 0,
-      paymentId: undefined,
-      image1: '',
-      image2: '',
+      billMethodId: undefined,
       note: undefined,
-      allocs: []
+      attachments: [],
+      orderItems: []
     })
+    attachment1.value = ''
+    attachment2.value = ''
     orderList.value = []
     Object.keys(allocMap).forEach((k) => delete allocMap[Number(k)])
     formRef.value?.resetFields()
@@ -270,10 +324,12 @@ const message = useMessage()
 
 const submitForm = async () => {
   await formRef.value?.validate()
-  syncAllocs()
+  syncOrderItems()
+  // 将两个附件字段合并为 attachments 数组（过滤空值）
+  formData.attachments = [attachment1.value, attachment2.value].filter(Boolean) as string[]
   submitLoading.value = true
   try {
-    await ZcCollectionApi.create(formData)
+    await ZcBillsApi.create(formData)
     message.success('收款单创建成功')
     dialogVisible.value = false
     emit('success')
