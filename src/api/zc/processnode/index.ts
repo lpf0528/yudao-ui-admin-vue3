@@ -1,6 +1,12 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 工序节点精简信息（用于下拉选项） */
+export interface ProcessNodeSimpleVO {
+  id: number    // 主键
+  name: string  // 工序名称
+}
+
 /** 工序节点配置信息 */
 export interface ProcessNode {
           id: number; // 主键
@@ -45,4 +51,14 @@ export const ProcessNodeApi = {
   exportProcessNode: async (params) => {
     return await request.download({ url: `/zc/process-node/export-excel`, params })
   },
+
+  /**
+   * 获取工序节点精简列表（主要用于前端下拉选项）
+   * 对应后端：GET /zc/process-node/simple-list
+   *
+   * @returns 工序节点精简信息数组（仅含 id、name）
+   */
+  getSimpleProcessNodeList: async () => {
+    return await request.get<ProcessNodeSimpleVO[]>({ url: `/zc/process-node/simple-list` })
+  }
 }

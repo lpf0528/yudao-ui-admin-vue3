@@ -7,7 +7,11 @@
       "Read(//c/Users/admin/.claude/**)",
       "Read(//mnt/d/workplace/yudao-ui-admin-vue3/**)",
       "Bash(Remove-Item *)",
-      "Bash(dir \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\api\\\\zc\\\\\")"
+      "Bash(dir \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\api\\\\zc\\\\\")",
+      "Bash(xargs grep -l -i \"node\\\\|工序\")",
+      "Bash(dir /s /b \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\api\")",
+      "Bash(findstr /i \"zc node process\")",
+      "Bash(dir *)"
     ]
   }
 }
