@@ -100,6 +100,23 @@
         </el-col>
       </el-row>
 
+      <!-- ======================== 分摊操作区 ======================== -->
+      <div class="flex items-center gap-24px py-10px">
+        <el-button type="primary" size="small" @click="handleAllocate">分摊到明细</el-button>
+        <span class="text-sm text-gray-600">
+          合计分摊金额：<span class="text-blue-500 font-medium">{{ totalAllocAmount.toFixed(2) }}</span>
+        </span>
+        <span class="text-sm text-gray-600">
+          选中订单应收金额：<span class="font-medium">{{ selectedUnpaidAmount.toFixed(2) }}</span>
+        </span>
+        <span class="text-sm text-gray-600">
+          分摊剩余金额：
+          <span :class="remainingAmount < 0 ? 'text-red-500' : 'text-blue-500'" class="font-medium">
+            {{ remainingAmount.toFixed(2) }}
+          </span>
+        </span>
+      </div>
+
       <!-- ======================== 订单分摊 ======================== -->
       <el-divider content-position="left">分摊到订单（已确认、未结清）</el-divider>
       <div v-if="!formData.customerId" class="text-center text-gray-400 py-20px text-sm">
@@ -112,9 +129,6 @@
         该客户暂无未结清的已确认订单
       </div>
       <template v-else>
-        <div class="mb-8px">
-          <el-button type="primary" size="small" @click="handleAllocate">分摊到明细</el-button>
-        </div>
         <el-table
           ref="orderTableRef"
           :data="orderList"
@@ -214,12 +228,31 @@ const handleSelectionChange = (rows: SalesOrder[]) => {
   selectedOrders.value = rows
 }
 
+// ======================== 分摊统计 ========================
+/** 合计分摊金额 = 实收金额 + 优惠金额 */
+const totalAllocAmount = computed(
+  () => Math.round(((formData.actualAmount || 0) + (formData.discountAmount || 0)) * 100) / 100
+)
+
+/** 当前勾选订单的合计应收金额（订单金额 - 已收金额） */
+const selectedUnpaidAmount = computed(() =>
+  selectedOrders.value.reduce((sum, o) => {
+    return Math.round((sum + Math.max(0, (o.amount ?? 0) - (o.amountReceived ?? 0))) * 100) / 100
+  }, 0)
+)
+
+/** 分摊剩余金额 = 合计分摊金额 - 已填写的本次收款合计 */
+const remainingAmount = computed(() => {
+  const allocated = Object.values(allocMap).reduce((sum, v) => sum + (v || 0), 0)
+  return Math.round((totalAllocAmount.value - allocated) * 100) / 100
+})
+
 /**
- * 将实收金额按订单显示顺序依次分摊到已勾选的订单
+ * 将合计分摊金额按订单显示顺序依次分摊到已勾选的订单
  * 每笔订单最多分摊其未结余额（订单金额 - 已收金额），余额不足则继续分摊到下一笔
  */
 const handleAllocate = () => {
-  if (!formData.actualAmount || formData.actualAmount <= 0) {
+  if (totalAllocAmount.value <= 0) {
     message.warning('请先填写实收金额')
     return
   }
@@ -231,7 +264,7 @@ const handleAllocate = () => {
   const orderedSelected = orderList.value.filter((o) =>
     selectedOrders.value.some((s) => s.id === o.id)
   )
-  let remaining = formData.actualAmount
+  let remaining = totalAllocAmount.value
   for (const order of orderedSelected) {
     if (order.id == null) continue
     if (remaining <= 0) {
