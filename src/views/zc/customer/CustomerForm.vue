@@ -48,9 +48,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="账户余额" prop="balance">
-        <el-input v-model="formData.balance" placeholder="请输入账户余额" />
-      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -89,7 +86,6 @@ const formData = ref({
   mobile2: undefined,
   logisticId: undefined,
   brandId: undefined,
-  balance: undefined,
   note: undefined,
 })
 const formRules = reactive({
@@ -154,7 +150,6 @@ const resetForm = () => {
     mobile2: undefined,
     logisticId: undefined,
     brandId: undefined,
-    balance: undefined,
     note: undefined,
   }
   formRef.value?.resetFields()

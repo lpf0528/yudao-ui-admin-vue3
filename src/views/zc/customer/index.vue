@@ -76,15 +76,6 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:customer:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -97,10 +88,8 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
-        @selection-change="handleRowCheckboxChange"
     >
-    <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" type="index" align="center" width="60" />
       <el-table-column label="简称" align="center" prop="shortName" />
       <el-table-column label="全称" align="center" prop="name" />
       <el-table-column label="联系人" align="center" prop="contactName" />
@@ -155,7 +144,6 @@
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerApi, Customer } from '@/api/zc/customer'
@@ -226,23 +214,6 @@ const handleDelete = async (id: number) => {
     // 刷新列表
     await getList()
   } catch {}
-}
-
-/** 批量删除客户资料 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await CustomerApi.deleteCustomerList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: Customer[]) => {
-  checkedIds.value = records.map((item) => item.id!);
 }
 
 /** 导出按钮操作 */
