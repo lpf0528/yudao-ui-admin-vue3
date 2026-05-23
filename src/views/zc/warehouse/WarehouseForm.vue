@@ -11,8 +11,13 @@
         <el-input v-model="formData.name" placeholder="请输入仓库名称" />
       </el-form-item>
       <el-form-item label="负责人" prop="managerId">
-        <el-select v-model="formData.managerId" placeholder="请选择负责人">
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="formData.managerId" clearable placeholder="请选择负责人" class="w-1/1">
+          <el-option
+            v-for="item in props.userList"
+            :key="item.id"
+            :label="item.nickname"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="note">
@@ -27,9 +32,12 @@
 </template>
 <script setup lang="ts">
 import { WarehouseApi, Warehouse } from '@/api/zc/warehouse'
+import type { UserVO } from '@/api/system/user/index'
 
 /** 仓库 表单 */
 defineOptions({ name: 'WarehouseForm' })
+
+const props = defineProps<{ userList: UserVO[] }>()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

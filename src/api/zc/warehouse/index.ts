@@ -12,11 +12,12 @@ export interface WarehouseSimpleVO {
 
 /** 仓库信息 */
 export interface Warehouse {
-          id: number; // 主键
-          name?: string; // 仓库名称
-          managerId: number; // 负责人
-          note: string; // 备注
-  }
+  id: number         // 主键
+  name?: string      // 仓库名称
+  managerId: number  // 负责人 ID
+  managerName: string // 负责人姓名
+  note: string       // 备注
+}
 
 // 仓库 API
 export const WarehouseApi = {

@@ -24,7 +24,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in userList"
+            :key="item.id"
+            :label="item.nickname"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -47,15 +52,6 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:warehouse:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -68,14 +64,11 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
-        @selection-change="handleRowCheckboxChange"
     >
-    <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="仓库名称" align="center" prop="name" />
-      <el-table-column label="负责人" align="center" prop="managerId" />
+      <el-table-column label="负责人" align="center" prop="managerName" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -93,14 +86,6 @@
           >
             编辑
           </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['zc:warehouse:delete']"
-          >
-            删除
-          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -114,15 +99,16 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <WarehouseForm ref="formRef" @success="getList" />
+  <WarehouseForm ref="formRef" :userList="userList" @success="getList" />
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { WarehouseApi, Warehouse } from '@/api/zc/warehouse'
 import WarehouseForm from './WarehouseForm.vue'
+import { getSimpleUserList } from '@/api/system/user/index'
+import type { UserVO } from '@/api/system/user/index'
 
 /** 仓库 列表 */
 defineOptions({ name: 'ZcWarehouse' })
@@ -132,6 +118,10 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<Warehouse[]>([]) // 列表的数据
+const userList = ref<UserVO[]>([]) // 负责人列表
+const managerIdMap = computed(() =>
+  Object.fromEntries(userList.value.map((item) => [item.id, item.nickname]))
+)
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -172,36 +162,6 @@ const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
 }
 
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await WarehouseApi.deleteWarehouse(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 批量删除仓库 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await WarehouseApi.deleteWarehouseList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: Warehouse[]) => {
-  checkedIds.value = records.map((item) => item.id!);
-}
-
 /** 导出按钮操作 */
 const handleExport = async () => {
   try {
@@ -218,7 +178,8 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  userList.value = await getSimpleUserList()
+  await getList()
 })
-</script>
+</script>
