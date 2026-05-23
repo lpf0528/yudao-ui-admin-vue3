@@ -61,13 +61,11 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="Logo URL" align="center" prop="logo" />
       <el-table-column label="电话" align="center" prop="mobile" />
       <el-table-column label="地址" align="center" prop="address" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"

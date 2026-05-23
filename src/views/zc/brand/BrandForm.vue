@@ -10,9 +10,6 @@
       <el-form-item label="名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
-      <el-form-item label="Logo URL" prop="logo">
-        <UploadImg v-model="formData.logo" />
-      </el-form-item>
       <el-form-item label="电话" prop="mobile">
         <el-input v-model="formData.mobile" placeholder="请输入电话" />
       </el-form-item>
@@ -45,7 +42,6 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  logo: undefined,
   mobile: undefined,
   address: undefined,
   note: undefined,
@@ -102,7 +98,6 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    logo: undefined,
     mobile: undefined,
     address: undefined,
     note: undefined,
