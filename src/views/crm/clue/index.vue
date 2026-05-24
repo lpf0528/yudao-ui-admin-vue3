@@ -42,6 +42,8 @@
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
+		  oninput="value=value.replace(/[^\d]/g,'')"
+		        maxlength="11"
         />
       </el-form-item>
       <el-form-item>

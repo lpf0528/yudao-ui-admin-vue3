@@ -17,7 +17,10 @@
         <el-input v-model="formData.contactName" placeholder="请输入联系人" />
       </el-form-item>
       <el-form-item label="电话" prop="mobile">
-        <el-input v-model="formData.mobile" placeholder="请输入电话" />
+        <el-input v-model="formData.mobile" 
+		 placeholder="请输入电话" 
+		 oninput="value=value.replace(/[^\d]/g,'')"
+		 maxlength="11"/>
       </el-form-item>
       <el-form-item label="地址" prop="address">
         <el-input v-model="formData.address" placeholder="请输入地址" />

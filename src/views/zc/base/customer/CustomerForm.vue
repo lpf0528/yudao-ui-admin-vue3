@@ -19,7 +19,10 @@
         </el-col>
         <el-col :span="12">
           <el-form-item label="手机" prop="mobile">
-            <el-input v-model="formData.mobile" />
+            <el-input v-model="formData.mobile" 
+			 oninput="value=value.replace(/[^\d]/g,'')"
+		     maxlength="11"/>
+			
           </el-form-item>
         </el-col>
         <el-col :span="24">

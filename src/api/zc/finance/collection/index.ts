@@ -31,3 +31,6 @@ export const ZcBillsApi = {
     return await request.post({ url: `/zc/bills/create`, data })
   }
 }
+// 在 src/api/zc/finance/collection/index.ts 里加
+export const ZcCollectionApi = useZcCollectionApi();
+export const ZcCollectionSaveVO = useZcCollectionSaveVO();
