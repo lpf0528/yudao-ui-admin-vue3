@@ -72,7 +72,7 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="工序名称" align="center" prop="name" />
       <el-table-column label="排序号" align="center" prop="sort" />
       <el-table-column label="工序描述/操作说明" align="center" prop="description" />

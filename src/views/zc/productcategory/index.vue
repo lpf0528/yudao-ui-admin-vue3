@@ -81,7 +81,7 @@
         @selection-change="handleRowCheckboxChange"
     >
     <el-table-column type="selection" width="55" />
-      <el-table-column label="主键" align="center" prop="id" />
+       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="类别名称" align="center" prop="value" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
