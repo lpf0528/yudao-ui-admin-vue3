@@ -49,7 +49,7 @@
       <el-form-item label="分类" prop="classify">
         <el-select v-model="formData.classify" placeholder="请选择分类">
           <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -77,7 +77,7 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getIntDictOptions, getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
 import { ProductCategorySimpleVO } from '@/api/zc/productcategory'
 import { SupplierSimpleVO } from '@/api/zc/supplier'
