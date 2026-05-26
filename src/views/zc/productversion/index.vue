@@ -32,22 +32,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="类别" prop="categoryId">
-        <el-select
-          v-model="queryParams.categoryId"
-          placeholder="请选择类别"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in categoryList"
-            :key="item.id"
-            :label="item.value"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="出货价类型" prop="sellingPriceType">
+       <el-form-item label="出货价类型" prop="sellingPriceType">
         <el-select
           v-model="queryParams.sellingPriceType"
           placeholder="请选择出货价类型"
@@ -59,36 +44,6 @@
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="分类" prop="classify">
-        <el-select
-          v-model="queryParams.classify"
-          placeholder="请选择分类"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="供应商" prop="supplierId">
-        <el-select
-          v-model="queryParams.supplierId"
-          placeholder="请选择供应商"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in supplierList"
-            :key="item.id"
-            :label="item.shortName"
-            :value="item.id"
           />
         </el-select>
       </el-form-item>
