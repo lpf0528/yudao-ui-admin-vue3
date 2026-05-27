@@ -32,5 +32,5 @@ export const ZcBillsApi = {
   }
 }
 // 在 src/api/zc/finance/collection/index.ts 里加
-export const ZcCollectionApi = useZcCollectionApi();
-export const ZcCollectionSaveVO = useZcCollectionSaveVO();
+// export const ZcCollectionApi = useZcCollectionApi();
+// export const ZcCollectionSaveVO = useZcCollectionSaveVO();
