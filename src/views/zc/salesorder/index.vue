@@ -139,6 +139,14 @@
           <Icon icon="ep:plus" class="mr-5px" /> 成品单
         </el-button>
         <el-button
+          type="warning"
+          plain
+          @click="openProductForm('create')"
+          v-hasPermi="['zc:sales-order:create']"
+        >
+          <Icon icon="ep:plus" class="mr-5px" /> 面料单
+        </el-button>
+        <el-button
           type="success"
           plain
           @click="handleExport"
@@ -268,8 +276,11 @@
     />
   </ContentWrap>
 
-  <!-- 表单弹窗：添加/修改 -->
+  <!-- 成品单表单弹窗 -->
   <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
+
+  <!-- 面料单表单弹窗 -->
+  <SalesOrderProductForm ref="productFormRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" />
 
   <!-- 收款弹窗 -->
   <CollectionDialog ref="collectionDialogRef" :customersList="customersList" @success="getList" />
@@ -286,6 +297,7 @@ import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
 import SalesOrderForm from './SalesOrderForm.vue'
+import SalesOrderProductForm from './SalesOrderProductForm.vue'
 import CollectionDialog from './CollectionDialog.vue'
 
 /** 销售订单 列表 */
@@ -354,10 +366,16 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 添加/修改操作 */
+/** 添加/修改成品单 */
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 添加/修改面料单 */
+const productFormRef = ref()
+const openProductForm = (type: string, id?: number) => {
+  productFormRef.value.open(type, id)
 }
 
 /** 打开新增收款弹窗 */

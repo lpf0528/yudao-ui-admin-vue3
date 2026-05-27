@@ -188,3 +188,91 @@ export const SalesOrderApi = {
     return await request.download({ url: `/zc/sales-order/export-pdf`, params: { id } })
   }
 }
+
+// ======================== 面料单 ========================
+
+/** 面料单 - 批次行提交结构（与后端字段名一致） */
+export interface SalesOrderProductBatch {
+  product_id?: number   // 产品 ID
+  batch_id?: number     // 批次 ID
+  pishu?: number        // 匹数
+  quantity?: number     // 数量
+  price?: number        // 单价
+  amount?: number       // 金额
+}
+
+/** 面料单提交/响应数据结构 */
+export interface SalesOrderProductVO {
+  id?: number
+  orderNo?: string
+  customerId?: number
+  mobile?: string
+  brandId?: number
+  orderDate?: string
+  logisticId?: number
+  receiver?: string
+  deliveryAddress?: string
+  freight?: number
+  types?: string
+  discountAmount?: number
+  amount?: number
+  deliveryDate?: string
+  payStatus?: string
+  status?: string
+  confirmTime?: string | number
+  isExpedited?: boolean
+  note?: string
+  batchs: SalesOrderProductBatch[]
+  customerName?: string
+  logisticName?: string
+}
+
+export const SalesOrderProductApi = {
+  /**
+   * 查询面料单详情（含批次列表）
+   * 对应后端：GET /zc/sales-order-product/get?id=xxx
+   */
+  getSalesOrderProduct: async (id: number) => {
+    return await request.get({ url: `/zc/sales-order-product/get?id=` + id })
+  },
+
+  /**
+   * 新增面料单
+   * 对应后端：POST /zc/sales-order-product/create
+   */
+  createSalesOrderProduct: async (data: SalesOrderProductVO) => {
+    return await request.post({ url: `/zc/sales-order-product/create`, data })
+  },
+
+  /**
+   * 修改面料单
+   * 对应后端：PUT /zc/sales-order-product/update
+   */
+  updateSalesOrderProduct: async (data: SalesOrderProductVO) => {
+    return await request.put({ url: `/zc/sales-order-product/update`, data })
+  },
+
+  /**
+   * 确认面料单（状态 unconfirmed → confirmed）
+   * 对应后端：PUT /zc/sales-order-product/confirm?id=xxx
+   */
+  confirmSalesOrderProduct: async (id: number) => {
+    return await request.put({ url: `/zc/sales-order-product/confirm`, params: { id } })
+  },
+
+  /**
+   * 取消确认面料单
+   * 对应后端：PUT /zc/sales-order-product/cancel-confirm?id=xxx
+   */
+  cancelConfirmSalesOrderProduct: async (id: number) => {
+    return await request.put({ url: `/zc/sales-order-product/cancel-confirm`, params: { id } })
+  },
+
+  /**
+   * 标记面料单为加急
+   * 对应后端：PUT /zc/sales-order-product/expedited?orderId=xxx
+   */
+  expeditedSalesOrderProduct: async (orderId: number) => {
+    return await request.put({ url: `/zc/sales-order-product/expedited`, params: { orderId } })
+  },
+}
