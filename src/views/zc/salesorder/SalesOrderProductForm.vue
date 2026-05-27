@@ -181,7 +181,7 @@
 
     <!-- 面料批次列表 -->
     <el-divider content-position="left">面料列表</el-divider>
-    <el-button type="primary" link class="mb-8px" @click="addBatch">+ 添加面料</el-button>
+    <el-button type="primary" link class="mb-8px" @click="openBatchDialog">+ 添加面料</el-button>
     <div style="max-height: 50vh; overflow-y: auto; padding-right: 4px">
       <template v-if="formData.batchs.length > 0">
         <!-- 列表标题行 -->
@@ -208,31 +208,25 @@
               <Icon icon="ep:delete" />
             </el-button>
           </el-col>
-          <!-- 货号：双击或回车打开批次选择弹窗 -->
+          <!-- 货号（由弹窗回填，只读展示） -->
           <el-col :span="4">
-            <div @dblclick="batchSelectRef?.open(batch as any, formData.customerId)">
-              <el-input
-                v-model="batch.productName"
-                placeholder="货号(双击选择)"
-                size="small"
-                class="!w-full"
-                readonly
-                @keyup.enter="batchSelectRef?.open(batch as any, formData.customerId)"
-              />
-            </div>
+            <el-input
+              v-model="batch.productName"
+              placeholder="货号"
+              size="small"
+              class="!w-full"
+              readonly
+            />
           </el-col>
-          <!-- 批次号：双击或回车打开批次选择弹窗 -->
+          <!-- 批次号（由弹窗回填，只读展示） -->
           <el-col :span="4">
-            <div @dblclick="batchSelectRef?.open(batch as any, formData.customerId)">
-              <el-input
-                v-model="batch.batchNo"
-                placeholder="批次(双击选择)"
-                size="small"
-                class="!w-full"
-                readonly
-                @keyup.enter="batchSelectRef?.open(batch as any, formData.customerId)"
-              />
-            </div>
+            <el-input
+              v-model="batch.batchNo"
+              placeholder="批次"
+              size="small"
+              class="!w-full"
+              readonly
+            />
           </el-col>
           <el-col :span="2">
             <el-input-number
@@ -295,8 +289,8 @@
       />
     </div>
 
-    <!-- 批次选择弹窗（复用成品单的选择器） -->
-    <ProductBatchSelectDialog ref="batchSelectRef" />
+    <!-- 批次选择弹窗（多选版） -->
+    <ProductBatchSelectDialog ref="batchSelectRef" @confirm="handleBatchConfirm" />
   </Dialog>
 </template>
 
@@ -306,7 +300,8 @@ import { SalesOrderProductApi } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
-import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
+import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
+import ProductBatchSelectDialog, { type BatchConfirmItem } from './ProductBatchSelectDialog2.vue'
 
 /** 面料单 表单 */
 defineOptions({ name: 'SalesOrderProductForm' })
@@ -386,6 +381,14 @@ const formRules = {
 const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 
+/** 打开批次多选弹窗，并传入已加入表单的批次 ID，避免重复选择 */
+const openBatchDialog = () => {
+  const existingIds = formData.value.batchs
+    .map((b) => b.batchId)
+    .filter((id): id is number => id != null)
+  batchSelectRef.value?.open(existingIds)
+}
+
 // ======================== 客户选择 ========================
 /** 选择客户后自动回填手机、品牌、物流、收货人、送货地址，并同步账户余额 */
 const handleCustomerChange = (customerId: number) => {
@@ -403,23 +406,46 @@ const handleCustomerChange = (customerId: number) => {
 }
 
 // ======================== 批次列表操作 ========================
-const addBatch = () => {
-  formData.value.batchs.push({
-    productId: undefined,
-    productName: undefined,
-    batchId: undefined,
-    batchNo: undefined,
-    unitValue: undefined,
-    price: undefined,
-    pishu: undefined,
-    quantity: undefined,
-    amount: undefined,
-    note: undefined,
-  })
-}
-
 const removeBatch = (index: number) => {
   formData.value.batchs.splice(index, 1)
+}
+
+/**
+ * 批次弹窗确认回调：将选中项批量追加到面料列表
+ * 支持两种情形：有批次（batchId 有值）/ 仅选产品（batchId 为 undefined）
+ * 若当前有客户，并发查询各产品的授权价并覆盖单价
+ */
+const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
+  const customerId = formData.value.customerId
+  const newBatchs = await Promise.all(
+    rows.map(async (row) => {
+      let price = row.productPrice ?? undefined
+      if (customerId && row.productId) {
+        try {
+          const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(
+            customerId,
+            row.productId
+          )
+          if (priceInfo?.authorizedPrice != null) price = priceInfo.authorizedPrice
+        } catch {
+          // 查询失败保持 productPrice
+        }
+      }
+      return {
+        productId: row.productId,
+        productName: row.productName,
+        batchId: row.batchId,   // 仅选产品时为 undefined
+        batchNo: row.batchNo,
+        unitValue: row.unitValue,
+        price,
+        pishu: undefined,
+        quantity: undefined,
+        amount: undefined,
+        note: undefined,
+      } as BatchRow
+    })
+  )
+  formData.value.batchs.push(...newBatchs)
 }
 
 // ======================== 金额自动计算 ========================
