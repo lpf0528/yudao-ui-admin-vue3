@@ -259,7 +259,7 @@
           <el-button
             link
             type="danger"
-            @click="handleDelete(scope.row.id)"
+            @click="handleDelete(scope.row.id, scope.row.types)"
             v-hasPermi="['zc:sales-order:delete']"
           >
             删除
@@ -291,7 +291,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderProductApi, SalesOrder } from '@/api/zc/salesorder'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -393,15 +393,16 @@ const openCollectionDialog = () => {
   collectionDialogRef.value.open()
 }
 
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
+/** 删除按钮操作：面料单走 SalesOrderProductApi，其余走 SalesOrderApi */
+const handleDelete = async (id: number, types: string) => {
   try {
-    // 删除的二次确认
     await message.delConfirm()
-    // 发起删除
-    await SalesOrderApi.deleteSalesOrder(id)
+    if (types === 'mianLiao') {
+      await SalesOrderProductApi.deleteSalesOrderProduct(id)
+    } else {
+      await SalesOrderApi.deleteSalesOrder(id)
+    }
     message.success(t('common.delSuccess'))
-    // 刷新列表
     await getList()
   } catch {}
 }

@@ -259,26 +259,12 @@ export const SalesOrderProductApi = {
   },
 
   /**
-   * 确认面料单（状态 unconfirmed → confirmed）
-   * 对应后端：PUT /zc/sales-order-product/confirm?id=xxx
+   * 删除面料单
+   * 对应后端：DELETE /zc/sales-order-product/delete?id=xxx
+   *
+   * @param id 面料单 ID
    */
-  confirmSalesOrderProduct: async (id: number) => {
-    return await request.put({ url: `/zc/sales-order-product/confirm`, params: { id } })
-  },
-
-  /**
-   * 取消确认面料单
-   * 对应后端：PUT /zc/sales-order-product/cancel-confirm?id=xxx
-   */
-  cancelConfirmSalesOrderProduct: async (id: number) => {
-    return await request.put({ url: `/zc/sales-order-product/cancel-confirm`, params: { id } })
-  },
-
-  /**
-   * 标记面料单为加急
-   * 对应后端：PUT /zc/sales-order-product/expedited?orderId=xxx
-   */
-  expeditedSalesOrderProduct: async (orderId: number) => {
-    return await request.put({ url: `/zc/sales-order-product/expedited`, params: { orderId } })
-  },
+  deleteSalesOrderProduct: async (id: number) => {
+    return await request.delete({ url: `/zc/sales-order-product/delete`, params: { id } })
+  }
 }

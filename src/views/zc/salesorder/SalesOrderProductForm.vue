@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalesOrderProductApi } from '@/api/zc/salesorder'
+import { SalesOrderProductApi, SalesOrderApi } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -465,7 +465,6 @@ const submitForm = async () => {
       await SalesOrderProductApi.updateSalesOrderProduct(payload as any)
       message.success(t('common.updateSuccess'))
     }
-    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
@@ -476,9 +475,9 @@ const submitForm = async () => {
 const handleConfirm = async () => {
   formLoading.value = true
   try {
-    await SalesOrderProductApi.confirmSalesOrderProduct(formData.value.id!)
+    await SalesOrderApi.confirmSalesOrder(formData.value.id!)
+    formData.value.status = 'confirmed'
     message.success('确认订单成功')
-    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
@@ -488,9 +487,9 @@ const handleConfirm = async () => {
 const handleCancelConfirm = async () => {
   formLoading.value = true
   try {
-    await SalesOrderProductApi.cancelConfirmSalesOrderProduct(formData.value.id!)
+    await SalesOrderApi.cancelConfirmSalesOrder(formData.value.id!)
+    formData.value.status = 'unconfirmed'
     message.success('取消确认成功')
-    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
@@ -500,9 +499,8 @@ const handleCancelConfirm = async () => {
 const handleExpedite = async () => {
   formLoading.value = true
   try {
-    await SalesOrderProductApi.expeditedSalesOrderProduct(formData.value.id!)
+    await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
     message.success('设置加急成功')
-    dialogVisible.value = false
     emit('success')
   } finally {
     formLoading.value = false
