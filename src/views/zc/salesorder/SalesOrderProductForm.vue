@@ -40,157 +40,91 @@
       </el-button>
     </div>
 
-    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" v-loading="formLoading">
-      <!-- 第一行：订单号、客户、手机、下单日期、品牌 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="订单号" prop="orderNo">
-            <!-- 订单号由后端自动生成，前端只读展示 -->
-            <el-input v-model="formData.orderNo" disabled placeholder="" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="客户" prop="customerId">
-            <el-select
-              v-model="formData.customerId"
-              clearable
-              placeholder="请选择客户"
-              class="w-1/1"
-              @change="handleCustomerChange"
-            >
-              <el-option
-                v-for="item in props.customersList"
-                :key="item.id"
-                :label="`${item.shortName}/${item.contactName}`"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="手机" prop="mobile">
-            <el-input v-model="formData.mobile" placeholder="请输入手机" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="下单日期" prop="orderDate">
-            <el-date-picker
-              v-model="formData.orderDate"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="选择下单日期"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="品牌" prop="brandId">
-            <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-1/1">
-              <el-option
-                v-for="item in props.brandsList"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-      </el-row>
+    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
+      <!-- 第一行：flex 流式布局，数字为各字段宽度比例 -->
+      <div class="flex gap-x-8px">
+        <!-- 订单号 2：较窄，后端自动生成 -->
+        <el-form-item label="订单号" prop="orderNo" style="flex: 2; min-width: 0">
+          <el-input v-model="formData.orderNo" disabled placeholder="" class="w-full" />
+        </el-form-item>
+        <!-- 客户 3：需展示姓名/联系人，稍宽 -->
+        <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
+          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
+            <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 手机 2 -->
+        <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
+          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" />
+        </el-form-item>
+        <!-- 下单日期 2 -->
+        <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" />
+        </el-form-item>
+        <!-- 品牌 2 -->
+        <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+            <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 物流 2 -->
+        <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
+          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+            <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 收货人 2 -->
+        <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
+        </el-form-item>
+        <!-- 交付日期 2 -->
+        <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
+        </el-form-item>
 
-      <!-- 第二行：物流、收货人、送货地址、交付日期 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="物流" prop="logisticId">
-            <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-1/1">
-              <el-option
-                v-for="item in props.logisticsList"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="收货人" prop="receiver">
-            <el-input v-model="formData.receiver" placeholder="请输入收货人" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="送货地址" prop="deliveryAddress">
-            <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="交付日期" prop="deliveryDate">
-            <el-date-picker
-              v-model="formData.deliveryDate"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="选择交付日期"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
+      </div>
 
-      <!-- 第三行：运费、优惠金额、金额、账户余额、备注 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="运费" prop="freight">
-            <el-input-number
-              v-model="formData.freight"
-              placeholder="请输入运费"
-              :controls="false"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="优惠金额" prop="discountAmount">
-            <el-input-number
-              v-model="formData.discountAmount"
-              placeholder="请输入优惠金额"
-              :controls="false"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="金额" prop="amount">
-            <el-input v-model="formData.amount" disabled />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="账户余额">
-            <span
-              class="text-sm font-medium"
-              :class="(selectedCustomerBalance ?? 0) < 0 ? 'text-red-500' : 'text-gray-700'"
-            >
-              {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
-            </span>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="备注" prop="note">
-            <el-input v-model="formData.note" placeholder="请输入备注" />
-          </el-form-item>
-        </el-col>
-      </el-row>
+      <!-- 第二行 -->
+      <div class="flex gap-x-8px">
+        <!-- 送货地址 3：地址文字较长，适当加宽 -->
+        <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
+        </el-form-item>
+        <!-- 运费 2 -->
+        <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+        </el-form-item>
+        <!-- 优惠金额 2 -->
+        <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
+          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+        </el-form-item>
+        <!-- 金额 2 -->
+        <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
+          <el-input v-model="formData.amount" disabled class="w-full" />
+        </el-form-item>
+        <!-- 账户余额 2 -->
+        <el-form-item label="账户余额" style="flex: 2; min-width: 0">
+          <span class="text-sm font-medium" :class="(selectedCustomerBalance ?? 0) < 0 ? 'text-red-500' : 'text-gray-700'">
+            {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
+          </span>
+        </el-form-item>
+        <!-- 备注 6：剩余空间较多，撑满 -->
+        <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
+        </el-form-item>
+      </div>
     </el-form>
 
     <!-- 面料批次列表 -->
     <el-divider content-position="left">面料列表</el-divider>
-    <el-button type="primary" link class="mb-8px" @click="openBatchDialog">+ 添加面料</el-button>
-    <div style="max-height: 50vh; overflow-y: auto; padding-right: 4px">
+    <div style="height: 200px; overflow-y: auto; padding-right: 4px">
       <template v-if="formData.batchs.length > 0">
         <!-- 列表标题行 -->
         <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-4px px-4px">
           <el-col :span="1" />
-          <el-col :span="4">货号</el-col>
+          <el-col :span="5">货号</el-col>
           <el-col :span="4">批次</el-col>
-          <el-col :span="2">匹数</el-col>
-          <el-col :span="2">数量</el-col>
+          <el-col :span="3">数量</el-col>
           <el-col :span="2">单位</el-col>
           <el-col :span="3">单价</el-col>
           <el-col :span="3">金额</el-col>
@@ -208,8 +142,8 @@
               <Icon icon="ep:delete" />
             </el-button>
           </el-col>
-          <!-- 货号（由弹窗回填，只读展示） -->
-          <el-col :span="4">
+          <!-- 货号（由面板回填，只读展示） -->
+          <el-col :span="5">
             <el-input
               v-model="batch.productName"
               placeholder="货号"
@@ -218,7 +152,7 @@
               readonly
             />
           </el-col>
-          <!-- 批次号（由弹窗回填，只读展示） -->
+          <!-- 批次号（由面板回填，只读展示） -->
           <el-col :span="4">
             <el-input
               v-model="batch.batchNo"
@@ -228,16 +162,7 @@
               readonly
             />
           </el-col>
-          <el-col :span="2">
-            <el-input-number
-              v-model="batch.pishu"
-              placeholder="匹数"
-              size="small"
-              :controls="false"
-              class="!w-full"
-            />
-          </el-col>
-          <el-col :span="2">
+          <el-col :span="3">
             <el-input-number
               v-model="batch.quantity"
               placeholder="数量"
@@ -283,14 +208,15 @@
       </template>
       <el-empty
         v-else
-        description="暂无面料数据，请点击上方按钮添加"
+        description="暂无面料数据，请在下方选择面料"
         :image-size="60"
         class="py-16px"
       />
     </div>
 
-    <!-- 批次选择弹窗（多选版） -->
-    <ProductBatchSelectDialog ref="batchSelectRef" @confirm="handleBatchConfirm" />
+    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
+    <el-divider content-position="left">选择面料</el-divider>
+    <ProductBatchSelectPanel :existingBatchIds="existingBatchIds" @confirm="handleBatchConfirm" />
   </Dialog>
 </template>
 
@@ -301,7 +227,7 @@ import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
-import ProductBatchSelectDialog, { type BatchConfirmItem } from './ProductBatchSelectDialog2.vue'
+import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
 
 /** 面料单 表单 */
 defineOptions({ name: 'SalesOrderProductForm' })
@@ -337,9 +263,8 @@ interface BatchRow {
   batchNo?: string      // 批次号（展示用）
   unitValue?: string    // 计量单位
   price?: number        // 单价
-  pishu?: number        // 匹数
   quantity?: number     // 数量
-  amount?: number       // 金额（匹数 × 单价，自动计算）
+  amount?: number       // 金额（数量 × 单价，自动计算）
   note?: string         // 备注
 }
 
@@ -375,19 +300,15 @@ const formData = ref(getInitFormData())
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
-  orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
+  // orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
 }
 
 const formRef = ref()
-const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 
-/** 打开批次多选弹窗，并传入已加入表单的批次 ID，避免重复选择 */
-const openBatchDialog = () => {
-  const existingIds = formData.value.batchs
-    .map((b) => b.batchId)
-    .filter((id): id is number => id != null)
-  batchSelectRef.value?.open(existingIds)
-}
+/** 已加入列表的批次 ID，传给面板以禁止重复选择 */
+const existingBatchIds = computed(() =>
+  formData.value.batchs.map((b) => b.batchId).filter((id): id is number => id != null)
+)
 
 // ======================== 客户选择 ========================
 /** 选择客户后自动回填手机、品牌、物流、收货人、送货地址，并同步账户余额 */
@@ -438,7 +359,6 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
         batchNo: row.batchNo,
         unitValue: row.unitValue,
         price,
-        pishu: undefined,
         quantity: undefined,
         amount: undefined,
         note: undefined,
@@ -453,7 +373,7 @@ const round2 = (val: number) => Math.round(val * 100) / 100
 
 /**
  * 监听整个表单变化，自动计算：
- * 1. 批次行金额 = 匹数 × 单价，保留两位小数
+ * 1. 批次行金额 = 数量 × 单价，保留两位小数
  * 2. 订单金额 = 所有批次行金额之和 + 运费 - 优惠金额，保留两位小数
  */
 watch(
@@ -462,8 +382,8 @@ watch(
     let batchTotal = 0
     form.batchs.forEach((batch) => {
       batch.amount =
-        batch.pishu != null || batch.price != null
-          ? round2((batch.pishu ?? 0) * (batch.price ?? 0))
+        batch.quantity != null || batch.price != null
+          ? round2((batch.quantity ?? 0) * (batch.price ?? 0))
           : undefined
       batchTotal += batch.amount ?? 0
     })
@@ -493,7 +413,6 @@ const open = async (type: string, id?: number) => {
           batchNo: b.batchNo,
           unitValue: b.unitValue,
           price: b.price,
-          pishu: b.pishu,
           quantity: b.quantity,
           amount: b.amount,
           note: b.note,
@@ -533,7 +452,6 @@ const submitForm = async () => {
       batchs: formData.value.batchs.map((b) => ({
         product_id: b.productId,
         batch_id: b.batchId,
-        pishu: b.pishu,
         quantity: b.quantity,
         price: b.price,
         amount: b.amount,
@@ -590,3 +508,8 @@ const handleExpedite = async () => {
   }
 }
 </script>
+
+<style scoped>
+/* flex 流式布局中防止 label 因列宽过窄换行；:deep() 穿透 Element Plus 内部 DOM */
+:deep(.el-form-item__label) { white-space: nowrap; }
+</style>
