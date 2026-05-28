@@ -476,7 +476,7 @@
 
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -717,21 +717,18 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  // 编辑模式：并发拉取订单基础信息 + 三层明细，回填到表单
+  // 编辑模式：通过 detail 接口一次性获取完整订单（主表 + 三层嵌套明细）
   if (id) {
     formLoading.value = true
     try {
-      const [order, details] = await Promise.all([
-        SalesOrderApi.getSalesOrder(id),
-        SalesOrderApi.getSalesOrderDetail(id)
-      ])
+      const detail: ZcSalesOrderDetailRespVO = await SalesOrderApi.getSalesOrderDetail(id)
       formData.value = {
-        ...(order as SalesOrder),
-        curtains: transformDetailCurtains(details)
+        ...detail,
+        curtains: transformDetailCurtains(detail.curtains)
       }
-      // 同步客户余额展示（编辑模式下也需要显示）
-      if (order?.customerId) {
-        const customer = props.customersList.find((item) => item.id === order.customerId)
+      // 同步客户余额展示
+      if (detail.customerId) {
+        const customer = props.customersList.find((item) => item.id === detail.customerId)
         selectedCustomerBalance.value = customer?.balance ?? null
       }
     } finally {

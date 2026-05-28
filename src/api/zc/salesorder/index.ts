@@ -99,6 +99,11 @@ export interface SalesOrderDetailCurtain extends SalesOrderCurtain {
   structures?: (SalesOrderStructure & { materials?: ZCSalesOrderMaterial[] })[]
 }
 
+/** 销售订单完整详情响应 VO（主表信息 + 窗帘→结构→用料 三层嵌套） */
+export interface ZcSalesOrderDetailRespVO extends SalesOrder {
+  curtains: SalesOrderDetailCurtain[]
+}
+
 // 销售订单 API
 export const SalesOrderApi = {
   // 查询销售订单分页
@@ -112,11 +117,14 @@ export const SalesOrderApi = {
   },
 
   /**
-   * 查询销售订单的全量明细（窗帘 → 结构 → 用料 三层嵌套）
-   * 对应后端：GET /zc/sales-order/detail?orderId=xxx
+   * 获取销售订单完整详情（主表信息 + 窗帘→结构→用料 三层嵌套）
+   * 对应后端：GET /zc/sales-order/detail?id=xxx
+   *
+   * @param id 销售订单 ID
+   * @returns 完整订单详情（含 curtains 三层嵌套）
    */
-  getSalesOrderDetail: async (orderId: number): Promise<SalesOrderDetailCurtain[]> => {
-    return await request.get({ url: `/zc/sales-order/detail`, params: { orderId } })
+  getSalesOrderDetail: async (id: number): Promise<ZcSalesOrderDetailRespVO> => {
+    return await request.get({ url: `/zc/sales-order/detail`, params: { id } })
   },
 
   // 新增销售订单
