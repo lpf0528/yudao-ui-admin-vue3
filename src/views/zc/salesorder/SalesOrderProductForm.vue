@@ -205,7 +205,7 @@
 
     <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
     <el-divider content-position="left">选择面料</el-divider>
-    <ProductBatchSelectPanel :existingBatchIds="existingBatchIds" @confirm="handleBatchConfirm" />
+    <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
   </Dialog>
 </template>
 
@@ -292,10 +292,6 @@ const formRules = {
 
 const formRef = ref()
 
-/** 已加入列表的批次 ID，传给面板以禁止重复选择 */
-const existingBatchIds = computed(() =>
-  formData.value.batchs.map((b) => b.batchId).filter((id): id is number => id != null)
-)
 
 // ======================== 客户选择 ========================
 /**

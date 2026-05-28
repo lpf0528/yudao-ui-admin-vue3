@@ -108,14 +108,13 @@
             :stripe="true"
             :show-overflow-tooltip="true"
             :max-height="tableMaxHeight"
-            :row-class-name="getRowClassName"
             size="small"
             style="cursor: pointer"
             @selection-change="handleSelectionChange"
             @row-click="handleRowClick"
             @row-dblclick="(row: BatchRow) => handleDblclick(row)"
           >
-            <el-table-column type="selection" width="40" align="center" fixed="left" :selectable="isSelectable" />
+            <el-table-column type="selection" width="40" align="center" fixed="left" />
             <el-table-column label="批号" align="center" prop="batchNo" min-width="90px" />
             <el-table-column label="入库日期" align="center" prop="inboundDate" width="96px" />
             <el-table-column label="规格" align="center" prop="specValue" />
@@ -168,10 +167,6 @@ export interface BatchConfirmItem {
 
 defineOptions({ name: 'ProductBatchSelectPanel' })
 
-const props = defineProps<{
-  /** 已加入列表的批次 ID，这些行置灰不可再选 */
-  existingBatchIds: number[]
-}>()
 
 const emit = defineEmits<{
   (e: 'confirm', rows: BatchConfirmItem[]): void
@@ -246,25 +241,17 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 已加入过的批次行不可勾选 */
-const isSelectable = (row: BatchRow) => !props.existingBatchIds.includes(row.id)
-
-const getRowClassName = ({ row }: { row: BatchRow }) =>
-  props.existingBatchIds.includes(row.id) ? 'batch-row-disabled' : ''
-
 const handleSelectionChange = (rows: BatchRow[]) => {
   selectedRows.value = rows
 }
 
-/** 点击行：已加入的行忽略；其余切换勾选 */
+/** 点击行切换勾选 */
 const handleRowClick = (row: BatchRow) => {
-  if (props.existingBatchIds.includes(row.id)) return
   tableRef.value?.toggleRowSelection(row)
 }
 
-/** 双击行：已加入的行忽略；否则直接确认该行 */
+/** 双击行直接确认该行 */
 const handleDblclick = (row: BatchRow) => {
-  if (props.existingBatchIds.includes(row.id)) return
   emit('confirm', [rowToItem(row)])
   tableRef.value?.clearSelection()
   message.success('已添加 1 条批次')
@@ -319,11 +306,4 @@ const handleConfirm = () => {
 </script>
 
 <style scoped>
-:deep(.batch-row-disabled) {
-  opacity: 0.45;
-  cursor: not-allowed !important;
-}
-:deep(.batch-row-disabled .el-checkbox__input) {
-  pointer-events: none;
-}
 </style>
