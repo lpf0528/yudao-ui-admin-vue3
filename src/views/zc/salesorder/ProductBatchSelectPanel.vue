@@ -33,7 +33,12 @@
             "
             @click="handleSelectProduct(item)"
           >
-            {{ item.name }}
+            <div class="font-medium truncate">{{ item.name }}</div>
+            <div class="text-xs mt-1px" :class="selectedProduct?.id === item.id ? 'text-blue-100' : 'text-gray-400'">
+              <span v-if="item.specValue">规格 {{ item.specValue }}</span>
+              <span v-if="item.specValue && item.onePrice != null"> · </span>
+              <span v-if="item.onePrice != null">¥{{ item.onePrice }}</span>
+            </div>
           </div>
           <el-empty
             v-if="!filteredProductList.length && !loading"
@@ -158,6 +163,7 @@ export interface BatchConfirmItem {
   batchNo?: string
   unitValue?: string
   productPrice?: number
+  onePrice?: number     // 产品一级销售价，用于回填单价
 }
 
 defineOptions({ name: 'ProductBatchSelectPanel' })

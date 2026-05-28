@@ -9,6 +9,8 @@ export interface ProductSimpleVO {
   id: number
   name: string
   inboundPrice: number
+  onePrice?: number   // 一级销售价
+  specValue?: string  // 规格展示值
 }
 
 /** 产品信息 */

@@ -122,10 +122,9 @@
         <!-- 列表标题行 -->
         <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-4px px-4px">
           <el-col :span="1" />
-          <el-col :span="5">货号</el-col>
-          <el-col :span="4">批次</el-col>
+          <el-col :span="6">货号</el-col>
+          <el-col :span="5">批次</el-col>
           <el-col :span="3">数量</el-col>
-          <el-col :span="2">单位</el-col>
           <el-col :span="3">单价</el-col>
           <el-col :span="3">金额</el-col>
           <el-col :span="3">备注</el-col>
@@ -143,7 +142,7 @@
             </el-button>
           </el-col>
           <!-- 货号（由面板回填，只读展示） -->
-          <el-col :span="5">
+          <el-col :span="6">
             <el-input
               v-model="batch.productName"
               placeholder="货号"
@@ -153,7 +152,7 @@
             />
           </el-col>
           <!-- 批次号（由面板回填，只读展示） -->
-          <el-col :span="4">
+          <el-col :span="5">
             <el-input
               v-model="batch.batchNo"
               placeholder="批次"
@@ -170,16 +169,6 @@
               :controls="false"
               class="!w-full"
             />
-          </el-col>
-          <el-col :span="2">
-            <el-select v-model="batch.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
-              <el-option
-                v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
           </el-col>
           <el-col :span="3">
             <el-input-number
@@ -221,7 +210,6 @@
 </template>
 
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { SalesOrderProductApi } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -261,7 +249,6 @@ interface BatchRow {
   productName?: string  // 货号名称（展示用）
   batchId?: number      // 批次 ID → 提交为 batch_id
   batchNo?: string      // 批次号（展示用）
-  unitValue?: string    // 计量单位
   price?: number        // 单价
   quantity?: number     // 数量
   amount?: number       // 金额（数量 × 单价，自动计算）
@@ -311,8 +298,12 @@ const existingBatchIds = computed(() =>
 )
 
 // ======================== 客户选择 ========================
-/** 选择客户后自动回填手机、品牌、物流、收货人、送货地址，并同步账户余额 */
-const handleCustomerChange = (customerId: number) => {
+/**
+ * 选择客户后：
+ * 1. 回填手机、品牌、物流、收货人、送货地址、账户余额
+ * 2. 并发查询已选面料中各产品的授权价，有则覆盖单价
+ */
+const handleCustomerChange = async (customerId: number) => {
   const customer = props.customersList.find((item) => item.id === customerId)
   if (!customer) {
     selectedCustomerBalance.value = null
@@ -324,6 +315,21 @@ const handleCustomerChange = (customerId: number) => {
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
   selectedCustomerBalance.value = customer.balance
+
+  // 更新已选面料的单价
+  const batchs = formData.value.batchs
+  if (!batchs.length) return
+  await Promise.all(
+    batchs.map(async (batch) => {
+      if (!batch.productId) return
+      try {
+        const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(customerId, batch.productId)
+        if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
+      } catch {
+        // 查询失败保持原单价
+      }
+    })
+  )
 }
 
 // ======================== 批次列表操作 ========================
@@ -357,7 +363,6 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
         productName: row.productName,
         batchId: row.batchId,   // 仅选产品时为 undefined
         batchNo: row.batchNo,
-        unitValue: row.unitValue,
         price,
         quantity: undefined,
         amount: undefined,
@@ -411,7 +416,6 @@ const open = async (type: string, id?: number) => {
           productName: b.productName,
           batchId: b.batch_id,
           batchNo: b.batchNo,
-          unitValue: b.unitValue,
           price: b.price,
           quantity: b.quantity,
           amount: b.amount,
