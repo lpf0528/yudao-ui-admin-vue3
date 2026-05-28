@@ -594,7 +594,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
   receiver: undefined,
   deliveryAddress: undefined,
   freight: undefined,
-  types: 'chengpin',
+  types: 'chengPin',
   discountAmount: undefined,
   totalAmount: undefined,
   deliveryDate: undefined,

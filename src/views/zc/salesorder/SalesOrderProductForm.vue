@@ -446,15 +446,15 @@ const submitForm = async () => {
   }
   formLoading.value = true
   try {
-    // 将前端 camelCase 批次行映射为后端约定的 snake_case 字段
     const payload = {
       ...formData.value,
       batchs: formData.value.batchs.map((b) => ({
-        product_id: b.productId,
-        batch_id: b.batchId,
+        productId: b.productId,
+        batchId: b.batchId,
         quantity: b.quantity,
         price: b.price,
         amount: b.amount,
+        note: b.note,
       })),
     }
     if (formType.value === 'create') {

@@ -193,12 +193,12 @@ export const SalesOrderApi = {
 
 /** 面料单 - 批次行提交结构（与后端字段名一致） */
 export interface SalesOrderProductBatch {
-  product_id?: number   // 产品 ID
-  batch_id?: number     // 批次 ID
-  pishu?: number        // 匹数
+  productId?: number    // 产品 ID
+  batchId?: number      // 批次 ID
   quantity?: number     // 数量
   price?: number        // 单价
   amount?: number       // 金额
+  note?: string         // 备注
 }
 
 /** 面料单提交/响应数据结构 */
