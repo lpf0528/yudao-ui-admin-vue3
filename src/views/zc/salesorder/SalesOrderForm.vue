@@ -31,133 +31,78 @@
       </el-button>
     </div>
 
-    <el-form
-      ref="formRef"
-      :model="formData"
-      :rules="formRules"
-      label-width="80px"
-      v-loading="formLoading"
-    >
-      <!-- 第一行：订单号、客户、手机、下单日期 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="订单号" prop="orderNo">
-            <!-- 订单号由后端自动生成，前端只读展示，创建和编辑均不可修改 -->
-            <el-input v-model="formData.orderNo" disabled placeholder="" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="客户" prop="customerId">
-            <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-1/1" @change="handleCustomerChange">
-              <el-option
-                v-for="item in props.customersList"
-                :key="item.id"
-                :label="`${item.shortName}/${item.contactName}`"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="手机" prop="mobile">
-            <el-input v-model="formData.mobile" placeholder="请输入手机" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="下单日期" prop="orderDate">
-            <el-date-picker
-              v-model="formData.orderDate"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="选择下单日期"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
+    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
+      <!-- 第一行：订单号、客户、手机、下单日期、品牌、物流、收货人、交付日期 -->
+      <div class="flex gap-x-8px">
+        <!-- 订单号：后端自动生成，只读 -->
+        <el-form-item label="订单号" prop="orderNo" style="flex: 2; min-width: 0">
+          <el-input v-model="formData.orderNo" disabled placeholder="" class="w-full" />
+        </el-form-item>
+        <!-- 客户：展示简称/联系人，稍宽 -->
+        <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
+          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
+            <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 手机 -->
+        <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
+          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" />
+        </el-form-item>
+        <!-- 下单日期 -->
+        <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" />
+        </el-form-item>
+        <!-- 品牌 -->
+        <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+            <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 物流 -->
+        <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
+          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+            <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <!-- 收货人 -->
+        <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
+        </el-form-item>
+        <!-- 交付日期 -->
+        <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
+        </el-form-item>
+      </div>
 
-        <el-col :span="4">
-          <el-form-item label="品牌" prop="brandId">
-            <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-1/1">
-              <el-option
-                v-for="item in props.brandsList"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-      </el-row>
-
-      <!-- 第二行：物流、收货人、送货地址 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="物流" prop="logisticId">
-            <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-1/1">
-              <el-option
-                v-for="item in props.logisticsList"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="收货人" prop="receiver">
-            <el-input v-model="formData.receiver" placeholder="请输入收货人" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="送货地址" prop="deliveryAddress">
-            <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="交付日期" prop="deliveryDate">
-            <el-date-picker
-              v-model="formData.deliveryDate"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="选择交付日期"
-              class="!w-full"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
-
-      <!-- 第三行：运费、优惠金额、金额、账户余额 / 品牌、交付日期、备注 -->
-      <el-row :gutter="16">
-        <el-col :span="4">
-          <el-form-item label="运费" prop="freight">
-            <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="优惠金额" prop="discountAmount">
-            <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="金额" prop="amount">
-            <el-input v-model="formData.amount" disabled />
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item label="账户余额">
-            <span class="text-sm font-medium" :class="selectedCustomerBalance < 0 ? 'text-red-500' : 'text-gray-700'">
-              {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
-            </span>
-          </el-form-item>
-        </el-col>
-
-
-        <el-col :span="8">
-          <el-form-item label="备注" prop="note">
-            <el-input v-model="formData.note" placeholder="请输入备注" />
-          </el-form-item>
-        </el-col>
-      </el-row>
+      <!-- 第二行：送货地址、运费、优惠金额、金额、账户余额、备注 -->
+      <div class="flex gap-x-8px">
+        <!-- 送货地址：地址文字较长，适当加宽 -->
+        <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
+        </el-form-item>
+        <!-- 运费 -->
+        <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+        </el-form-item>
+        <!-- 优惠金额 -->
+        <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
+          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+        </el-form-item>
+        <!-- 金额：自动计算，只读 -->
+        <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
+          <el-input v-model="formData.amount" disabled class="w-full" />
+        </el-form-item>
+        <!-- 账户余额 -->
+        <el-form-item label="账户余额" style="flex: 2; min-width: 0">
+          <span class="text-sm font-medium" :class="(selectedCustomerBalance ?? 0) < 0 ? 'text-red-500' : 'text-gray-700'">
+            {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
+          </span>
+        </el-form-item>
+        <!-- 备注：剩余空间较多，撑满 -->
+        <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
+        </el-form-item>
+      </div>
     </el-form>
 
     <el-divider content-position="left">窗帘列表</el-divider>
@@ -260,219 +205,219 @@
 
         <el-divider content-position="left">结构列表</el-divider>
         <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板..." style="min-height: 60px">
-        <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
-        <div
-          v-for="(structure, sIdx) in curtain.structures"
-          :key="sIdx"
-          class="mt-8px border border-solid border-gray-200 rounded p-12px"
-        >
-          <div class="flex justify-between items-center mb-8px">
-            <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
-            <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
-          </div>
-          <el-row :gutter="16">
-            <el-col :span="3">
-              <el-form-item label="结构">
-                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
-                  <el-option
-                    v-for="item in curtainStructureList"
-                    :key="item.id"
-                    :label="item.name"
-                    :value="item.id"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="3">
-              <el-form-item label="高">
-                <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3">
-              <el-form-item label="宽">
-                <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">
-              <el-form-item label="左转角">
-                <el-input v-model="structure.leftCorner" placeholder="左转角" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'rightCorner')">
-              <el-form-item label="右转角">
-                <el-input v-model="structure.rightCorner" placeholder="右转角" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pasteDirection')">
-              <el-form-item label="粘贴方向">
-                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1">
-                  <el-option
-                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
-                    :key="dict.value"
-                    :label="dict.label"
-                    :value="dict.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
-              <el-form-item label="安装工艺">
-                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1">
-                  <el-option
-                    v-for="item in props.installProcessList"
-                    :key="item.id"
-                    :label="item.name"
-                    :value="item.id"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
-              <el-form-item label="打开方式">
-                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1">
-                  <el-option
-                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
-                    :key="dict.value"
-                    :label="dict.label"
-                    :value="dict.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'processType')">
-              <el-form-item label="加工类型">
-                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1">
-                  <el-option
-                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
-                    :key="dict.value"
-                    :label="dict.label"
-                    :value="dict.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'isShaping')">
-              <el-form-item label="是否定型">
-                <el-input v-model="structure.isShaping" placeholder="是否定型" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
-              <el-form-item label="总褶数">
-                <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsDistance')">
-              <el-form-item label="褶距">
-                <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="3" v-if="hasAttr(structure.structureId, 'skirtHeight')">
-              <el-form-item label="裙摆高度">
-                <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="9">
-              <el-form-item label="备注">
-                <el-input v-model="structure.note" placeholder="备注" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <div class="mt-4px pl-4px">
-            <div class="flex items-center mb-2px">
-              <span class="text-sm font-medium text-gray-600 mr-8px">用料列表</span>
-              <el-button type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
+          <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
+          <div
+            v-for="(structure, sIdx) in curtain.structures"
+            :key="sIdx"
+            class="mt-8px border border-solid border-gray-200 rounded p-12px"
+          >
+            <div class="flex justify-between items-center mb-8px">
+              <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
+              <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
             </div>
-            <template v-if="structure.materials.length > 0">
-              <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
-                <el-col :span="1" />
-                <el-col :span="3">组件类型</el-col>
-                <el-col :span="3">货号</el-col>
-                <el-col :span="3">批次</el-col>
-                <el-col :span="2">单价</el-col>
-                <el-col :span="2">用料</el-col>
-                <el-col :span="2">单位</el-col>
-                <el-col :span="2">折扣率</el-col>
-                <el-col :span="2">小计</el-col>
-                <el-col :span="4">备注</el-col>
-              </el-row>
-              <el-row
-                v-for="(material, mIdx) in structure.materials"
-                :key="mIdx"
-                :gutter="12"
-                class="mb-2px items-center rounded bg-blue-50 px-2px py-2px"
-              >
-                <el-col :span="1" class="flex justify-center">
-                  <el-button link type="danger" size="small" @click="removeMaterial(structure, mIdx)">
-                    <Icon icon="ep:delete" />
-                  </el-button>
-                </el-col>
-                <el-col :span="3">
-                  <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1">
+            <el-row :gutter="16">
+              <el-col :span="3">
+                <el-form-item label="结构">
+                  <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
                     <el-option
-                      v-for="item in curtainStructureElementList"
+                      v-for="item in curtainStructureList"
                       :key="item.id"
                       :label="item.name"
                       :value="item.id"
                     />
                   </el-select>
-                </el-col>
-                <el-col :span="3">
-                  <!-- 显示产品名称，回车或双击打开批次选择弹窗 -->
-                  <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
-                    <el-input
-                      v-model="material.productName"
-                      placeholder="货号(回车/双击选择)"
-                      size="small"
-                      class="!w-full"
-                      readonly
-                      @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
-                    />
-                  </div>
-                </el-col>
-                <el-col :span="3">
-                  <!-- 显示批次号，回车或双击打开批次选择弹窗 -->
-                  <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
-                    <el-input
-                      v-model="material.batchNo"
-                      placeholder="批次(回车/双击选择)"
-                      size="small"
-                      class="!w-full"
-                      readonly
-                      @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
-                    />
-                  </div>
-                </el-col>
-                <el-col :span="2">
-                  <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
-                </el-col>
-                <el-col :span="2">
-                  <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
-                </el-col>
-                <el-col :span="2">
-                  <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
+                </el-form-item>
+              </el-col>
+              <el-col :span="3">
+                <el-form-item label="高">
+                  <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3">
+                <el-form-item label="宽">
+                  <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">
+                <el-form-item label="左转角">
+                  <el-input v-model="structure.leftCorner" placeholder="左转角" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'rightCorner')">
+                <el-form-item label="右转角">
+                  <el-input v-model="structure.rightCorner" placeholder="右转角" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pasteDirection')">
+                <el-form-item label="粘贴方向">
+                  <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1">
                     <el-option
-                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
+                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
                       :key="dict.value"
                       :label="dict.label"
                       :value="dict.value"
                     />
                   </el-select>
-                </el-col>
-                <el-col :span="2">
-                  <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
-                </el-col>
-                <el-col :span="2">
-                  <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
-                  <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
-                </el-col>
-                <el-col :span="4">
-                  <el-input v-model="material.note" placeholder="备注" size="small" />
-                </el-col>
-              </el-row>
-            </template>
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
+                <el-form-item label="安装工艺">
+                  <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1">
+                    <el-option
+                      v-for="item in props.installProcessList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
+                <el-form-item label="打开方式">
+                  <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1">
+                    <el-option
+                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
+                      :key="dict.value"
+                      :label="dict.label"
+                      :value="dict.value"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'processType')">
+                <el-form-item label="加工类型">
+                  <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1">
+                    <el-option
+                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
+                      :key="dict.value"
+                      :label="dict.label"
+                      :value="dict.value"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'isShaping')">
+                <el-form-item label="是否定型">
+                  <el-input v-model="structure.isShaping" placeholder="是否定型" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
+                <el-form-item label="总褶数">
+                  <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsDistance')">
+                <el-form-item label="褶距">
+                  <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="3" v-if="hasAttr(structure.structureId, 'skirtHeight')">
+                <el-form-item label="裙摆高度">
+                  <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="9">
+                <el-form-item label="备注">
+                  <el-input v-model="structure.note" placeholder="备注" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <div class="mt-4px pl-4px">
+              <div class="flex items-center mb-2px">
+                <span class="text-sm font-medium text-gray-600 mr-8px">用料列表</span>
+                <el-button type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
+              </div>
+              <template v-if="structure.materials.length > 0">
+                <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
+                  <el-col :span="1" />
+                  <el-col :span="3">组件类型</el-col>
+                  <el-col :span="3">货号</el-col>
+                  <el-col :span="3">批次</el-col>
+                  <el-col :span="2">单价</el-col>
+                  <el-col :span="2">用料</el-col>
+                  <el-col :span="2">单位</el-col>
+                  <el-col :span="2">折扣率</el-col>
+                  <el-col :span="2">小计</el-col>
+                  <el-col :span="4">备注</el-col>
+                </el-row>
+                <el-row
+                  v-for="(material, mIdx) in structure.materials"
+                  :key="mIdx"
+                  :gutter="12"
+                  class="mb-2px items-center rounded bg-blue-50 px-2px py-2px"
+                >
+                  <el-col :span="1" class="flex justify-center">
+                    <el-button link type="danger" size="small" @click="removeMaterial(structure, mIdx)">
+                      <Icon icon="ep:delete" />
+                    </el-button>
+                  </el-col>
+                  <el-col :span="3">
+                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1">
+                      <el-option
+                        v-for="item in curtainStructureElementList"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id"
+                      />
+                    </el-select>
+                  </el-col>
+                  <el-col :span="3">
+                    <!-- 显示产品名称，回车或双击打开批次选择弹窗 -->
+                    <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
+                      <el-input
+                        v-model="material.productName"
+                        placeholder="货号(回车/双击选择)"
+                        size="small"
+                        class="!w-full"
+                        readonly
+                        @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
+                      />
+                    </div>
+                  </el-col>
+                  <el-col :span="3">
+                    <!-- 显示批次号，回车或双击打开批次选择弹窗 -->
+                    <div @dblclick="batchSelectRef?.open(material, formData.customerId)">
+                      <el-input
+                        v-model="material.batchNo"
+                        placeholder="批次(回车/双击选择)"
+                        size="small"
+                        class="!w-full"
+                        readonly
+                        @keyup.enter="batchSelectRef?.open(material, formData.customerId)"
+                      />
+                    </div>
+                  </el-col>
+                  <el-col :span="2">
+                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
+                  </el-col>
+                  <el-col :span="2">
+                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
+                  </el-col>
+                  <el-col :span="2">
+                    <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
+                      <el-option
+                        v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="dict.value"
+                      />
+                    </el-select>
+                  </el-col>
+                  <el-col :span="2">
+                    <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
+                  </el-col>
+                  <el-col :span="2">
+                    <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
+                    <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
+                  </el-col>
+                  <el-col :span="4">
+                    <el-input v-model="material.note" placeholder="备注" size="small" />
+                  </el-col>
+                </el-row>
+              </template>
+            </div>
           </div>
-        </div>
         </div>
       </el-card>
     </div>
@@ -1021,3 +966,8 @@ const resetForm = () => {
   formRef.value?.resetFields()
 }
 </script>
+
+<style scoped>
+/* flex 流式布局中防止 label 因列宽过窄换行；:deep() 穿透 Element Plus 内部 DOM */
+:deep(.el-form-item__label) { white-space: nowrap; }
+</style>
