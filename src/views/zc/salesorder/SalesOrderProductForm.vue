@@ -245,9 +245,10 @@ const selectedCustomerBalance = ref<number | null>(null)
  * 以便直接传给 ProductBatchSelectDialog 回填；提交时映射为 product_id / batch_id（后端约定）
  */
 interface BatchRow {
-  productId?: number    // 产品 ID → 提交为 product_id
+  id?: number           // 产品行 ID（编辑时回传，新增行为 undefined）
+  productId?: number    // 产品 ID
   productName?: string  // 货号名称（展示用）
-  batchId?: number      // 批次 ID → 提交为 batch_id
+  batchId?: number      // 批次 ID
   batchNo?: string      // 批次号（展示用）
   price?: number        // 单价
   quantity?: number     // 数量
@@ -406,11 +407,11 @@ const open = async (type: string, id?: number) => {
       const data = await SalesOrderProductApi.getSalesOrderProduct(id)
       formData.value = {
         ...data,
-        // 后端返回 snake_case 字段，映射为前端 camelCase 以便与批次选择弹窗兼容
         batchs: (data.batchs ?? []).map((b: any) => ({
-          productId: b.product_id,
+          id: b.id,
+          productId: b.productId,
           productName: b.productName,
-          batchId: b.batch_id,
+          batchId: b.batchId,
           batchNo: b.batchNo,
           price: b.price,
           quantity: b.quantity,
@@ -449,6 +450,7 @@ const submitForm = async () => {
     const payload = {
       ...formData.value,
       batchs: formData.value.batchs.map((b) => ({
+        id: b.id,
         productId: b.productId,
         batchId: b.batchId,
         quantity: b.quantity,

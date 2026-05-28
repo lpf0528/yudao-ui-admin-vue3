@@ -191,10 +191,13 @@ export const SalesOrderApi = {
 
 // ======================== 面料单 ========================
 
-/** 面料单 - 批次行提交结构（与后端字段名一致） */
+/** 面料单 - 批次行提交/响应结构 */
 export interface SalesOrderProductBatch {
+  id?: number           // 产品行 ID（编辑时回传，用于后端区分新增/更新）
   productId?: number    // 产品 ID
+  productName?: string  // 产品名称（仅展示用，后端返回）
   batchId?: number      // 批次 ID
+  batchNo?: string      // 批次号（仅展示用，后端返回）
   quantity?: number     // 数量
   price?: number        // 单价
   amount?: number       // 金额
@@ -206,25 +209,28 @@ export interface SalesOrderProductVO {
   id?: number
   orderNo?: string
   customerId?: number
+  customerName?: string  // 客户名称（仅展示用）
   mobile?: string
   brandId?: number
   orderDate?: string
   logisticId?: number
+  logisticName?: string  // 物流名称（仅展示用）
   receiver?: string
   deliveryAddress?: string
   freight?: number
   types?: string
   discountAmount?: number
-  amount?: number
+  totalAmount?: number   // 总金额
+  amount?: number        // 订单金额（总金额 - 优惠）
+  amountReceived?: number // 已收金额
   deliveryDate?: string
   payStatus?: string
   status?: string
   confirmTime?: string | number
   isExpedited?: boolean
   note?: string
+  createTime?: string    // 创建时间
   batchs: SalesOrderProductBatch[]
-  customerName?: string
-  logisticName?: string
 }
 
 export const SalesOrderProductApi = {
