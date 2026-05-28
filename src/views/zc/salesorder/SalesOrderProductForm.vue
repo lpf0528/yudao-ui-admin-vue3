@@ -48,7 +48,7 @@
           <el-input v-model="formData.orderNo" disabled placeholder="" class="w-full" />
         </el-form-item>
         <!-- 客户 3：需展示姓名/联系人，稍宽 -->
-        <el-form-item label="客户" prop="customerId" style="flex: 2.5%; min-width: 0">
+        <el-form-item label="客户" prop="customerId" style="flex: 2.5; min-width: 0">
           <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
             <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
           </el-select>
@@ -59,7 +59,7 @@
         </el-form-item>
         <!-- 下单日期 2 -->
         <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" />
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :clearable="false" />
         </el-form-item>
         <!-- 品牌 2 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
