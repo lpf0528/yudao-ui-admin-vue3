@@ -142,11 +142,6 @@ export const SalesOrderApi = {
     return await request.delete({ url: `/zc/sales-order/delete?id=` + id })
   },
 
-  /** 批量删除销售订单 */
-  deleteSalesOrderList: async (ids: number[]) => {
-    return await request.delete({ url: `/zc/sales-order/delete-list?ids=${ids.join(',')}` })
-  },
-
   /**
    * 确认销售订单（状态 unconfirmed → confirmed，扣减客户余额）
    * 对应后端：PUT /zc/sales-order/confirm?id=xxx

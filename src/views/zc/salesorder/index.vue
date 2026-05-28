@@ -146,7 +146,7 @@
         >
           <Icon icon="ep:plus" class="mr-5px" /> 面料单
         </el-button>
-        <el-button
+        <!-- <el-button
           type="success"
           plain
           @click="handleExport"
@@ -154,16 +154,7 @@
           v-hasPermi="['zc:sales-order:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
-        </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:sales-order:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+        </el-button> -->
         <el-button
           type="warning"
           plain
@@ -407,17 +398,6 @@ const handleDelete = async (id: number, types: string) => {
   } catch {}
 }
 
-/** 批量删除销售订单 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await SalesOrderApi.deleteSalesOrderList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
 
 const handleRowCheckboxChange = (records: SalesOrder[]) => {
   checkedIds.value = records.map((item) => item.id!);

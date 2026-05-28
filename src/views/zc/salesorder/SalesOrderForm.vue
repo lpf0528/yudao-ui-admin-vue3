@@ -50,7 +50,7 @@
         </el-form-item>
         <!-- 下单日期 -->
         <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :disabled="isConfirmed" />
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :disabled="isConfirmed" :clearable="false" />
         </el-form-item>
         <!-- 品牌 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
@@ -616,7 +616,7 @@ const formData = ref(getInitFormData())
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
-  orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
+  // orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
