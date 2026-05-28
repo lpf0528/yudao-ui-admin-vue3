@@ -44,11 +44,11 @@
       <!-- 第一行：flex 流式布局，数字为各字段宽度比例 -->
       <div class="flex gap-x-8px">
         <!-- 订单号 2：较窄，后端自动生成 -->
-        <el-form-item label="订单号" prop="orderNo" style="flex: 2; min-width: 0">
+        <el-form-item label="订单号" prop="orderNo" style="flex: 2.5; min-width: 0">
           <el-input v-model="formData.orderNo" disabled placeholder="" class="w-full" />
         </el-form-item>
         <!-- 客户 3：需展示姓名/联系人，稍宽 -->
-        <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
+        <el-form-item label="客户" prop="customerId" style="flex: 2.5%; min-width: 0">
           <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
             <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
           </el-select>
@@ -450,7 +450,6 @@ const submitForm = async () => {
     const payload = {
       ...formData.value,
       batchs: formData.value.batchs.map((b) => ({
-        id: b.id,
         productId: b.productId,
         batchId: b.batchId,
         quantity: b.quantity,
