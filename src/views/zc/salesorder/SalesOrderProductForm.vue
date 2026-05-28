@@ -404,7 +404,7 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      const data = await SalesOrderProductApi.getSalesOrderProduct(id)
+      const data = await SalesOrderProductApi.getSalesOrderProductDetail(id)
       formData.value = {
         ...data,
         batchs: (data.batchs ?? []).map((b: any) => ({

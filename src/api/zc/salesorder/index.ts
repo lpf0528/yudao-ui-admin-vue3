@@ -244,10 +244,10 @@ export interface SalesOrderProductVO {
 export const SalesOrderProductApi = {
   /**
    * 查询面料单详情（含批次列表）
-   * 对应后端：GET /zc/sales-order-product/get?id=xxx
+   * 对应后端：GET /zc/sales-order-product/detail?id=xxx
    */
-  getSalesOrderProduct: async (id: number) => {
-    return await request.get({ url: `/zc/sales-order-product/get?id=` + id })
+  getSalesOrderProductDetail: async (id: number) => {
+    return await request.get({ url: `/zc/sales-order-product/detail?id=` + id })
   },
 
   /**
