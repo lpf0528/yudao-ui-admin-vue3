@@ -251,7 +251,7 @@
           <el-button
             link
             type="primary"
-            @click="openForm('update', scope.row.id)"
+            @click="handleEdit(scope.row)"
             v-hasPermi="['zc:sales-order:update']"
           >
             编辑
@@ -376,6 +376,15 @@ const openForm = (type: string, id?: number) => {
 const productFormRef = ref()
 const openProductForm = (type: string, id?: number) => {
   productFormRef.value.open(type, id)
+}
+
+/** 编辑按钮：根据订单类型打开对应表单 */
+const handleEdit = (row: SalesOrder) => {
+  if (row.types === 'mianLiao') {
+    openProductForm('update', row.id)
+  } else {
+    openForm('update', row.id)
+  }
 }
 
 /** 打开新增收款弹窗 */
