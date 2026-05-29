@@ -43,7 +43,11 @@
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
-      <el-form-item label="一级类销售价" prop="onePrice">
+      <el-form-item
+        v-if="formData.sellingPriceType === 'fixed_price'"
+        label="一级类销售价"
+        prop="onePrice"
+      >
         <el-input v-model="formData.onePrice" placeholder="请输入一级类销售价" />
       </el-form-item>
       <el-form-item label="分类" prop="classify">
@@ -109,8 +113,34 @@ const formData = ref({
 const formRules = reactive({
   name: [{ required: true, message: '版本名称不能为空', trigger: 'blur' }],
   sellingPriceType: [{ required: true, message: '出货价类型不能为空', trigger: 'change' }],
-  classify: [{ required: true, message: '分类不能为空', trigger: 'change' }]
+  classify: [{ required: true, message: '分类不能为空', trigger: 'change' }],
+  onePrice: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        // 选择统一价时，一级类销售价为必填
+        if (formData.value.sellingPriceType === 'fixed_price' && !value && value !== 0) {
+          callback(new Error('选择统一价时，一级类销售价不能为空'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
 })
+
+// 切换出货价类型时处理一级类销售价：统一价重新触发校验，其他类型清空并清除校验
+watch(
+  () => formData.value.sellingPriceType,
+  (val) => {
+    if (val !== 'fixed_price') {
+      formData.value.onePrice = undefined
+      formRef.value?.clearValidate('onePrice')
+    } else {
+      formRef.value?.validateField('onePrice')
+    }
+  }
+)
 const formRef = ref() // 表单 Ref
 
 /** 打开弹窗 */
