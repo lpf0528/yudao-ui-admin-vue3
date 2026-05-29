@@ -11,7 +11,9 @@
       "Bash(xargs grep -l -i \"node\\\\|工序\")",
       "Bash(dir /s /b \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\api\")",
       "Bash(findstr /i \"zc node process\")",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

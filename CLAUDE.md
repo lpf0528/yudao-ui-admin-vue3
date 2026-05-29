@@ -43,7 +43,9 @@ yudao-ui-admin-vue3/
 │   │   ├── crm/             # CRM 接口
 │   │   ├── erp/             # ERP 接口
 │   │   ├── ai/              # AI 大模型接口
-│   │   └── member/          # 会员接口
+│   │   ├── member/          # 会员接口
+│   │   ├── zc/              # 【自研】窗帘业务核心模块（salesorder、customer、product、curtain...）
+│   │   └── mes/             # 【自研】制造执行系统接口（工单、工序、质检等）
 │   ├── assets/              # 本地静态资源（图片、SVG、字体）
 │   ├── components/          # 全局公共组件（已自动注册）
 │   │   ├── Form/            # 表单组件（SchemaForm 动态表单）
@@ -88,7 +90,9 @@ yudao-ui-admin-vue3/
 │       ├── ai/              # AI 大模型页面
 │       ├── member/          # 会员中心页面
 │       ├── mp/              # 微信公众号页面
-│       └── report/          # 数据报表页面
+│       ├── report/          # 数据报表页面
+│       ├── zc/              # 【自研】窗帘业务核心页面（salesorder、customer、product...）
+│       └── mes/             # 【自研】制造执行系统页面（cal、dv、md、pro、qc、tm、wm...）
 ├── types/                   # 全局 TypeScript 类型声明
 ├── .env                     # 公共环境变量
 ├── .env.dev                 # 开发环境（代理到本地后端）
@@ -147,8 +151,8 @@ yudao-ui-admin-vue3/
 
 ### TypeScript 规范
 
-- **禁止使用 `any`**，用 `unknown` 或具体类型替代
-- 后端返回的数据模型统一在 `api/xxx/types.ts`（或 `api/xxx/index.ts` 中 export）中定义接口类型
+- **尽量避免 `any`**，优先使用 `unknown` 或具体类型；查询参数类型复杂时可酌情使用
+- 后端返回的数据模型在 `api/xxx/index.ts` 中 export，`zc`、`mes` 等自研模块类型与函数写在同一文件
 - 枚举值优先使用 `const enum`，避免运行时开销
 
 ### 路径别名
@@ -262,46 +266,58 @@ const handleDelete = async (id: number) => {
 
 ### 3. API 文件注释
 
-每个 API 函数都需要注释，说明接口用途、入参、出参：
+**`zc` / `mes` 等自研模块**统一使用命名空间对象模式，类型接口与函数写在同一 `index.ts`：
 
 ```ts
-// api/system/user/index.ts
+// api/zc/customer/index.ts
 
 import request from '@/config/axios'
-import type { UserVO, UserPageReqVO, UserPageRespVO } from './types'
 
-/**
- * 查询用户分页列表
- * 对应后端：GET /system/user/page
- *
- * @param params 查询参数（页码、用户名、手机号、状态、部门 ID 等）
- * @returns 分页结果（list + total）
- */
-export const getUserPage = (params: UserPageReqVO) => {
-  return request.get<UserPageRespVO>({ url: '/system/user/page', params })
+/** 客户简要信息（用于下拉选择） */
+export interface CustomerSimpleVO {
+  id: number
+  shortName: string   // 简称
+  name: string        // 全称
+  mobile: string      // 手机
 }
 
-/**
- * 创建用户
- * 对应后端：POST /system/user/create
- *
- * @param data 用户创建数据
- * @returns 新用户 ID
- */
-export const createUser = (data: UserCreateReqVO) => {
-  return request.post<number>({ url: '/system/user/create', data })
+/** 客户详细信息 */
+export interface Customer {
+  id?: number
+  shortName?: string  // 简称
+  name?: string       // 全称
+  contactName?: string // 联系人
+  mobile: string      // 手机
+  balance: number     // 账户余额
+  note: string        // 备注
 }
 
-/**
- * 删除用户
- * 对应后端：DELETE /system/user/delete
- *
- * @param id 用户 ID
- */
-export const deleteUser = (id: number) => {
-  return request.delete({ url: '/system/user/delete', params: { id } })
+// 客户资料 API
+export const CustomerApi = {
+  // 查询客户分页列表，对应后端：GET /zc/customer/page
+  getCustomerPage: async (params: any) => {
+    return await request.get({ url: `/zc/customer/page`, params })
+  },
+  // 查询客户详情，对应后端：GET /zc/customer/get
+  getCustomer: async (id: number) => {
+    return await request.get({ url: `/zc/customer/get?id=` + id })
+  },
+  // 新增客户，对应后端：POST /zc/customer/create
+  createCustomer: async (data: Customer) => {
+    return await request.post({ url: `/zc/customer/create`, data })
+  },
+  // 修改客户，对应后端：PUT /zc/customer/update
+  updateCustomer: async (data: Customer) => {
+    return await request.put({ url: `/zc/customer/update`, data })
+  },
+  // 删除客户，对应后端：DELETE /zc/customer/delete
+  deleteCustomer: async (id: number) => {
+    return await request.delete({ url: `/zc/customer/delete?id=` + id })
+  }
 }
 ```
+
+**系统内置模块**（`system`、`infra` 等框架自带模块）保持原有独立函数导出风格，类型写在 `types.ts`。
 
 ### 4. 类型定义注释
 
@@ -807,10 +823,10 @@ pnpm lint:fix
 
 1. **组件注释必须完整**：生成任何 `.vue` 文件时，必须包含顶部组件说明注释、`<script setup>` 内分区注释、复杂逻辑内联注释，不得省略
 2. **严格使用 `<script setup lang="ts">`**：不接受 Options API，不接受无 TypeScript 的写法
-3. **禁止使用 `any`**：所有类型必须明确定义，API 返回类型须在 `types.ts` 中声明
+3. **尽量避免 `any`**：优先定义具体类型；查询参数等复杂场景可酌情使用 `any`
 4. **路径使用 `@` 别名**：所有跨目录导入必须以 `@/` 开头，禁止相对路径 `../../`
 5. **权限按钮必须加指令**：涉及新增、编辑、删除的按钮，必须加 `v-hasPermi` 指令
-6. **API 函数与类型分离**：接口函数写在 `api/{module}/index.ts`，类型写在 `api/{module}/types.ts`
+6. **API 模式按模块区分**：`zc`、`mes` 等自研模块使用命名空间对象模式（`export const XxxApi = { ... }`），类型与函数写在同一 `index.ts`；系统内置模块保持独立函数导出 + `types.ts` 分离
 7. **字典使用统一工具**：展示字典值用 `<DictTag>`，表单下拉用 `getIntDictOptions()` / `getStrDictOptions()`，不要硬编码字典值
 8. **表单弹窗用 `defineExpose`**：弹窗组件通过 `open()` 方法被父组件调用，需 `defineExpose({ open })`
 9. **多租户相关代码须提醒**：若修改涉及租户切换（如登录逻辑、请求头 `tenant-id`），需明确提示开发者确认影响范围
