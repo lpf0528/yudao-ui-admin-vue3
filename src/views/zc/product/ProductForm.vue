@@ -100,9 +100,33 @@ const formData = ref({
 const formRules = computed(() => ({
   name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
   versionId: [{ required: true, message: '版本不能为空', trigger: 'blur' }],
+  inboundPrice: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
+          callback(new Error('进货价不能小于0'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
   onePrice: isOnePriceFixed.value
     ? []
-    : [{ required: true, message: '一级销售价不能为空', trigger: 'blur' }]
+    : [
+        { required: true, message: '一级销售价不能为空', trigger: 'blur' },
+        {
+          validator: (_rule: any, value: any, callback: any) => {
+            if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
+              callback(new Error('一级销售价不能小于0'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ]
 }))
 const formRef = ref() // 表单 Ref
 

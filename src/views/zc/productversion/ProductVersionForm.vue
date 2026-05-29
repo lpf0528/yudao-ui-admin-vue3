@@ -114,12 +114,25 @@ const formRules = reactive({
   name: [{ required: true, message: '版本名称不能为空', trigger: 'blur' }],
   sellingPriceType: [{ required: true, message: '出货价类型不能为空', trigger: 'change' }],
   classify: [{ required: true, message: '分类不能为空', trigger: 'change' }],
+  inboundPrice: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
+          callback(new Error('进货价不能小于0'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
   onePrice: [
     {
       validator: (_rule: any, value: any, callback: any) => {
-        // 选择统一价时，一级类销售价为必填
         if (formData.value.sellingPriceType === 'fixed_price' && !value && value !== 0) {
           callback(new Error('选择统一价时，一级类销售价不能为空'))
+        } else if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
+          callback(new Error('一级类销售价不能小于0'))
         } else {
           callback()
         }
