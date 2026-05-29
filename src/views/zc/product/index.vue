@@ -78,7 +78,7 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
+        <!-- <el-button
             type="danger"
             plain
             :disabled="isEmpty(checkedIds)"
@@ -86,7 +86,7 @@
             v-hasPermi="['zc:product:delete']"
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>

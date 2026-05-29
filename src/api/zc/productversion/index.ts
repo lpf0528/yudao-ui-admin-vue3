@@ -1,13 +1,18 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
-/** 产品版本简要信息
+/** 产品版本简要信息（用于下拉选择及字段回显）
  * 接口：GET /zc/product-version/simple-list
- * 返回：{ id: number, name: string }[]
  */
 export interface ProductVersionSimpleVO {
   id: number
   name: string
+  unitValue: string       // 单位
+  categoryId: number      // 类别ID
+  sellingPriceType: string // 出货价类型：fixed_price=统一价
+  inboundPrice: number    // 进货价
+  onePrice: number        // 一级类销售价
+  supplierId: number      // 供应商ID
 }
 
 /** 产品版本信息 */
