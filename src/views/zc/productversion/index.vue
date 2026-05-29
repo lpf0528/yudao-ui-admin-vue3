@@ -14,7 +14,7 @@
           placeholder="请输入版本名称"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-150px"
         />
       </el-form-item>
       <el-form-item label="单位" prop="unitValue">
@@ -22,7 +22,7 @@
           v-model="queryParams.unitValue"
           placeholder="请选择单位"
           clearable
-          class="!w-240px"
+          class="!w-100px"
         >
           <el-option
             v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
@@ -37,7 +37,7 @@
           v-model="queryParams.categoryId"
           placeholder="请选择类别"
           clearable
-          class="!w-240px"
+          class="!w-100px"
         >
           <el-option
             v-for="item in categoryList"
@@ -47,12 +47,12 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="出货价类型" prop="sellingPriceType">
+      <el-form-item label="出货价类型" prop="sellingPriceType" label-width="88px">
         <el-select
           v-model="queryParams.sellingPriceType"
           placeholder="请选择出货价类型"
           clearable
-          class="!w-240px"
+          class="!w-100px"
         >
           <el-option
             v-for="dict in getStrDictOptions(DICT_TYPE.ZC_SELLING_PRICE_TYPE)"
@@ -67,7 +67,7 @@
           v-model="queryParams.classify"
           placeholder="请选择分类"
           clearable
-          class="!w-240px"
+          class="!w-100px"
         >
           <el-option
             v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_CLASSIFY)"
@@ -82,7 +82,7 @@
           v-model="queryParams.supplierId"
           placeholder="请选择供应商"
           clearable
-          class="!w-240px"
+          class="!w-150px"
         >
           <el-option
             v-for="item in supplierList"
@@ -100,7 +100,7 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+          class="!w-250px"
         />
       </el-form-item>
       <el-form-item>
