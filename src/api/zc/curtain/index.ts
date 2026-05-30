@@ -21,14 +21,20 @@ export interface Curtain {
           note: string; // 备注
   }
 
+/** 窗帘模板 - 配件项
+ * elementId 必填；productId 可空（未指定产品时）
+ */
 export interface CurtainTemplateElement {
   elementId: number
-  version_id: number | null
+  productId?: number | null
 }
 
+/** 窗帘模板 - 结构项
+ * structureId 必填；elements 为配件列表，每个配件可对应一个产品
+ */
 export interface CurtainTemplateStructure {
   structureId: number
-  elementIds: CurtainTemplateElement[]
+  elements: CurtainTemplateElement[]
 }
 
 /** 窗帘模板信息 */

@@ -25,6 +25,21 @@ export interface Product {
           note: string; // 备注
   }
 
+/** 产品分页查询结果 VO（后端关联查询填充版本名、规格值、供应商名） */
+export interface ProductPageVO {
+  id: number
+  name: string
+  versionId?: number
+  versionName?: string  // 版本名称
+  inboundPrice: number
+  specId?: number
+  specValue?: string    // 规格展示值
+  onePrice?: number     // 一级销售价
+  supplierId?: number
+  supplierName?: string // 供应商名称
+  note?: string
+}
+
 // 产品 API
 export const ProductApi = {
   // 查询产品分页
