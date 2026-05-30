@@ -488,6 +488,7 @@ import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtai
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
+import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
 import SalesOrderProcessingPrintDialog from './SalesOrderProcessingPrintDialog.vue'
@@ -516,6 +517,8 @@ const handleCustomerChange = (customerId: number) => {
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
   selectedCustomerBalance.value = customer.balance
+  // 新建订单选完客户后自动带出第一个窗帘行
+  if (formData.value.curtains.length === 0) addCurtain()
 }
 
 const curtainList = ref<CurtainSimpleVO[]>([])
@@ -542,34 +545,49 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
   try {
     const template = await CurtainApi.getCurtainTemplateByCurtainId(curtainId)
     if (template?.structures?.length) {
-      curtain.structures = template.structures.map((tmpl) => ({
-        structureId: tmpl.structureId,
-        height: undefined,
-        width: undefined,
-        leftCorner: undefined,
-        rightCorner: undefined,
-        pasteDirection: undefined,
-        installProcessId: undefined,
-        openMethod: undefined,
-        processType: undefined,
-        isShaping: undefined,
-        pleatsNum: undefined,
-        pleatsDistance: undefined,
-        skirtHeight: undefined,
-        note: undefined,
-        materials: tmpl.elements.map((elem) => ({
-          elementId: elem.elementId,
-          productId: elem.productId ?? undefined,
-          productName: elem.productName ?? undefined,
-          batchId: undefined,
-          price: elem.onePrice ?? undefined,
-          quantity: undefined,
-          unitValue: undefined,
-          discountRate: undefined,
-          amount: undefined,
-          note: undefined
+      const customerId = formData.value.customerId
+      curtain.structures = await Promise.all(
+        template.structures.map(async (tmpl) => ({
+          structureId: tmpl.structureId,
+          height: undefined,
+          width: undefined,
+          leftCorner: undefined,
+          rightCorner: undefined,
+          pasteDirection: undefined,
+          installProcessId: undefined,
+          openMethod: undefined,
+          processType: undefined,
+          isShaping: undefined,
+          pleatsNum: undefined,
+          pleatsDistance: undefined,
+          skirtHeight: undefined,
+          note: undefined,
+          materials: await Promise.all(
+            tmpl.elements.map(async (elem) => {
+              // 默认使用模板单价，若客户有配置授权价则优先使用授权价
+              let price = elem.onePrice ?? undefined
+              if (elem.productId && customerId) {
+                try {
+                  const authPrice = await CustomerProductPriceApi.getByCustomerAndProduct(customerId, elem.productId)
+                  if (authPrice?.authorizedPrice != null) price = authPrice.authorizedPrice
+                } catch (_) {}
+              }
+              return {
+                elementId: elem.elementId,
+                productId: elem.productId ?? undefined,
+                productName: elem.productName ?? undefined,
+                batchId: undefined,
+                price,
+                quantity: undefined,
+                unitValue: undefined,
+                discountRate: undefined,
+                amount: undefined,
+                note: undefined
+              }
+            })
+          )
         }))
-      }))
+      )
     }
   } catch (_) {
   } finally {
@@ -745,6 +763,10 @@ const open = async (type: string, id?: number) => {
 }
 
 const addCurtain = () => {
+  if (!formData.value.customerId) {
+    message.warning('请先选择客户')
+    return
+  }
   formData.value.curtains.push({
     orderId: formData.value.id,
     curtainId: undefined,
