@@ -1,6 +1,16 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 订单分摊明细 */
+export interface BillOrderItem {
+  id: number            // 主键
+  billId: number        // 关联收款单 ID
+  orderId: number       // 关联销售订单 ID
+  orderNo: string       // 订单号
+  allocatedAmount: number // 本次分摊金额
+  note: string          // 备注
+}
+
 /** 收支账单信息 */
 export interface Bills {
           id: number; // 主键
@@ -42,5 +52,10 @@ export const BillsApi = {
   // 导出收支账单 Excel
   exportBills: async (params) => {
     return await request.download({ url: `/zc/bills/export-excel`, params })
+  },
+
+  // 查询收款单的订单分摊明细列表
+  getOrderItems: async (billId: number) => {
+    return await request.get<BillOrderItem[]>({ url: `/zc/bills/order-items`, params: { billId } })
   }
 }

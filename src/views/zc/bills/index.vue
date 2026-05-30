@@ -92,7 +92,35 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
+        @expand-change="handleExpandChange"
     >
+      <el-table-column type="expand" width="40">
+        <template #default="{ row }">
+          <div class="px-40px py-10px">
+            <div v-if="orderItemsLoading[row.id]" class="text-center py-10px text-gray-400 text-sm">
+              加载中...
+            </div>
+            <template v-else>
+              <div
+                v-if="!orderItemsCache[row.id] || orderItemsCache[row.id].length === 0"
+                class="text-center py-10px text-gray-400 text-sm"
+              >
+                暂无订单分摊明细
+              </div>
+              <el-table
+                v-else
+                :data="orderItemsCache[row.id]"
+                size="small"
+                border
+              >
+                <el-table-column label="订单号" prop="orderNo" min-width="160" />
+                <el-table-column label="本次分摊金额" prop="allocatedAmount" align="right" width="130" />
+                <el-table-column label="备注" prop="note" min-width="120" />
+              </el-table>
+            </template>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="序号" type="index" align="center" width="60" />
       <el-table-column label="单号" align="center" prop="billNo" />
       <el-table-column label="付款时间" align="center" prop="billDate" :formatter="dateFormatter2" width="110" />
@@ -128,7 +156,7 @@
 <script setup lang="ts">
 import download from '@/utils/download'
 import { dateFormatter2 } from '@/utils/formatTime'
-import { BillsApi, Bills } from '@/api/zc/bills'
+import { BillsApi, Bills, BillOrderItem } from '@/api/zc/bills'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
 
@@ -152,6 +180,22 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+// ======================== 展开行：订单分摊明细 ========================
+/** key 为 billId，避免重复请求 */
+const orderItemsCache = reactive<Record<number, BillOrderItem[]>>({})
+const orderItemsLoading = reactive<Record<number, boolean>>({})
+
+const handleExpandChange = async (row: Bills, expandedRows: Bills[]) => {
+  const isExpanding = expandedRows.some((r) => r.id === row.id)
+  if (!isExpanding || orderItemsCache[row.id] !== undefined) return
+  orderItemsLoading[row.id] = true
+  try {
+    orderItemsCache[row.id] = await BillsApi.getOrderItems(row.id)
+  } finally {
+    orderItemsLoading[row.id] = false
+  }
+}
 
 /** 客户精简列表（用于搜索栏下拉） */
 const customersList = ref<CustomerSimpleVO[]>([])
