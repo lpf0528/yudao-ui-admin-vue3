@@ -96,10 +96,9 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="客户" align="center" prop="customerId">
-        <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
-      </el-table-column>
+      <el-table-column label="序号" align="center" type="index" width="60px" />
+      <el-table-column label="关联单号" align="center" prop="refNo" />
+      <el-table-column label="客户" align="center" prop="customerShortName" />
       <el-table-column label="余额变动额" align="center" prop="changeAmount" />
       <el-table-column label="变动前余额" align="center" prop="balanceBefore" />
       <el-table-column label="变动后余额" align="center" prop="balanceAfter" />
@@ -113,8 +112,6 @@
           <dict-tag :type="DICT_TYPE.ZC_CUSTOMER_BALANCE_REF_TYPE" :value="scope.row.refType" />
         </template>
       </el-table-column>
-      <!-- <el-table-column label="关联单据" align="center" prop="refId" /> -->
-      <el-table-column label="关联单号" align="center" prop="refNo" />
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column
         label="创建时间"
@@ -151,10 +148,7 @@ const message = useMessage() // 消息弹窗
 const loading = ref(true) // 列表的加载中
 const list = ref<CustomerBalanceLog[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
-const customerList = ref<CustomerSimpleVO[]>([]) // 客户列表
-const customerIdMap = computed(() =>
-  Object.fromEntries(customerList.value.map((item) => [item.id, item.shortName]))
-)
+const customerList = ref<CustomerSimpleVO[]>([]) // 客户列表（用于搜索下拉）
 
 /** 查询参数，与后端分页 VO 对应 */
 const queryParams = reactive({
