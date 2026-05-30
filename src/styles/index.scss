@@ -18,6 +18,16 @@
   justify-content: flex-start;
 }
 
+/* 后端业务错误通知（非 5xx/401）：浅红色背景，强调异常信息 */
+.error-notification.el-notification {
+  background-color: #fff2f2;
+  border-color: #ffc0c0;
+
+  .el-notification__title {
+    color: #c0392b;
+  }
+}
+
 /* nprogress 适配 element-plus 的主题色 */
 #nprogress {
   & .bar {

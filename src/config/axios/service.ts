@@ -215,7 +215,7 @@ service.interceptors.response.use(
         console.log(msg)
         return handleAuthorized()
       } else {
-        ElNotification.error({ title: msg })
+        ElNotification.error({ title: msg, customClass: 'error-notification' })
       }
       return Promise.reject('error')
     } else {
