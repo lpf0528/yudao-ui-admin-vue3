@@ -28,7 +28,7 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item label="财务人员" prop="billUserId">
+      <!-- <el-form-item label="财务人员" prop="billUserId">
         <el-input
           v-model="queryParams.billUserId"
           placeholder="请输入财务人员"
@@ -36,7 +36,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="客户" prop="customerId">
         <el-input
           v-model="queryParams.customerId"
@@ -59,14 +59,6 @@
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
         <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['zc:bills:create']"
-        >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
-        </el-button>
-        <el-button
           type="success"
           plain
           @click="handleExport"
@@ -74,15 +66,6 @@
           v-hasPermi="['zc:bills:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
-        </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:bills:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
       </el-form-item>
     </el-form>
@@ -96,28 +79,18 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
-        @selection-change="handleRowCheckboxChange"
     >
-    <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="单号" align="center" prop="billNo" />
       <el-table-column label="付款时间" align="center" prop="billDate" />
-      <el-table-column label="财务人员" align="center" prop="billUserId" />
+      <!-- <el-table-column label="财务人员" align="center" prop="billUserId" /> -->
       <el-table-column label="客户" align="center" prop="customerId" />
       <el-table-column label="优惠金额" align="center" prop="discountAmount" />
       <el-table-column label="实收金额 " align="center" prop="actualAmount" />
       <el-table-column label="收支方式" align="center" prop="billMethodId" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="80px">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['zc:bills:update']"
-          >
-            编辑
-          </el-button>
           <el-button
             link
             type="danger"
@@ -138,15 +111,11 @@
     />
   </ContentWrap>
 
-  <!-- 表单弹窗：添加/修改 -->
-  <BillsForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
 import download from '@/utils/download'
 import { BillsApi, Bills } from '@/api/zc/bills'
-import BillsForm from './BillsForm.vue'
 
 /** 收支账单 列表 */
 defineOptions({ name: 'ZcBills' })
@@ -193,12 +162,6 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 添加/修改操作 */
-const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
-
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
@@ -210,23 +173,6 @@ const handleDelete = async (id: number) => {
     // 刷新列表
     await getList()
   } catch {}
-}
-
-/** 批量删除收支账单 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await BillsApi.deleteBillsList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: Bills[]) => {
-  checkedIds.value = records.map((item) => item.id!);
 }
 
 /** 导出按钮操作 */

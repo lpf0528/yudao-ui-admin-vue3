@@ -21,10 +21,6 @@ export const BillsApi = {
     return await request.get({ url: `/zc/bills/page`, params })
   },
 
-  // 查询收支账单详情
-  getBills: async (id: number) => {
-    return await request.get({ url: `/zc/bills/get?id=` + id })
-  },
 
   // 新增收支账单
   createBills: async (data: Bills) => {
@@ -39,11 +35,6 @@ export const BillsApi = {
   // 删除收支账单
   deleteBills: async (id: number) => {
     return await request.delete({ url: `/zc/bills/delete?id=` + id })
-  },
-
-  /** 批量删除收支账单 */
-  deleteBillsList: async (ids: number[]) => {
-    return await request.delete({ url: `/zc/bills/delete-list?ids=${ids.join(',')}` })
   },
 
   // 导出收支账单 Excel
