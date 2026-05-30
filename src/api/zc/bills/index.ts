@@ -12,6 +12,8 @@ export interface Bills {
           actualAmount?: number; // 实收金额 
           billMethodId?: number; // 收支方式
           note: string; // 备注
+          customerName?: string; // 客户简称（后端关联返回）
+          billMethodName?: string; // 收款方式名称（后端关联返回）
   }
 
 // 收支账单 API

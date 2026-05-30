@@ -38,22 +38,35 @@
         />
       </el-form-item> -->
       <el-form-item label="客户" prop="customerId">
-        <el-input
+        <el-select
           v-model="queryParams.customerId"
-          placeholder="请输入客户"
+          placeholder="请选择客户"
           clearable
-          @keyup.enter="handleQuery"
+          filterable
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in customersList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="收支方式" prop="billMethodId">
-        <el-input
+        <el-select
           v-model="queryParams.billMethodId"
-          placeholder="请输入收支方式"
+          placeholder="请选择收支方式"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in billMethodsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
@@ -80,14 +93,13 @@
         :stripe="true"
         :show-overflow-tooltip="true"
     >
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" type="index" align="center" width="60" />
       <el-table-column label="单号" align="center" prop="billNo" />
-      <el-table-column label="付款时间" align="center" prop="billDate" />
-      <!-- <el-table-column label="财务人员" align="center" prop="billUserId" /> -->
-      <el-table-column label="客户" align="center" prop="customerId" />
+      <el-table-column label="付款时间" align="center" prop="billDate" :formatter="dateFormatter2" width="110" />
+      <el-table-column label="客户" align="center" prop="customerName" />
       <el-table-column label="优惠金额" align="center" prop="discountAmount" />
-      <el-table-column label="实收金额 " align="center" prop="actualAmount" />
-      <el-table-column label="收支方式" align="center" prop="billMethodId" />
+      <el-table-column label="实收金额" align="center" prop="actualAmount" />
+      <el-table-column label="收支方式" align="center" prop="billMethodName" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="操作" align="center" min-width="80px">
         <template #default="scope">
@@ -115,7 +127,10 @@
 
 <script setup lang="ts">
 import download from '@/utils/download'
+import { dateFormatter2 } from '@/utils/formatTime'
 import { BillsApi, Bills } from '@/api/zc/bills'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
 
 /** 收支账单 列表 */
 defineOptions({ name: 'ZcBills' })
@@ -137,6 +152,11 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+/** 客户精简列表（用于搜索栏下拉） */
+const customersList = ref<CustomerSimpleVO[]>([])
+/** 收支方式精简列表（用于搜索栏下拉） */
+const billMethodsList = ref<BillMethodsSimpleVO[]>([])
 
 /** 查询列表 */
 const getList = async () => {
@@ -191,7 +211,9 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  customersList.value = await CustomerApi.getCustomerSimpleList()
+  billMethodsList.value = await BillMethodsApi.getBillMethodsSimpleList()
+  await getList()
 })
 </script>
