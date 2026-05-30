@@ -8,7 +8,8 @@
   <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh">
     <!-- 顶部操作栏（与成品单一致） -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
-      <el-button type="primary" @click="handleSave" :loading="formLoading">
+      <!-- 保存按钮：已确认订单禁止修改，隐藏保存 -->
+      <el-button v-if="!isReadOnly" type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
@@ -49,37 +50,37 @@
         </el-form-item>
         <!-- 客户 3：需展示姓名/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
+          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange" :disabled="isReadOnly">
             <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 手机 2 -->
         <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
-          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" />
+          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 下单日期 2 -->
         <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :clearable="false" />
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :clearable="false" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 品牌 2 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full" :disabled="isReadOnly">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 2 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full" :disabled="isReadOnly">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 收货人 2 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
-          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 交付日期 2 -->
         <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" :disabled="isReadOnly" />
         </el-form-item>
 
       </div>
@@ -88,15 +89,15 @@
       <div class="flex gap-x-8px">
         <!-- 送货地址 3：地址文字较长，适当加宽 -->
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
-          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 运费 2 -->
         <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 优惠金额 2 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" :disabled="isReadOnly" />
         </el-form-item>
         <!-- 金额 2 -->
         <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
@@ -110,7 +111,7 @@
         </el-form-item>
         <!-- 备注 6：剩余空间较多，撑满 -->
         <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
-          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" :disabled="isReadOnly" />
         </el-form-item>
       </div>
     </el-form>
@@ -137,7 +138,7 @@
           class="mb-4px items-center rounded bg-blue-50 px-2px py-4px"
         >
           <el-col :span="1" class="flex justify-center">
-            <el-button link type="danger" size="small" @click="removeBatch(idx)">
+            <el-button link type="danger" size="small" @click="removeBatch(idx)" :disabled="isReadOnly">
               <Icon icon="ep:delete" />
             </el-button>
           </el-col>
@@ -168,6 +169,7 @@
               size="small"
               :controls="false"
               class="!w-full"
+              :disabled="isReadOnly"
             />
           </el-col>
           <el-col :span="3">
@@ -177,6 +179,7 @@
               size="small"
               :controls="false"
               class="!w-full"
+              :disabled="isReadOnly"
             />
           </el-col>
           <!-- 金额由匹数 × 单价自动计算，禁止手动编辑 -->
@@ -191,7 +194,7 @@
             />
           </el-col>
           <el-col :span="3">
-            <el-input v-model="batch.note" placeholder="备注" size="small" />
+            <el-input v-model="batch.note" placeholder="备注" size="small" :disabled="isReadOnly" />
           </el-col>
         </el-row>
       </template>
@@ -203,9 +206,11 @@
       />
     </div>
 
-    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
-    <el-divider content-position="left">选择面料</el-divider>
-    <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
+    <!-- 面料选择面板：已确认订单不允许添加 -->
+    <template v-if="!isReadOnly">
+      <el-divider content-position="left">选择面料</el-divider>
+      <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
+    </template>
   </Dialog>
 </template>
 
@@ -280,6 +285,7 @@ const getInitFormData = () => ({
   payStatus: undefined as string | undefined,
   status: undefined as string | undefined,
   isExpedited: undefined as boolean | undefined,
+  confirmTime: undefined as string | undefined,
   note: undefined as string | undefined,
   batchs: [] as BatchRow[],
 })
@@ -293,6 +299,10 @@ const formRules = {
 
 const formRef = ref()
 
+/** 已确认（status=confirmed）或已有确认时间时禁止编辑 */
+const isReadOnly = computed(
+  () => formData.value.status === 'confirmed' || !!formData.value.confirmTime
+)
 
 // ======================== 客户选择 ========================
 /**
@@ -459,8 +469,16 @@ const submitForm = async () => {
       })),
     }
     if (formType.value === 'create') {
-      await SalesOrderProductApi.createSalesOrderProduct(payload as any)
+      const newId = await SalesOrderProductApi.createSalesOrderProduct(payload as any)
       message.success(t('common.createSuccess'))
+      // 保存后重新加载详情，回填 orderNo 和默认 status，并切换为编辑模式以显示确认/加急按钮
+      const detail = await SalesOrderProductApi.getSalesOrderProductDetail(newId)
+      formData.value.id = detail.id
+      formData.value.orderNo = detail.orderNo
+      formData.value.status = detail.status
+      formData.value.isExpedited = detail.isExpedited
+      formType.value = 'update'
+      dialogTitle.value = '编辑面料单'
     } else {
       await SalesOrderProductApi.updateSalesOrderProduct(payload as any)
       message.success(t('common.updateSuccess'))

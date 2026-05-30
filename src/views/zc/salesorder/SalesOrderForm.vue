@@ -2,7 +2,8 @@
   <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh">
     <!-- 顶部操作栏 -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
-      <el-button type="primary" @click="handleSave" :loading="formLoading">
+      <!-- 保存按钮：已确认订单禁止修改，隐藏保存 -->
+      <el-button v-if="!isConfirmed" type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
@@ -54,23 +55,23 @@
         </el-form-item>
         <!-- 品牌 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full" :disabled="isConfirmed">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full" :disabled="isConfirmed">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 收货人 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
-          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 交付日期 -->
         <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" :disabled="isConfirmed" />
         </el-form-item>
       </div>
 
@@ -78,15 +79,15 @@
       <div class="flex gap-x-8px">
         <!-- 送货地址：地址文字较长，适当加宽 -->
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
-          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 运费 -->
         <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 优惠金额 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 金额：自动计算，只读 -->
         <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
@@ -100,7 +101,7 @@
         </el-form-item>
         <!-- 备注：剩余空间较多，撑满 -->
         <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
-          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
       </div>
     </el-form>
@@ -598,7 +599,7 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
 const { t } = useI18n()
 const message = useMessage()
 
-/** 订单已确认：仅允许修改品牌、物流、收货人、交付日期、送货地址、运费、优惠金额、金额、备注 */
+/** 订单已确认：全表单只读，禁止任何修改 */
 const isConfirmed = computed(() => formData.value.status === 'confirmed')
 
 const dialogVisible = ref(false)
