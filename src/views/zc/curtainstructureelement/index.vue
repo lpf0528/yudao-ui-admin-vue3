@@ -37,7 +37,7 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
+        <!-- <el-button
             type="danger"
             plain
             :disabled="isEmpty(checkedIds)"
@@ -45,7 +45,7 @@
             v-hasPermi="['zc:curtain-structure-element:delete']"
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -63,9 +63,8 @@
     <el-table-column type="selection" width="55" />
        <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="组件名称" align="center" prop="name" />
-      <el-table-column label="关联版本" align="center" prop="versionName" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
+      <!-- <el-table-column label="创建者" align="center" prop="creator" /> -->
       <el-table-column
         label="创建时间"
         align="center"
@@ -104,7 +103,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <CurtainStructureElementForm ref="formRef" :versionList="versionList" @success="getList" />
+  <CurtainStructureElementForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -112,7 +111,6 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainStructureElementApi, CurtainStructureElement } from '@/api/zc/curtainstructureelement'
-import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 import CurtainStructureElementForm from './CurtainStructureElementForm.vue'
 
 /** 窗帘结构组件 列表 */
@@ -123,7 +121,6 @@ const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<CurtainStructureElement[]>([]) // 列表的数据
-const versionList = ref<ProductVersionSimpleVO[]>([]) // 版本列表
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -176,18 +173,6 @@ const handleDelete = async (id: number) => {
   } catch {}
 }
 
-/** 批量删除窗帘结构组件 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await CurtainStructureElementApi.deleteCurtainStructureElementList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (records: CurtainStructureElement[]) => {
   checkedIds.value = records.map((item) => item.id!);
@@ -210,7 +195,6 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
   await getList()
 })
 </script>

@@ -44,11 +44,6 @@ export const CurtainStructureElementApi = {
     return await request.delete({ url: `/zc/curtain-structure-element/delete?id=` + id })
   },
 
-  /** 批量删除窗帘结构组件 */
-  deleteCurtainStructureElementList: async (ids: number[]) => {
-    return await request.delete({ url: `/zc/curtain-structure-element/delete-list?ids=${ids.join(',')}` })
-  },
-
   // 导出窗帘结构组件 Excel
   exportCurtainStructureElement: async (params) => {
     return await request.download({ url: `/zc/curtain-structure-element/export-excel`, params })
