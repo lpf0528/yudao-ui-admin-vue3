@@ -132,8 +132,16 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="160px">
         <template #default="scope">
+          <el-button
+            link
+            type="primary"
+            @click="openInventoryRecord(scope.row)"
+            v-hasPermi="['zc:inventory-record:create']"
+          >
+            库存盘点
+          </el-button>
           <el-button
             link
             type="danger"
@@ -162,6 +170,8 @@
     :supplierList="supplierList"
     @success="getList"
   />
+  <!-- 库存盘点弹窗 -->
+  <InventoryRecordForm ref="inventoryRecordFormRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -173,6 +183,7 @@ import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductBatchBatchForm from './ProductBatchBatchForm.vue'
+import InventoryRecordForm from './InventoryRecordForm.vue'
 
 /** 产品批次 列表 */
 defineOptions({ name: 'ZcProductBatch' })
@@ -227,6 +238,12 @@ const resetQuery = () => {
 const batchFormRef = ref()
 const openBatchForm = () => {
   batchFormRef.value.open()
+}
+
+/** 库存盘点操作 */
+const inventoryRecordFormRef = ref()
+const openInventoryRecord = (row: ProductBatch) => {
+  inventoryRecordFormRef.value.open(row)
 }
 
 /** 删除按钮操作 */
