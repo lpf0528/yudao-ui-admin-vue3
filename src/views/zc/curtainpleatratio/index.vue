@@ -37,15 +37,6 @@
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:curtain-pleat-ratio:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -174,16 +165,16 @@ const handleDelete = async (id: number) => {
 }
 
 /** 批量删除褶倍 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await CurtainPleatRatioApi.deleteCurtainPleatRatioList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
+// const handleDeleteBatch = async () => {
+//   try {
+//     // 删除的二次确认
+//     await message.delConfirm()
+//     await CurtainPleatRatioApi.deleteCurtainPleatRatioList(checkedIds.value);
+//     checkedIds.value = [];
+//     message.success(t('common.delSuccess'))
+//     await getList();
+//   } catch {}
+// }
 
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (records: CurtainPleatRatio[]) => {

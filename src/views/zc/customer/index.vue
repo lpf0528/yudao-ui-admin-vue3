@@ -93,15 +93,15 @@
       <el-table-column label="简称" align="center" prop="shortName" />
       <el-table-column label="全称" align="center" prop="name" />
       <el-table-column label="联系人" align="center" prop="contactName" />
-      <el-table-column label="固定地址" align="center" prop="address" />
+      <!-- <el-table-column label="固定地址" align="center" prop="address" /> -->
       <el-table-column label="送货地址" align="center" prop="deliveryAddress" />
       <el-table-column label="手机" align="center" prop="mobile" />
-      <el-table-column label="联系电话" align="center" prop="mobile2" />
+      <!-- <el-table-column label="联系电话" align="center" prop="mobile2" /> -->
       <el-table-column label="物流" align="center" prop="logisticName" />
       <el-table-column label="关联品牌" align="center" prop="brandName" />
       <el-table-column label="账户余额" align="center" prop="balance" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
+      <!-- <el-table-column label="创建者" align="center" prop="creator" /> -->
       <el-table-column
         label="创建时间"
         align="center"
@@ -239,4 +239,4 @@ onMounted(async () => {
   ])
   await getList()
 })
-</script>
+</script>

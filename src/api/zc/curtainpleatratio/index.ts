@@ -44,10 +44,6 @@ export const CurtainPleatRatioApi = {
     return await request.delete({ url: `/zc/curtain-pleat-ratio/delete?id=` + id })
   },
 
-  /** 批量删除褶倍 */
-  deleteCurtainPleatRatioList: async (ids: number[]) => {
-    return await request.delete({ url: `/zc/curtain-pleat-ratio/delete-list?ids=${ids.join(',')}` })
-  },
 
   // 导出褶倍 Excel
   exportCurtainPleatRatio: async (params) => {

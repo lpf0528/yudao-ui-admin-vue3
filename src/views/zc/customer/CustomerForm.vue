@@ -16,18 +16,18 @@
       <el-form-item label="联系人" prop="contactName">
         <el-input v-model="formData.contactName" placeholder="请输入联系人" />
       </el-form-item>
-      <el-form-item label="固定地址" prop="address">
+      <!-- <el-form-item label="固定地址" prop="address">
         <el-input v-model="formData.address" type="textarea" placeholder="请输入固定地址" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="送货地址" prop="deliveryAddress">
         <el-input v-model="formData.deliveryAddress" type="textarea" placeholder="请输入送货地址" />
       </el-form-item>
       <el-form-item label="手机" prop="mobile">
         <el-input v-model="formData.mobile" placeholder="请输入手机" />
       </el-form-item>
-      <el-form-item label="联系电话" prop="mobile2">
+      <!-- <el-form-item label="联系电话" prop="mobile2">
         <el-input v-model="formData.mobile2" placeholder="请输入联系电话" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="物流" prop="logisticId">
         <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-1/1">
           <el-option
