@@ -176,7 +176,7 @@ import dayjs from 'dayjs'
 import { DICT_TYPE } from '@/utils/dict'
 import { ZcBillsApi, ZcBillsSaveReqVO } from '@/api/zc/finance/collection'
 import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
-import { BillMethodsApi, BillMethods } from '@/api/zc/bill_methods'
+import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import { UploadImg } from '@/components/UploadFile'
 
@@ -311,11 +311,10 @@ const syncOrderItems = () => {
 }
 
 // ======================== 收支方式 ========================
-const billMethodsList = ref<BillMethods[]>([])
+const billMethodsList = ref<BillMethodsSimpleVO[]>([])
 
 const loadBillMethods = async () => {
-  const data = await BillMethodsApi.getBillMethodsPage({ pageNo: 1, pageSize: 200 })
-  billMethodsList.value = data.list ?? []
+  billMethodsList.value = await BillMethodsApi.getBillMethodsSimpleList()
 }
 
 // ======================== 工具函数 ========================
