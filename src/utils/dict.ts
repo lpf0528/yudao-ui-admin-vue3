@@ -128,6 +128,7 @@ export enum DICT_TYPE {
   ZC_PASTE_DIRECTION = 'zc_paste_direction',
   ZC_PROCESS_TYPE='zc_process_type',
   ZC_CUSTOMER_BALANCE_BIZ_TYPE='zc_customer_balance_biz_type',
+  ZC_CUSTOMER_BALANCE_REF_TYPE='zc_customer_balance_ref_type',
 
   // ========== SYSTEM 模块 ==========
   SYSTEM_USER_SEX = 'system_user_sex',

@@ -13,40 +13,19 @@
       label-width="68px"
     >
       <el-form-item label="客户" prop="customerId">
-        <el-input
+        <el-select
           v-model="queryParams.customerId"
-          placeholder="请输入客户"
+          placeholder="请选择客户"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="余额变动额" prop="changeAmount">
-        <el-input
-          v-model="queryParams.changeAmount"
-          placeholder="请输入余额变动额"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="变动前余额" prop="balanceBefore">
-        <el-input
-          v-model="queryParams.balanceBefore"
-          placeholder="请输入变动前余额"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="变动后余额" prop="balanceAfter">
-        <el-input
-          v-model="queryParams.balanceAfter"
-          placeholder="请输入变动后余额"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in customerList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="业务类型" prop="bizType">
         <el-select
@@ -64,36 +43,24 @@
         </el-select>
       </el-form-item>
       <el-form-item label="关联单据类型" prop="refType">
-        <el-input
+        <el-select
           v-model="queryParams.refType"
-          placeholder="请输入关联单据类型"
+          placeholder="请选择单据类型"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_CUSTOMER_BALANCE_REF_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="关联单据主键" prop="refId">
-        <el-input
-          v-model="queryParams.refId"
-          placeholder="请输入关联单据主键"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="关联单号快照" prop="refNo">
+      <el-form-item label="关联单号" prop="refNo">
         <el-input
           v-model="queryParams.refNo"
-          placeholder="请输入关联单号快照"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="备注" prop="remark">
-        <el-input
-          v-model="queryParams.remark"
-          placeholder="请输入备注"
+          placeholder="请输入关联单号"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
@@ -130,7 +97,9 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
       <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="客户" align="center" prop="customerId" />
+      <el-table-column label="客户" align="center" prop="customerId">
+        <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
+      </el-table-column>
       <el-table-column label="余额变动额" align="center" prop="changeAmount" />
       <el-table-column label="变动前余额" align="center" prop="balanceBefore" />
       <el-table-column label="变动后余额" align="center" prop="balanceAfter" />
@@ -139,9 +108,13 @@
           <dict-tag :type="DICT_TYPE.ZC_CUSTOMER_BALANCE_BIZ_TYPE" :value="scope.row.bizType" />
         </template>
       </el-table-column>
-      <el-table-column label="关联单据类型" align="center" prop="refType" />
-      <el-table-column label="关联单据主键" align="center" prop="refId" />
-      <el-table-column label="关联单号快照" align="center" prop="refNo" />
+      <el-table-column label="单据类型" align="center" prop="refType">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ZC_CUSTOMER_BALANCE_REF_TYPE" :value="scope.row.refType" />
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="关联单据" align="center" prop="refId" /> -->
+      <el-table-column label="关联单号" align="center" prop="refNo" />
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column
         label="创建时间"
@@ -167,6 +140,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerBalanceLogApi, CustomerBalanceLog } from '@/api/zc/customerbalancelog'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 
 /** 客户余额变动流水 列表 */
 defineOptions({ name: 'ZcCustomerBalanceLog' })
@@ -177,6 +151,10 @@ const message = useMessage() // 消息弹窗
 const loading = ref(true) // 列表的加载中
 const list = ref<CustomerBalanceLog[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const customerList = ref<CustomerSimpleVO[]>([]) // 客户列表
+const customerIdMap = computed(() =>
+  Object.fromEntries(customerList.value.map((item) => [item.id, item.shortName]))
+)
 
 /** 查询参数，与后端分页 VO 对应 */
 const queryParams = reactive({
@@ -236,7 +214,8 @@ const handleExport = async () => {
 }
 
 // ======================== 生命周期 ========================
-onMounted(() => {
-  getList()
+onMounted(async () => {
+  customerList.value = await CustomerApi.getCustomerSimpleList()
+  await getList()
 })
 </script>

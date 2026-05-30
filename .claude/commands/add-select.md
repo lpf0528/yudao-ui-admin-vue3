@@ -294,6 +294,21 @@ const {listVarName} = ref<{voTypeName}[]>([]) // {label}列表
 
 ---
 
+## 字典方式：执行前 — 确认 DICT_TYPE 已定义
+
+**读取 `src/utils/dict.ts`**，在 `DICT_TYPE` 枚举中搜索 `{dictType}`：
+
+- **已存在** → 跳过此步骤
+- **不存在** → 在枚举中追加（紧跟同模块其他 ZC_ 常量之后，保持模块分组整齐）：
+
+```typescript
+{dictType} = '{dictType_lowercase}',
+```
+
+> 其中 `{dictType_lowercase}` 是 `{dictType}` 的全小写形式，如 `ZC_CUSTOMER_BALANCE_REF_TYPE` → `'zc_customer_balance_ref_type'`。
+
+---
+
 ## 字典方式：表单 + 列表页联动（存在 index.vue）
 
 > 核心原则：无需 API 请求和列表变量，直接用 `getStrDictOptions` 渲染，表格用 `dict-tag`。
@@ -387,7 +402,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 
 ## 字典方式：仅表单（不存在 index.vue）
 
-步骤与上方 D-1 相同，无需处理 index.vue。
+同样先执行「确认 DICT_TYPE 已定义」步骤，再按 D-1 修改表单，无需处理 index.vue。
 
 ---
 
