@@ -557,11 +557,12 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
         pleatsDistance: undefined,
         skirtHeight: undefined,
         note: undefined,
-        materials: tmpl.elementIds.map((elem) => ({
+        materials: tmpl.elements.map((elem) => ({
           elementId: elem.elementId,
-          productId: undefined,
+          productId: elem.productId ?? undefined,
+          productName: elem.productName ?? undefined,
           batchId: undefined,
-          price: undefined,
+          price: elem.onePrice ?? undefined,
           quantity: undefined,
           unitValue: undefined,
           discountRate: undefined,

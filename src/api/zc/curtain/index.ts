@@ -22,11 +22,14 @@ export interface Curtain {
   }
 
 /** 窗帘模板 - 配件项
- * elementId 必填；productId 可空（未指定产品时）
+ * elementId 必填；productId / productName 可空（模板未指定产品时）
  */
 export interface CurtainTemplateElement {
   elementId: number
+  elementName?: string   // 组件名称
   productId?: number | null
+  productName?: string   // 货号名称
+  onePrice?: number | null // 产品单价
 }
 
 /** 窗帘模板 - 结构项
