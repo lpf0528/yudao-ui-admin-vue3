@@ -76,7 +76,7 @@
       <el-table-column label="工序名称" align="center" prop="name" />
       <el-table-column label="排序号" align="center" prop="sort" />
       <el-table-column label="工序描述/操作说明" align="center" prop="description" />
-      <el-table-column label="创建者" align="center" prop="creator" />
+      <!-- <el-table-column label="创建者" align="center" prop="creator" /> -->
       <el-table-column
         label="创建时间"
         align="center"

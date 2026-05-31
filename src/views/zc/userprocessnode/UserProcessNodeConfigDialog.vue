@@ -42,6 +42,9 @@ import { ProcessNodeApi } from '@/api/zc/processnode'
 import type { ProcessNodeSimpleVO } from '@/api/zc/processnode'
 import type { UserVO } from '@/api/system/user'
 
+/** 配置成功后通知父组件刷新列表 */
+const emit = defineEmits(['success'])
+
 const message = useMessage()
 
 // ======================== 弹窗状态 ========================
@@ -92,6 +95,7 @@ const handleSubmit = async () => {
     })
     message.success('配置成功')
     dialogVisible.value = false
+    emit('success')
   } finally {
     submitLoading.value = false
   }

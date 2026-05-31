@@ -91,7 +91,7 @@
   </ContentWrap>
 
   <!-- 工序节点配置弹窗 -->
-  <UserProcessNodeConfigDialog ref="nodeConfigDialogRef" />
+  <UserProcessNodeConfigDialog ref="nodeConfigDialogRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
