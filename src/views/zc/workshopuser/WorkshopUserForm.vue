@@ -11,9 +11,8 @@
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-radio-group v-model="formData.status">
-          <el-radio value="1">请选择字典生成</el-radio>
-        </el-radio-group>
+        <!-- 0=禁用，1=启用 -->
+        <el-switch v-model="formData.status" :active-value="1" :inactive-value="0" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -38,11 +37,10 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  status: undefined,
+  status: 1, // 默认启用
 })
 const formRules = reactive({
   name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
-  status: [{ required: true, message: '状态不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -93,7 +91,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    status: undefined,
+    status: 1,
   }
   formRef.value?.resetFields()
 }
