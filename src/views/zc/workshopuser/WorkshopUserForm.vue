@@ -11,8 +11,8 @@
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <!-- 0=禁用，1=启用 -->
-        <el-switch v-model="formData.status" :active-value="1" :inactive-value="0" />
+        <!-- 0=开启，1=关闭 -->
+        <el-switch v-model="formData.status" :active-value="0" :inactive-value="1" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -37,7 +37,7 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  status: 1, // 默认启用
+  status: 0, // 默认开启
 })
 const formRules = reactive({
   name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
@@ -91,7 +91,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    status: 1,
+    status: 0, // 默认开启
   }
   formRef.value?.resetFields()
 }

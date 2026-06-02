@@ -24,7 +24,9 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <!-- 0=开启，1=关闭 -->
+          <el-option label="开启" :value="0" />
+          <el-option label="关闭" :value="1" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -73,7 +75,14 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="状态" align="center" prop="status" />
+      <el-table-column label="状态" align="center" prop="status" width="80px">
+        <template #default="scope">
+          <!-- 0=开启（绿色），1=关闭（灰色） -->
+          <el-tag :type="scope.row.status === 0 ? 'success' : 'info'">
+            {{ scope.row.status === 0 ? '开启' : '关闭' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
