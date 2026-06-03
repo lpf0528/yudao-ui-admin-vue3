@@ -20,6 +20,9 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="是否默认" prop="defaultStatus">
+        <el-switch v-model="formData.defaultStatus" />
+      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -50,6 +53,7 @@ const formData = ref({
   id: undefined,
   name: undefined,
   managerId: undefined,
+  defaultStatus: false, // 是否默认仓库，默认否
   note: undefined,
 })
 const formRules = reactive({
@@ -105,6 +109,7 @@ const resetForm = () => {
     id: undefined,
     name: undefined,
     managerId: undefined,
+    defaultStatus: false,
     note: undefined,
   }
   formRef.value?.resetFields()

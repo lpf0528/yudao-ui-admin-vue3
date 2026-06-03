@@ -68,6 +68,13 @@
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="仓库名称" align="center" prop="name" />
       <el-table-column label="负责人" align="center" prop="managerName" />
+      <el-table-column label="是否默认" align="center" prop="defaultStatus" width="100px">
+        <template #default="{ row }">
+          <el-tag :type="row.defaultStatus ? 'success' : 'info'">
+            {{ row.defaultStatus ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"
