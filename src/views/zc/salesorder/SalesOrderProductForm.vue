@@ -460,8 +460,19 @@ const submitForm = async () => {
       })),
     }
     if (formType.value === 'create') {
-      await SalesOrderProductApi.createSalesOrderProduct(payload as any)
+      const newId = await SalesOrderProductApi.createSalesOrderProduct(payload as any)
       message.success(t('common.createSuccess'))
+      // 创建成功后立即拉取详情，回填后端生成的字段（订单号、ID 等），并切换为编辑模式
+      const detail = await SalesOrderProductApi.getSalesOrderProductDetail(newId)
+      formData.value = {
+        ...detail,
+        batchs: (detail.batchs ?? []).map((b: any) => ({
+          ...b,
+          _key: Date.now() + Math.random(),
+        })),
+      }
+      formType.value = 'update'
+      dialogTitle.value = '编辑面料单'
     } else {
       await SalesOrderProductApi.updateSalesOrderProduct(payload as any)
       message.success(t('common.updateSuccess'))
