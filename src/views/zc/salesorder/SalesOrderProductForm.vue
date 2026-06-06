@@ -13,7 +13,7 @@
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
       <el-button
-        v-if="formData.id && formData.status !== 'confirmed'"
+        v-if="formData.id && formData.status !== ZcSalesOrderStatus.CONFIRMED"
         type="success"
         @click="handleConfirm"
         :loading="formLoading"
@@ -22,7 +22,7 @@
       </el-button>
       <!-- 取消确认按钮：订单已确认时显示 -->
       <el-button
-        v-if="formData.id && formData.status === 'confirmed'"
+        v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED"
         type="danger"
         @click="handleCancelConfirm"
         :loading="formLoading"
@@ -211,6 +211,7 @@
 
 <script setup lang="ts">
 import { SalesOrderProductApi, SalesOrderApi } from '@/api/zc/salesorder'
+import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -476,7 +477,7 @@ const handleConfirm = async () => {
   formLoading.value = true
   try {
     await SalesOrderApi.confirmSalesOrder(formData.value.id!)
-    formData.value.status = 'confirmed'
+    formData.value.status = ZcSalesOrderStatus.CONFIRMED
     message.success('确认订单成功')
     emit('success')
   } finally {
@@ -488,7 +489,7 @@ const handleCancelConfirm = async () => {
   formLoading.value = true
   try {
     await SalesOrderApi.cancelConfirmSalesOrder(formData.value.id!)
-    formData.value.status = 'unconfirmed'
+    formData.value.status = ZcSalesOrderStatus.UNCONFIRMED
     message.success('取消确认成功')
     emit('success')
   } finally {

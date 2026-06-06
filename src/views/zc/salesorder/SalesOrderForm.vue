@@ -6,11 +6,11 @@
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
-      <el-button v-if="formData.id && formData.status !== 'confirmed'" type="success" @click="handleConfirm" :loading="formLoading">
+      <el-button v-if="formData.id && formData.status !== ZcSalesOrderStatus.CONFIRMED" type="success" @click="handleConfirm" :loading="formLoading">
         <Icon icon="ep:circle-check" class="mr-4px" />确认订单
       </el-button>
       <!-- 取消确认按钮：订单已确认时显示 -->
-      <el-button v-if="formData.id && formData.status === 'confirmed'" type="danger" @click="handleCancelConfirm" :loading="formLoading">
+      <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
       <!-- 加急按钮：订单已保存且未加急时显示 -->
@@ -479,6 +479,7 @@
 
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -599,7 +600,7 @@ const { t } = useI18n()
 const message = useMessage()
 
 /** 订单已确认：仅允许修改品牌、物流、收货人、交付日期、送货地址、运费、优惠金额、金额、备注 */
-const isConfirmed = computed(() => formData.value.status === 'confirmed')
+const isConfirmed = computed(() => formData.value.status === ZcSalesOrderStatus.CONFIRMED)
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
