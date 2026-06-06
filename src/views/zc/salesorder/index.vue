@@ -282,7 +282,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { SalesOrderApi, SalesOrderProductApi, SalesOrder } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderProductApi, SalesOrderType, SalesOrder } from '@/api/zc/salesorder'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -371,7 +371,7 @@ const openProductForm = (type: string, id?: number) => {
 
 /** 编辑按钮：根据订单类型打开对应表单 */
 const handleEdit = (row: SalesOrder) => {
-  if (row.types === 'mianLiao') {
+  if (row.types === SalesOrderType.FABRIC) {
     openProductForm('update', row.id)
   } else {
     openForm('update', row.id)
@@ -388,7 +388,7 @@ const openCollectionDialog = () => {
 const handleDelete = async (id: number, types: string) => {
   try {
     await message.delConfirm()
-    if (types === 'mianLiao') {
+    if (types === SalesOrderType.FABRIC) {
       await SalesOrderProductApi.deleteSalesOrderProduct(id)
     } else {
       await SalesOrderApi.deleteSalesOrder(id)

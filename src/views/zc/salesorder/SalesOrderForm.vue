@@ -480,7 +480,7 @@
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
-import { SalesOrderApi, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -620,7 +620,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
   receiver: undefined,
   deliveryAddress: undefined,
   freight: undefined,
-  types: 'chengPin',
+  types: SalesOrderType.CURTAIN,
   discountAmount: undefined,
   totalAmount: undefined,
   deliveryDate: undefined,

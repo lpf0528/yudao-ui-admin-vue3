@@ -1,6 +1,14 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 销售订单类型枚举 */
+export enum SalesOrderType {
+  /** 面料单：直接购买产品批次，无工艺配置 */
+  FABRIC = 'FABRIC',
+  /** 成品单：包含窗帘工艺配置的完整订单 */
+  CURTAIN = 'CURTAIN'
+}
+
 /** 窗帘用料（结构下的组件用料） */
 export interface ZCSalesOrderMaterial {
   id?: number               // 主键

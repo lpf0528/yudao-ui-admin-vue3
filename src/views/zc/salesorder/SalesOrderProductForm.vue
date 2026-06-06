@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalesOrderProductApi, SalesOrderApi } from '@/api/zc/salesorder'
+import { SalesOrderProductApi, SalesOrderApi, SalesOrderType } from '@/api/zc/salesorder'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -274,7 +274,7 @@ const getInitFormData = () => ({
   receiver: undefined as string | undefined,
   deliveryAddress: undefined as string | undefined,
   freight: undefined as number | undefined,
-  types: 'mianLiao',
+  types: SalesOrderType.FABRIC,
   discountAmount: undefined as number | undefined,
   amount: undefined as any,
   deliveryDate: undefined as string | undefined,
