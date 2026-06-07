@@ -127,6 +127,7 @@ export enum DICT_TYPE {
   ZC_OPEN_METHOD = 'zc_open_method',
   ZC_PASTE_DIRECTION = 'zc_paste_direction',
   ZC_PROCESS_TYPE='zc_process_type',
+  ZC_PROCESS_NODE_GROUP = 'zc_process_node_group',
 
 
   // ========== SYSTEM 模块 ==========

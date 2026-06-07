@@ -17,6 +17,16 @@
           class="!w-240px"
         />
       </el-form-item>
+      <el-form-item label="分组" prop="group">
+        <el-select v-model="queryParams.group" placeholder="请选择分组" clearable class="!w-180px">
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.ZC_PROCESS_NODE_GROUP)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -75,6 +85,11 @@
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="工序名称" align="center" prop="name" />
       <el-table-column label="排序号" align="center" prop="sort" />
+      <el-table-column label="分组" align="center" prop="group" width="120">
+        <template #default="scope">
+          <DictTag :type="DICT_TYPE.ZC_PROCESS_NODE_GROUP" :value="scope.row.group" />
+        </template>
+      </el-table-column>
       <el-table-column label="工序描述/操作说明" align="center" prop="description" />
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
@@ -91,6 +106,7 @@
             type="primary"
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['zc:process-node:update']"
+            :disabled="scope.row.group === 0"
           >
             编辑
           </el-button>
@@ -99,6 +115,7 @@
             type="danger"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['zc:process-node:delete']"
+            :disabled="scope.row.group === 0"
           >
             删除
           </el-button>
@@ -124,6 +141,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProcessNodeApi, ProcessNode } from '@/api/zc/processnode'
 import ProcessNodeForm from './ProcessNodeForm.vue'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 
 /** 工序节点配置 列表 */
 defineOptions({ name: 'ZcProcessNode' })
@@ -138,6 +156,7 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
+  group: undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单

@@ -9,11 +9,12 @@ export interface ProcessNodeSimpleVO {
 
 /** 工序节点配置信息 */
 export interface ProcessNode {
-          id: number; // 主键
-          name?: string; // 工序名称，如：备料、裁剪、缝制、定型、质检、包装
-          sort?: number; // 排序号，数字越小越靠前
-          description: string; // 工序描述/操作说明
-  }
+  id: number;          // 主键
+  name?: string;       // 工序名称，如：备料、裁剪、缝制、定型、质检、包装
+  sort?: number;       // 排序号，数字越小越靠前
+  description: string; // 工序描述/操作说明
+  group?: number;      // 分组，字典 zc_process_node_group
+}
 
 // 工序节点配置 API
 export const ProcessNodeApi = {

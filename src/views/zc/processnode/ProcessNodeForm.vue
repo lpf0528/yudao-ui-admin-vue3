@@ -43,8 +43,8 @@ const formData = ref({
   description: undefined,
 })
 const formRules = reactive({
-  name: [{ required: true, message: '工序名称，如：备料、裁剪、缝制、定型、质检、包装不能为空', trigger: 'blur' }],
-  sort: [{ required: true, message: '排序号，数字越小越靠前不能为空', trigger: 'blur' }],
+  name: [{ required: true, message: '工序名称不能为空', trigger: 'blur' }],
+  sort: [{ required: true, message: '排序号不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
