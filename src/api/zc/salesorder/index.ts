@@ -140,6 +140,18 @@ export const SalesOrderApi = {
     return await request.post({ url: `/zc/sales-order/create`, data })
   },
 
+  // 新增面单（类型固定 FABRIC，curtainId/structureId 可为空）
+  // 对应后端：POST /zc/sales-order/fabric/create
+  createSalesOrderFabric: async (data: any) => {
+    return await request.post({ url: `/zc/sales-order/fabric/create`, data })
+  },
+
+  // 更新面单（已确认订单禁止修改）
+  // 对应后端：PUT /zc/sales-order/fabric/update
+  updateSalesOrderFabric: async (data: any) => {
+    return await request.put({ url: `/zc/sales-order/fabric/update`, data })
+  },
+
   // 修改销售订单
   updateSalesOrder: async (data: SalesOrder) => {
     return await request.put({ url: `/zc/sales-order/update`, data })

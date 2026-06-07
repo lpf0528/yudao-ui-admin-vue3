@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalesOrderApi, SalesOrderType } from '@/api/zc/salesorder'
+import { SalesOrderProductApi, SalesOrderApi, SalesOrderType } from '@/api/zc/salesorder'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -405,23 +405,21 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      const data = await SalesOrderApi.getSalesOrderDetail(id)
-      // 面料单：取第一层 curtain → 第一层 structure → materials 作为批次列表
-      const materials = data.curtains?.[0]?.structures?.[0]?.materials ?? []
+      const data = await SalesOrderProductApi.getSalesOrderProductDetail(id)
       formData.value = {
         ...data,
-        batchs: materials.map((m) => ({
-          id: m.id,
-          productId: m.productId,
-          productName: m.productName,
-          batchId: m.batchId,
-          batchNo: m.batchNo,
-          price: m.price,
-          quantity: m.quantity,
-          amount: m.amount,
-          note: m.note,
+        batchs: (data.batchs ?? []).map((b: any) => ({
+          id: b.id,
+          productId: b.productId,
+          productName: b.productName,
+          batchId: b.batchId,
+          batchNo: b.batchNo,
+          price: b.price,
+          quantity: b.quantity,
+          amount: b.amount,
+          note: b.note,
         })),
-      } as any
+      }
       if (data?.customerId) {
         const customer = props.customersList.find((item) => item.id === data.customerId)
         selectedCustomerBalance.value = customer?.balance ?? null
@@ -450,45 +448,33 @@ const submitForm = async () => {
   }
   formLoading.value = true
   try {
-    // 将批次列表包装为 curtains → structures → materials 嵌套结构
-    const materials = formData.value.batchs.map((b) => ({
-      productId: b.productId,
-      batchId: b.batchId,
-      price: b.price,
-      quantity: b.quantity,
-      amount: b.amount,
-      note: b.note,
-    }))
-    // 新增 / 更新均使用面单专用接口，字段结构一致（更新时额外携带 id）
-    const fabricPayload = {
-      id: formData.value.id,
-      customerId: formData.value.customerId,
-      mobile: formData.value.mobile,
-      brandId: formData.value.brandId,
-      orderDate: formData.value.orderDate,
-      logisticId: formData.value.logisticId,
-      receiver: formData.value.receiver,
-      deliveryAddress: formData.value.deliveryAddress,
-      amount: formData.value.amount,
-      curtains: [{ amount: formData.value.amount, note: formData.value.note, structures: [{ materials }] }],
+    const payload = {
+      ...formData.value,
+      batchs: formData.value.batchs.map((b) => ({
+        productId: b.productId,
+        batchId: b.batchId,
+        quantity: b.quantity,
+        price: b.price,
+        amount: b.amount,
+        note: b.note,
+      })),
     }
     if (formType.value === 'create') {
-      const newId = await SalesOrderApi.createSalesOrderFabric(fabricPayload)
+      const newId = await SalesOrderProductApi.createSalesOrderProduct(payload as any)
       message.success(t('common.createSuccess'))
       // 创建成功后立即拉取详情，回填后端生成的字段（订单号、ID 等），并切换为编辑模式
-      const detail = await SalesOrderApi.getSalesOrderDetail(newId)
-      const detailMaterials = detail.curtains?.[0]?.structures?.[0]?.materials ?? []
+      const detail = await SalesOrderProductApi.getSalesOrderProductDetail(newId)
       formData.value = {
         ...detail,
-        batchs: detailMaterials.map((m) => ({
-          ...m,
+        batchs: (detail.batchs ?? []).map((b: any) => ({
+          ...b,
           _key: Date.now() + Math.random(),
         })),
-      } as any
+      }
       formType.value = 'update'
       dialogTitle.value = '编辑面料单'
     } else {
-      await SalesOrderApi.updateSalesOrderFabric(fabricPayload)
+      await SalesOrderProductApi.updateSalesOrderProduct(payload as any)
       message.success(t('common.updateSuccess'))
     }
     emit('success')
