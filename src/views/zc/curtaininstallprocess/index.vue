@@ -63,6 +63,17 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="工艺名称" align="center" prop="name" />
+      <el-table-column label="关联工序" align="center" prop="nodeIds" min-width="160px">
+        <template #default="{ row }">
+          <el-tag
+            v-for="id in row.nodeIds"
+            :key="id"
+            size="small"
+            class="mr-4px mb-2px"
+          >{{ nodeNameMap[id] ?? id }}</el-tag>
+          <span v-if="!row.nodeIds?.length">-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
 <!--      <el-table-column label="创建者" align="center" prop="creator" />-->
       <el-table-column
@@ -111,6 +122,7 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainInstallProcessApi, CurtainInstallProcess } from '@/api/zc/curtaininstallprocess'
+import { ProcessNodeApi } from '@/api/zc/processnode'
 import CurtainInstallProcessForm from './CurtainInstallProcessForm.vue'
 
 /** 安装工艺 列表 */
@@ -129,6 +141,13 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+
+/** 工序节点 id → name 映射，用于表格中展示名称 */
+const nodeNameMap = ref<Record<number, string>>({})
+const loadProcessNodes = async () => {
+  const list = await ProcessNodeApi.getSimpleProcessNodeList()
+  nodeNameMap.value = Object.fromEntries(list.map((n) => [n.id, n.name]))
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -207,6 +226,7 @@ const handleExport = async () => {
 
 /** 初始化 **/
 onMounted(() => {
+  loadProcessNodes()
   getList()
 })
 </script>

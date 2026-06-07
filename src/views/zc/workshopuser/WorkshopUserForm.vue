@@ -28,9 +28,7 @@
             v-for="node in processNodeList"
             :key="node.id"
             :label="node.id"
-          >
-            {{ node.name }}
-          </el-checkbox>
+          >{{ node.name }}</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
     </el-form>

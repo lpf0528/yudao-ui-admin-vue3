@@ -10,6 +10,15 @@
       <el-form-item label="工艺名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入工艺名称" />
       </el-form-item>
+      <el-form-item label="关联工序" prop="nodeIds">
+        <el-checkbox-group v-model="formData.nodeIds">
+          <el-checkbox
+            v-for="node in processNodeList"
+            :key="node.id"
+            :label="node.id"
+          >{{ node.name }}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -22,6 +31,7 @@
 </template>
 <script setup lang="ts">
 import { CurtainInstallProcessApi, CurtainInstallProcess } from '@/api/zc/curtaininstallprocess'
+import { ProcessNodeApi, ProcessNodeSimpleVO } from '@/api/zc/processnode'
 
 /** 安装工艺 表单 */
 defineOptions({ name: 'CurtainInstallProcessForm' })
@@ -36,12 +46,16 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  note: undefined
+  note: undefined,
+  nodeIds: [] as number[]  // 关联工序节点 ID 列表
 })
 const formRules = reactive({
   name: [{ required: true, message: '工艺名称不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
+
+/** 工序节点精简列表，用于多选下拉 */
+const processNodeList = ref<ProcessNodeSimpleVO[]>([])
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -49,11 +63,16 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  // 加载工序节点选项
+  if (!processNodeList.value.length) {
+    processNodeList.value = await ProcessNodeApi.getSimpleProcessNodeList()
+  }
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await CurtainInstallProcessApi.getCurtainInstallProcess(id)
+      const data = await CurtainInstallProcessApi.getCurtainInstallProcess(id)
+      formData.value = { ...data, nodeIds: Array.isArray(data.nodeIds) ? data.nodeIds : [] }
     } finally {
       formLoading.value = false
     }
@@ -90,7 +109,8 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    note: undefined
+    note: undefined,
+    nodeIds: []
   }
   formRef.value?.resetFields()
 }

@@ -12,10 +12,11 @@ export interface CurtainInstallProcessSimpleVO {
 
 /** 安装工艺信息 */
 export interface CurtainInstallProcess {
-          id: number; // 主键
-          name?: string; // 工艺名称
-          note: string; // 备注
-  }
+  id: number;          // 主键
+  name?: string;       // 工艺名称
+  note: string;        // 备注
+  nodeIds?: number[];  // 关联工序节点 ID 列表
+}
 
 // 安装工艺 API
 export const CurtainInstallProcessApi = {
