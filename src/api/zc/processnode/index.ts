@@ -59,7 +59,7 @@ export const ProcessNodeApi = {
    *
    * @returns 工序节点精简信息数组（仅含 id、name）
    */
-  getSimpleProcessNodeList: async () => {
-    return await request.get<ProcessNodeSimpleVO[]>({ url: `/zc/process-node/simple-list` })
+  getSimpleProcessNodeList: async (params?: { group?: number }) => {
+    return await request.get<ProcessNodeSimpleVO[]>({ url: `/zc/process-node/simple-list`, params })
   }
 }
