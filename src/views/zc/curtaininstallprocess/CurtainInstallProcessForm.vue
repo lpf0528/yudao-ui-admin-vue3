@@ -1,5 +1,5 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" width="900px">
     <el-form
       ref="formRef"
       :model="formData"
@@ -16,7 +16,9 @@
             v-for="node in processNodeList"
             :key="node.id"
             :label="node.id"
-          >{{ node.name }}</el-checkbox>
+          >
+            <span class="inline-block w-[8em]">{{ node.name }}</span>
+          </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="备注" prop="note">
