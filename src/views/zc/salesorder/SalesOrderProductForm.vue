@@ -406,21 +406,23 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       const data = await SalesOrderApi.getSalesOrderDetail(id)
-      // 面料单：取第一层 curtain → 第一层 structure → materials 作为批次列表
-      const materials = data.curtains?.[0]?.structures?.[0]?.materials ?? []
+      // 面料单：每个 curtain 对应一条面料，从各自的 structures[0].materials[0] 反解
       formData.value = {
         ...data,
-        batchs: materials.map((m) => ({
-          id: m.id,
-          productId: m.productId,
-          productName: m.productName,
-          batchId: m.batchId,
-          batchNo: m.batchNo,
-          price: m.price,
-          quantity: m.quantity,
-          amount: m.amount,
-          note: m.note,
-        })),
+        batchs: (data.curtains ?? []).map((c) => {
+          const m = c.structures?.[0]?.materials?.[0] ?? {}
+          return {
+            id: m.id,
+            productId: m.productId,
+            productName: m.productName,
+            batchId: m.batchId,
+            batchNo: m.batchNo,
+            price: m.price,
+            quantity: m.quantity,
+            amount: m.amount,
+            note: m.note,
+          }
+        }),
       } as any
       if (data?.customerId) {
         const customer = props.customersList.find((item) => item.id === data.customerId)
@@ -450,14 +452,20 @@ const submitForm = async () => {
   }
   formLoading.value = true
   try {
-    // 将批次列表包装为 curtains → structures → materials 嵌套结构
-    const materials = formData.value.batchs.map((b) => ({
-      productId: b.productId,
-      batchId: b.batchId,
-      price: b.price,
-      quantity: b.quantity,
+    // 每条面料独立为一个 curtain，各自放在 structures[0].materials[0]
+    const curtains = formData.value.batchs.map((b) => ({
       amount: b.amount,
       note: b.note,
+      structures: [{
+        materials: [{
+          productId: b.productId,
+          batchId: b.batchId,
+          price: b.price,
+          quantity: b.quantity,
+          amount: b.amount,
+          note: b.note,
+        }]
+      }]
     }))
     // 新增 / 更新均使用面单专用接口，字段结构一致（更新时额外携带 id）
     const fabricPayload = {
@@ -470,20 +478,19 @@ const submitForm = async () => {
       receiver: formData.value.receiver,
       deliveryAddress: formData.value.deliveryAddress,
       amount: formData.value.amount,
-      curtains: [{ amount: formData.value.amount, note: formData.value.note, structures: [{ materials }] }],
+      curtains,
     }
     if (formType.value === 'create') {
       const newId = await SalesOrderApi.createSalesOrderFabric(fabricPayload)
       message.success(t('common.createSuccess'))
       // 创建成功后立即拉取详情，回填后端生成的字段（订单号、ID 等），并切换为编辑模式
       const detail = await SalesOrderApi.getSalesOrderDetail(newId)
-      const detailMaterials = detail.curtains?.[0]?.structures?.[0]?.materials ?? []
       formData.value = {
         ...detail,
-        batchs: detailMaterials.map((m) => ({
-          ...m,
-          _key: Date.now() + Math.random(),
-        })),
+        batchs: (detail.curtains ?? []).map((c) => {
+          const m = c.structures?.[0]?.materials?.[0] ?? {}
+          return { ...m, _key: Date.now() + Math.random() }
+        }),
       } as any
       formType.value = 'update'
       dialogTitle.value = '编辑面料单'
