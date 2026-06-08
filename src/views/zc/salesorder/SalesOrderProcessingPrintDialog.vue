@@ -162,7 +162,7 @@
 
 <script setup lang="ts">
 import QRCode from 'qrcode'
-import { genProcessCode } from '@/utils/processCode'
+import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -253,9 +253,18 @@ const open = async (data: FormDataType) => {
   structureQrCodes.value = {}
   for (const [cIdx, curtain] of (data.curtains || []).entries()) {
     for (const [sIdx, structure] of ((curtain as any).structures || []).entries()) {
-      const code = genProcessCode(data.orderNo || '', 'ST', structure.id ?? sIdx + 1)
-      const url = await QRCode.toDataURL(code, { width: 80, margin: 1 })
-      structureQrCodes.value[`${cIdx}-${sIdx}`] = { url, code }
+      const codeContent = JSON.stringify({
+         orderNo: data.orderNo,
+        curtainId: curtain.id ?? cIdx + 1,
+        structureId: structure.id ?? sIdx + 1
+      })
+      const codeId = await BarcodeRegistryApi.create({
+        codeType: 'PROCESS_QR',
+        targetRoute: '/pages-curtain/process-node/index',
+        codeContent
+      })
+      const url = await QRCode.toDataURL(codeId, { width: 80, margin: 1 })
+      structureQrCodes.value[`${cIdx}-${sIdx}`] = { url, code: codeId }
     }
   }
 }
