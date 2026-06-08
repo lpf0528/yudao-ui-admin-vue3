@@ -51,8 +51,13 @@
                 <div style="padding: 2px 0; font-weight: bold;"><b>交付：</b>{{ formData?.deliveryDate || '-' }}</div>
                 <div v-if="formData?.note" style="padding: 2px 0; font-weight: bold;"><b>备注：</b>{{ formData.note }}</div>
               </div>
-              <div style="width: 58px; flex-shrink: 0; padding-left: 6px; text-align: center;">
-                <img v-if="qrCodeUrl" :src="qrCodeUrl" width="56" height="56" style="display: block;" />
+              <div style="width: 70px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+                <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
+                  <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="56" height="56" style="display: block; margin: 0 auto;" />
+                  <div style="font-size: 9px; word-break: break-all; margin-top: 2px; line-height: 1.2;">
+                    {{ structureQrCodes[`${cIdx}-${sIdx}`].code }}
+                  </div>
+                </template>
                 <div
                   v-else
                   style="width: 56px; height: 56px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
@@ -157,6 +162,7 @@
 
 <script setup lang="ts">
 import QRCode from 'qrcode'
+import { genProcessCode } from '@/utils/processCode'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -186,8 +192,8 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 订单号二维码的 base64 data URL */
-const qrCodeUrl = ref<string>('')
+/** 每个结构的二维码信息，key 为 `${curtainIdx}-${structureIdx}` */
+const structureQrCodes = ref<Record<string, { url: string; code: string }>>({})
 
 // ======================== 计算属性 ========================
 const customerName = computed(() => {
@@ -240,13 +246,17 @@ const getStructureAttrs = (structure: any): { label: string; value: string }[] =
 }
 
 // ======================== 对外方法 ========================
-/** 打开预览弹窗，传入当前表单数据，并生成订单号二维码 */
+/** 打开预览弹窗，传入当前表单数据，并为每个结构生成独立二维码 */
 const open = async (data: FormDataType) => {
   formData.value = data
   visible.value = true
-  qrCodeUrl.value = ''
-  if (data.orderNo) {
-    qrCodeUrl.value = await QRCode.toDataURL(String(data.orderNo), { width: 80, margin: 1 })
+  structureQrCodes.value = {}
+  for (const [cIdx, curtain] of (data.curtains || []).entries()) {
+    for (const [sIdx, structure] of ((curtain as any).structures || []).entries()) {
+      const code = genProcessCode(data.orderNo || '', 'ST', structure.id ?? sIdx + 1)
+      const url = await QRCode.toDataURL(code, { width: 80, margin: 1 })
+      structureQrCodes.value[`${cIdx}-${sIdx}`] = { url, code }
+    }
   }
 }
 
@@ -267,27 +277,29 @@ const handlePrint = () => {
   const thS = 'border:1px solid #D1D5DB;padding:3px 5px;font-weight:600;'
   const tdS = 'border:1px solid #D1D5DB;padding:3px 5px;'
 
-  // 二维码图片 HTML
-  const qrImg = qrCodeUrl.value
-    ? `<img src="${qrCodeUrl.value}" width="56" height="56" style="display:block;" />`
-    : `<div style="width:56px;height:56px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>`
-
-  // 所有页面共用的抬头 HTML（不含物流、地址）
-  const headerHtml = `
-    <div style="display:flex;align-items:flex-start;margin-bottom:4px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:17pt;font-weight:bold;letter-spacing:3px;text-align:center;margin-bottom:3px;">
-          ${bName ? bName + '&nbsp;' : ''}加工单
+  /** 根据结构索引生成抬头 HTML（含各自二维码） */
+  const buildHeaderHtml = (cIdx: number, sIdx: number) => {
+    const qrEntry = structureQrCodes.value[`${cIdx}-${sIdx}`]
+    const qrImg = qrEntry
+      ? `<img src="${qrEntry.url}" width="56" height="56" style="display:block;margin:0 auto;" />
+         <div style="font-size:7pt;word-break:break-all;margin-top:2px;line-height:1.2;text-align:center;">${qrEntry.code}</div>`
+      : `<div style="width:56px;height:56px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>`
+    return `
+      <div style="display:flex;align-items:flex-start;margin-bottom:4px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:17pt;font-weight:bold;letter-spacing:3px;text-align:center;margin-bottom:3px;">
+            ${bName ? bName + '&nbsp;' : ''}加工单
+          </div>
+          <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>订单号：</b>${fd.orderNo || '-'}</div>
+          <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>客户：</b>${cName}</div>
+          <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>交付：</b>${fd.deliveryDate || '-'}</div>
+          ${fd.note ? `<div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>备注：</b>${fd.note}</div>` : ''}
         </div>
-        <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>订单号：</b>${fd.orderNo || '-'}</div>
-        <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>客户：</b>${cName}</div>
-        <div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>交付：</b>${fd.deliveryDate || '-'}</div>
-        ${fd.note ? `<div style="padding:1px 0;font-size:11pt;font-weight:bold;"><b>备注：</b>${fd.note}</div>` : ''}
+        <div style="width:60px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
       </div>
-      <div style="width:60px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
-    </div>
-    <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
-  `
+      <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
+    `
+  }
 
   // 遍历每个窗帘下的每个结构，生成独立页面
   const pages: string[] = []
@@ -373,7 +385,7 @@ const handlePrint = () => {
           </table>`
         : `<div style="padding:2px 8px;font-size:10pt;color:#9CA3AF;border:1px solid #D1D5DB;">（无用料）</div>`
 
-      pages.push(`<div class="page">${headerHtml}${curtainHeaderHtml}${structureHtml}${materialsHtml}</div>`)
+      pages.push(`<div class="page">${buildHeaderHtml(cIdx, sIdx)}${curtainHeaderHtml}${structureHtml}${materialsHtml}</div>`)
     }
   }
 
