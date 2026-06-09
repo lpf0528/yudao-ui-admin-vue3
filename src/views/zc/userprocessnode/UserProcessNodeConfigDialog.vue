@@ -4,15 +4,19 @@
   使用方：views/zc/userprocessnode/index.vue
 -->
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" width="800px">
     <div v-loading="dialogLoading">
       <!-- 员工信息提示 -->
       <div class="mb-16px text-sm text-gray-500">
         为员工 <span class="font-bold text-gray-800">{{ currentUser?.nickname }}</span> 配置工序节点
       </div>
 
-      <!-- 工序节点多选列表 -->
-      <el-checkbox-group v-model="selectedNodeIds" class="flex flex-col gap-8px">
+      <!-- 工序节点多选列表：一行多列网格布局 -->
+      <el-checkbox-group
+        v-model="selectedNodeIds"
+        class="grid gap-x-16px gap-y-12px"
+        style="grid-template-columns: repeat(4, 1fr)"
+      >
         <el-checkbox
           v-for="node in processNodeList"
           :key="node.id"
