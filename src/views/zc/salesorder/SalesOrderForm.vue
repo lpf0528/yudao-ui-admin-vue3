@@ -26,9 +26,9 @@
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
       <!-- 销售单2：请求后端 PDF 接口，在弹窗内预览并打印 -->
-      <el-button v-if="formData.id" type="success" plain @click="handlePrintOrder2" :loading="pdfLoading">
+      <!-- <el-button v-if="formData.id" type="success" plain @click="handlePrintOrder2" :loading="pdfLoading">
         <Icon icon="ep:document-checked" class="mr-4px" />销售单2
-      </el-button>
+      </el-button> -->
     </div>
 
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
