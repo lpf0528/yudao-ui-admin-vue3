@@ -120,7 +120,11 @@
             <el-table-column label="规格" align="center" prop="specValue" />
             <el-table-column label="版本" align="center" prop="versionName" />
             <el-table-column label="单价" align="center" prop="productPrice" />
-            <el-table-column label="计量单位" align="center" prop="unitValue" />
+            <el-table-column label="单位" align="center" prop="unitValue">
+              <template #default="scope">
+                <dict-tag :type="DICT_TYPE.ZC_PRODUCT_UNIT" :value="scope.row.unitValue" />
+              </template>
+            </el-table-column>
             <el-table-column label="剩余数量" align="center" prop="quantity" />
             <el-table-column label="仓库" align="center" prop="warehouseName" />
             <el-table-column label="供应商" align="center" prop="supplierName" />
@@ -139,6 +143,7 @@
 </template>
 
 <script setup lang="ts">
+import { DICT_TYPE } from '@/utils/dict'
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'

@@ -109,7 +109,7 @@
             <el-table-column label="版本" align="center" prop="versionName" />
             <el-table-column label="进货价" align="center" prop="inboundPrice" />
             <el-table-column label="单价" align="center" prop="productPrice" />
-            <el-table-column label="计量单位" align="center" prop="unitValue" />
+            <el-table-column label="单位" align="center" prop="unitValue" />
             <el-table-column label="剩余数量" align="center" prop="quantity" />
             <el-table-column label="仓库" align="center" prop="warehouseName" />
             <el-table-column label="供应商" align="center" prop="supplierName" />

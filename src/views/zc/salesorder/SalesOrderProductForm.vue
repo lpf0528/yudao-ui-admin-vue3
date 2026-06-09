@@ -124,7 +124,7 @@
           <el-col :span="1" />
           <el-col :span="6">货号</el-col>
           <el-col :span="5">批次</el-col>
-          <el-col :span="3">数量</el-col>
+          <el-col :span="3">用料</el-col>
           <el-col :span="3">单价</el-col>
           <el-col :span="3">金额</el-col>
           <el-col :span="3">备注</el-col>
@@ -164,7 +164,7 @@
           <el-col :span="3">
             <el-input-number
               v-model="batch.quantity"
-              placeholder="数量"
+              placeholder="用料"
               size="small"
               :controls="false"
               class="!w-full"
