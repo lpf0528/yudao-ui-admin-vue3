@@ -163,6 +163,7 @@
 <script setup lang="ts">
 import QRCode from 'qrcode'
 import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
+import { getDictLabel, DICT_TYPE } from '@/utils/dict'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -234,9 +235,9 @@ const getStructureAttrs = (structure: any): { label: string; value: string }[] =
   }
   if (structure.leftCorner) attrs.push({ label: '左转角', value: structure.leftCorner })
   if (structure.rightCorner) attrs.push({ label: '右转角', value: structure.rightCorner })
-  if (structure.pasteDirection) attrs.push({ label: '粘贴方向', value: structure.pasteDirection })
-  if (structure.openMethod) attrs.push({ label: '打开方式', value: structure.openMethod })
-  if (structure.processType) attrs.push({ label: '加工类型', value: structure.processType })
+  if (structure.pasteDirection) attrs.push({ label: '粘贴方向', value: getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) || structure.pasteDirection })
+  if (structure.openMethod) attrs.push({ label: '打开方式', value: getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod) || structure.openMethod })
+  if (structure.processType) attrs.push({ label: '加工类型', value: getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType) || structure.processType })
   if (structure.pleatsNum != null) attrs.push({ label: '总褶数', value: String(structure.pleatsNum) })
   if (structure.pleatsDistance != null) attrs.push({ label: '褶距', value: String(structure.pleatsDistance) })
   if (structure.skirtHeight != null) attrs.push({ label: '裙摆高度', value: String(structure.skirtHeight) })
