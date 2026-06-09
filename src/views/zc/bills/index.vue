@@ -1,3 +1,7 @@
+<!--
+  收支账单 - 列表页
+  支持按单号、付款时间、财务人员、客户、收款方式查询，可进行删除操作
+-->
 <template>
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -46,44 +50,24 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="收支方式" prop="billMethodId">
-        <el-input
+      <el-form-item label="收款方式" prop="billMethodId">
+        <el-select
           v-model="queryParams.billMethodId"
-          placeholder="请输入收支方式"
+          placeholder="请选择收款方式"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in billMethodsList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['zc:bills:create']"
-        >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['zc:bills:export']"
-        >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
-        </el-button>
-        <el-button
-            type="danger"
-            plain
-            :disabled="isEmpty(checkedIds)"
-            @click="handleDeleteBatch"
-            v-hasPermi="['zc:bills:delete']"
-        >
-          <Icon icon="ep:delete" class="mr-5px" /> 批量删除
-        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -91,14 +75,12 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table
-        row-key="id"
-        v-loading="loading"
-        :data="list"
-        :stripe="true"
-        :show-overflow-tooltip="true"
-        @selection-change="handleRowCheckboxChange"
+      row-key="id"
+      v-loading="loading"
+      :data="list"
+      :stripe="true"
+      :show-overflow-tooltip="true"
     >
-    <el-table-column type="selection" width="55" />
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="单号" align="center" prop="billNo" />
       <el-table-column label="付款时间" align="center" prop="billDate" />
@@ -106,28 +88,10 @@
       <el-table-column label="客户" align="center" prop="customerId" />
       <el-table-column label="优惠金额" align="center" prop="discountAmount" />
       <el-table-column label="实收金额 " align="center" prop="actualAmount" />
-      <el-table-column label="收支方式" align="center" prop="billMethodId" />
-      <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="操作" align="center" min-width="120px">
-        <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['zc:bills:update']"
-          >
-            编辑
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['zc:bills:delete']"
-          >
-            删除
-          </el-button>
-        </template>
+      <el-table-column label="收款方式" align="center" prop="billMethodId">
+        <template #default="scope">{{ billMethodIdMap[scope.row.billMethodId] }}</template>
       </el-table-column>
+      <el-table-column label="备注" align="center" prop="note" />
     </el-table>
     <!-- 分页 -->
     <Pagination
@@ -137,23 +101,16 @@
       @pagination="getList"
     />
   </ContentWrap>
-
-  <!-- 表单弹窗：添加/修改 -->
-  <BillsForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
-import { isEmpty } from '@/utils/is'
-import download from '@/utils/download'
 import { BillsApi, Bills } from '@/api/zc/bills'
-import BillsForm from './BillsForm.vue'
+import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
 
 /** 收支账单 列表 */
 defineOptions({ name: 'ZcBills' })
 
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
-
+// ======================== 响应式状态 ========================
 const loading = ref(true) // 列表的加载中
 const list = ref<Bills[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
@@ -167,8 +124,12 @@ const queryParams = reactive({
   billMethodId: undefined
 })
 const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+const billMethodsList = ref<BillMethodsSimpleVO[]>([]) // 收款方式列表
+const billMethodIdMap = computed(() =>
+  Object.fromEntries(billMethodsList.value.map((item) => [item.id, item.name]))
+)
 
+// ======================== 数据获取 ========================
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
@@ -181,6 +142,7 @@ const getList = async () => {
   }
 }
 
+// ======================== 事件处理 ========================
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.pageNo = 1
@@ -193,59 +155,9 @@ const resetQuery = () => {
   handleQuery()
 }
 
-/** 添加/修改操作 */
-const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await BillsApi.deleteBills(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 批量删除收支账单 */
-const handleDeleteBatch = async () => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    await BillsApi.deleteBillsList(checkedIds.value);
-    checkedIds.value = [];
-    message.success(t('common.delSuccess'))
-    await getList();
-  } catch {}
-}
-
-const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: Bills[]) => {
-  checkedIds.value = records.map((item) => item.id!);
-}
-
-/** 导出按钮操作 */
-const handleExport = async () => {
-  try {
-    // 导出的二次确认
-    await message.exportConfirm()
-    // 发起导出
-    exportLoading.value = true
-    const data = await BillsApi.exportBills(queryParams)
-    download.excel(data, '收支账单.xls')
-  } catch {
-  } finally {
-    exportLoading.value = false
-  }
-}
-
-/** 初始化 **/
-onMounted(() => {
-  getList()
+// ======================== 生命周期 ========================
+onMounted(async () => {
+  billMethodsList.value = await BillMethodsApi.getBillMethodsSimpleList()
+  await getList()
 })
 </script>

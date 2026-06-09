@@ -1,6 +1,15 @@
 import request from '@/config/axios'
 import type { Dayjs } from 'dayjs';
 
+/** 收款方式简要信息
+ * 接口：GET /zc/bill-methods/simple-list
+ * 返回：{ id: number, name: string }[]
+ */
+export interface BillMethodsSimpleVO {
+  id: number   // 主键
+  name: string // 名称
+}
+
 /** 收款方式信息 */
 export interface BillMethods {
           id: number; // 主键
@@ -11,6 +20,11 @@ export interface BillMethods {
 
 // 收款方式 API
 export const BillMethodsApi = {
+  // 查询收款方式精简列表，用于下拉选项
+  getBillMethodsSimpleList: async () => {
+    return await request.get<BillMethodsSimpleVO[]>({ url: `/zc/bill-methods/simple-list` })
+  },
+
   // 查询收款方式分页
   getBillMethodsPage: async (params: any) => {
     return await request.get({ url: `/zc/bill-methods/page`, params })
