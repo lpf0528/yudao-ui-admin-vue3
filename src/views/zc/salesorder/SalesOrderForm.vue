@@ -636,7 +636,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
   types: SalesOrderType.CURTAIN,
   discountAmount: undefined,
   totalAmount: undefined,
-  deliveryDate: undefined,
+  deliveryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 6); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })() as any,
   payStatus: undefined,
   status: undefined,
   confirmTime: undefined,

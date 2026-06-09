@@ -277,7 +277,7 @@ const getInitFormData = () => ({
   types: SalesOrderType.FABRIC,
   discountAmount: undefined as number | undefined,
   amount: undefined as any,
-  deliveryDate: undefined as string | undefined,
+  deliveryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 6); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })() as string | undefined,
   payStatus: undefined as string | undefined,
   status: undefined as string | undefined,
   isExpedited: undefined as boolean | undefined,
