@@ -25,6 +25,10 @@
       <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
+      <!-- 水洗码按钮：订单已保存时显示，每个结构生成 6 张水洗标 -->
+      <el-button v-if="formData.id" type="warning" plain @click="handlePrintWashLabel">
+        <Icon icon="ep:ticket" class="mr-4px" />水洗码
+      </el-button>
       <!-- 销售单2：请求后端 PDF 接口，在弹窗内预览并打印 -->
       <!-- <el-button v-if="formData.id" type="success" plain @click="handlePrintOrder2" :loading="pdfLoading">
         <Icon icon="ep:document-checked" class="mr-4px" />销售单2
@@ -446,6 +450,14 @@
       :curtain-structure-list="curtainStructureList"
       :element-list="curtainStructureElementList"
     />
+    <!-- 水洗标打印预览弹窗 -->
+    <SalesOrderWashLabelDialog
+      ref="washLabelDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :curtain-list="curtainList"
+      :curtain-structure-list="curtainStructureList"
+    />
 
     <!-- 销售单2：后端 PDF 预览弹窗 -->
     <el-dialog
@@ -493,6 +505,7 @@ import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
 import SalesOrderProcessingPrintDialog from './SalesOrderProcessingPrintDialog.vue'
+import SalesOrderWashLabelDialog from './SalesOrderWashLabelDialog.vue'
 
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
@@ -648,6 +661,7 @@ const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProcessingPrintDialog>>()
+const washLabelDialogRef = ref<InstanceType<typeof SalesOrderWashLabelDialog>>()
 /** 销售单2 PDF 预览 dialog 状态 */
 const pdfDialogVisible = ref(false)
 /** 当前 PDF 的 blob object URL，关闭弹窗时需 revoke */
@@ -882,6 +896,11 @@ const handlePrintOrder = () => {
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
   processingPrintDialogRef.value?.open(formData.value as any)
+}
+
+/** 打开水洗标打印预览，每个结构生成 6 张相同标签 */
+const handlePrintWashLabel = () => {
+  washLabelDialogRef.value?.open(formData.value as any)
 }
 
 /**
