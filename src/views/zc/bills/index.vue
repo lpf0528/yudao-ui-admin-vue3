@@ -32,23 +32,21 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item label="财务人员" prop="billUserId">
-        <el-input
-          v-model="queryParams.billUserId"
-          placeholder="请输入财务人员"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
+
       <el-form-item label="客户" prop="customerId">
-        <el-input
+        <el-select
           v-model="queryParams.customerId"
-          placeholder="请输入客户"
+          placeholder="请选择客户"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in customerList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="收款方式" prop="billMethodId">
         <el-select
@@ -84,8 +82,9 @@
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="单号" align="center" prop="billNo" />
       <el-table-column label="付款时间" align="center" prop="billDate" />
-      <el-table-column label="财务人员" align="center" prop="billUserId" />
-      <el-table-column label="客户" align="center" prop="customerId" />
+      <el-table-column label="客户" align="center" prop="customerId">
+        <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
+      </el-table-column>
       <el-table-column label="优惠金额" align="center" prop="discountAmount" />
       <el-table-column label="实收金额 " align="center" prop="actualAmount" />
       <el-table-column label="收款方式" align="center" prop="billMethodId">
@@ -106,6 +105,7 @@
 <script setup lang="ts">
 import { BillsApi, Bills } from '@/api/zc/bills'
 import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 
 /** 收支账单 列表 */
 defineOptions({ name: 'ZcBills' })
@@ -119,7 +119,7 @@ const queryParams = reactive({
   pageSize: 10,
   billNo: undefined,
   billDate: [],
-  billUserId: undefined,
+
   customerId: undefined,
   billMethodId: undefined
 })
@@ -127,6 +127,10 @@ const queryFormRef = ref() // 搜索的表单
 const billMethodsList = ref<BillMethodsSimpleVO[]>([]) // 收款方式列表
 const billMethodIdMap = computed(() =>
   Object.fromEntries(billMethodsList.value.map((item) => [item.id, item.name]))
+)
+const customerList = ref<CustomerSimpleVO[]>([]) // 客户列表
+const customerIdMap = computed(() =>
+  Object.fromEntries(customerList.value.map((item) => [item.id, item.shortName]))
 )
 
 // ======================== 数据获取 ========================
@@ -158,6 +162,7 @@ const resetQuery = () => {
 // ======================== 生命周期 ========================
 onMounted(async () => {
   billMethodsList.value = await BillMethodsApi.getBillMethodsSimpleList()
+  customerList.value = await CustomerApi.getCustomerSimpleList()
   await getList()
 })
 </script>
