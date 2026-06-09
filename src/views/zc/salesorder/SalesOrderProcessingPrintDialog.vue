@@ -80,7 +80,7 @@
                 margin-bottom: 4px;
               "
             >
-              <span style="color: #1D4ED8;">窗帘 #{{ cIdx + 1 }}</span>
+              <span style="color: #1D4ED8;">第{{ cIdx + 1 }}-{{ sIdx + 1 }}套/共{{ formData!.curtains.length }}套</span>
               &nbsp;|&nbsp;<span style="font-weight: 400;">款式：</span>{{ getCurtainName(curtain.curtainId) || (curtain as any).curtainName || '-' }}
               &nbsp;|&nbsp;<span style="font-weight: 400;">房间：</span>{{ curtain.room || '-' }}
               <template v-if="curtain.pleatRatioValue">&nbsp;|&nbsp;<span style="font-weight: 400;">褶倍：</span>{{ curtain.pleatRatioValue }}</template>
@@ -228,7 +228,7 @@ const getElementName = (id?: number): string => {
 const getStructureAttrs = (structure: any): { label: string; value: string }[] => {
   const attrs: { label: string; value: string }[] = []
   if (structure.height != null && structure.width != null) {
-    attrs.push({ label: '高/宽', value: `${structure.height} / ${structure.width}` })
+    attrs.push({ label: '高*宽', value: `${structure.height} * ${structure.width}m` })
   } else {
     if (structure.height != null) attrs.push({ label: '高', value: String(structure.height) })
     if (structure.width != null) attrs.push({ label: '宽', value: String(structure.width) })
@@ -322,7 +322,7 @@ const handlePrint = () => {
     // 窗帘标题行
     const curtainHeaderHtml = `
       <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:3px solid #3B82F6;padding:4px 8px;font-weight:600;font-size:11pt;line-height:1.5;margin-bottom:3px;">
-        <span style="color:#1D4ED8;">窗帘 #${cIdx + 1}</span>
+        <span style="color:#1D4ED8;">第${cIdx + 1}-${sIdx + 1}套/共${fd.curtains.length}套</span>
         &nbsp;|&nbsp;<span style="font-weight:400;">款式：</span>${ctnName}
         &nbsp;|&nbsp;<span style="font-weight:400;">房间：</span>${curtain.room || '-'}
         ${curtain.pleatRatioValue != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">褶倍：</span>${curtain.pleatRatioValue}` : ''}

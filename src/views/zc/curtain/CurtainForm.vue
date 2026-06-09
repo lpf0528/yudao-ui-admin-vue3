@@ -10,8 +10,8 @@
       <el-form-item label="款式名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入款式名称" />
       </el-form-item>
-      <el-form-item label="默认褶倍" prop="pleatRatioValue">
-        <el-input v-model="formData.pleatRatioValue" placeholder="请输入默认褶倍" />
+      <el-form-item label="褶倍" prop="pleatRatioValue">
+        <el-input v-model="formData.pleatRatioValue" placeholder="请输入褶倍" />
       </el-form-item>
       <el-form-item label="褶距" prop="pleatsDistance">
         <el-input v-model="formData.pleatsDistance" placeholder="请输入褶距" />

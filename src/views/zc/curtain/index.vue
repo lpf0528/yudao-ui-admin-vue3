@@ -182,7 +182,7 @@
       </el-table-column>
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="款式名称" align="center" prop="name" />
-      <el-table-column label="默认褶倍" align="center" prop="pleatRatioValue" />
+      <el-table-column label="褶倍" align="center" prop="pleatRatioValue" />
       <el-table-column label="褶距" align="center" prop="pleatsDistance" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column label="创建者" align="center" prop="creator" />

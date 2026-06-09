@@ -16,7 +16,7 @@ export interface CurtainSimpleVO {
 export interface Curtain {
           id: number; // 主键
           name?: string; // 款式名称
-          pleatRatioValue: number; // 默认褶倍
+          pleatRatioValue: number; // 褶倍
           pleatsDistance: number; // 褶距
           note: string; // 备注
   }
