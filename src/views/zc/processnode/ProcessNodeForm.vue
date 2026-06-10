@@ -10,11 +10,8 @@
       <el-form-item label="工序名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入工序名称" />
       </el-form-item>
-      <el-form-item label="排序号" prop="sort">
-        <el-input v-model="formData.sort" placeholder="请输入排序号" />
-      </el-form-item>
       <el-form-item label="工序描述/操作说明" prop="description">
-        <Editor v-model="formData.description" height="150px" />
+        <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入工序描述/操作说明" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -39,12 +36,10 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  sort: undefined,
   description: undefined,
 })
 const formRules = reactive({
   name: [{ required: true, message: '工序名称不能为空', trigger: 'blur' }],
-  sort: [{ required: true, message: '排序号不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -95,7 +90,6 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    sort: undefined,
     description: undefined,
   }
   formRef.value?.resetFields()

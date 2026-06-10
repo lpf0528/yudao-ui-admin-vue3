@@ -84,7 +84,6 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="工序名称" align="center" prop="name" />
-      <el-table-column label="排序号" align="center" prop="sort" />
       <el-table-column label="分组" align="center" prop="group" width="120">
         <template #default="scope">
           <DictTag :type="DICT_TYPE.ZC_PROCESS_NODE_GROUP" :value="scope.row.group" />
