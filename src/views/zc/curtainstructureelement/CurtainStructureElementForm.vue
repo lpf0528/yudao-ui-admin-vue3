@@ -10,7 +10,10 @@
       <el-form-item label="组件名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入组件名称" />
       </el-form-item>
-      <el-form-item label="备注" prop="note">
+      <el-form-item label="是否打印" prop="isPrint">
+        <el-switch v-model="formData.isPrint" />
+      </el-form-item>
+        <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
@@ -36,7 +39,8 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   name: undefined,
-  note: undefined
+  note: undefined,
+  isPrint: false // 是否打印，默认不打印
 })
 const formRules = reactive({
   name: [{ required: true, message: '组件名称不能为空', trigger: 'blur' }]
@@ -90,7 +94,8 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    note: undefined
+    note: undefined,
+    isPrint: false
   }
   formRef.value?.resetFields()
 }

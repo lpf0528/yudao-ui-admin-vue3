@@ -12,10 +12,11 @@ export interface CurtainStructureElementSimpleVO {
 
 /** 窗帘结构组件信息 */
 export interface CurtainStructureElement {
-          id: number; // 主键
-          name?: string; // 组件名称
-          note: string; // 备注
-  }
+  id: number;      // 主键
+  name?: string;   // 组件名称
+  note: string;    // 备注
+  isPrint?: boolean; // 是否打印
+}
 
 // 窗帘结构组件 API
 export const CurtainStructureElementApi = {

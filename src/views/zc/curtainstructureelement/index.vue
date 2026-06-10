@@ -63,7 +63,13 @@
     <el-table-column type="selection" width="55" />
        <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="组件名称" align="center" prop="name" />
+      <el-table-column label="是否打印" align="center" prop="isPrint" width="100px">
+        <template #default="scope">
+          <el-switch :model-value="scope.row.isPrint" disabled />
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
+
       <!-- <el-table-column label="创建者" align="center" prop="creator" /> -->
       <el-table-column
         label="创建时间"
