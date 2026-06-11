@@ -16,7 +16,9 @@
       "WebFetch(domain:github.com)",
       "Bash(Get-ChildItem -Path \"D:\\\\workplace\\\\yudao-ui-admin-vue3\\\\src\\\\views\\\\zc\" -Recurse -Include \"*.vue\",\"*.ts\")",
       "Bash(ConvertTo-Csv -NoTypeInformation)",
-      "Bash(Select-Object -Skip 1)"
+      "Bash(Select-Object -Skip 1)",
+      "Bash(sales\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
