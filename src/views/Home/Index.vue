@@ -55,7 +55,7 @@
   </el-row>
 
   <!-- 图表区域 -->
-  <el-row class="mt-8px" :gutter="8">
+  <!-- <el-row class="mt-8px" :gutter="8">
     <el-col :span="24" class="mb-8px">
       <el-card shadow="never">
         <el-skeleton :loading="loading" animated>
@@ -78,7 +78,7 @@
         </el-skeleton>
       </el-card>
     </el-col>
-  </el-row>
+  </el-row> -->
 </template>
 <script lang="ts" setup>
 import { set } from 'lodash-es'
@@ -104,39 +104,40 @@ let shortcut = reactive<Shortcut[]>([])
 const getShortcut = async () => {
   const data = [
     {
-      name: '首页',
+      name: '销售订单管理',
       icon: 'ion:home-outline',
-      url: '/',
+      url: '/zc/order/sales-order',
       color: '#1fdaca'
     },
-    {
-      name: '商城中心',
-      icon: 'ep:shop',
-      url: '/mall/home',
-      color: '#ff6b6b'
-    },
-    {
-      name: 'AI 大模型',
+      {
+      name: '产品管理',
       icon: 'tabler:ai',
-      url: '/ai/chat',
+      url: '/zc/product/product',
       color: '#7c3aed'
     },
     {
-      name: 'ERP 系统',
+      name: '产品批次管理',
+      icon: 'ep:shop',
+      url: '/zc/product/product-batch',
+      color: '#ff6b6b'
+    },
+  
+    {
+      name: '客户资料',
       icon: 'simple-icons:erpnext',
-      url: '/erp/home',
+      url: '/zc/baseInfo/customer',
       color: '#3fb27f'
     },
     {
-      name: 'CRM 系统',
+      name: '用户管理',
       icon: 'simple-icons:civicrm',
-      url: '/crm/backlog',
+      url: '/system/user',
       color: '#4daf1bc9'
     },
     {
-      name: 'IoT 物联网',
+      name: '角色管理',
       icon: 'fa-solid:hdd',
-      url: '/iot/home',
+      url: '/system/role',
       color: '#1a73e8'
     }
   ]
