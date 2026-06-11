@@ -83,9 +83,9 @@ export default defineComponent({
               color="var(--top-header-text-color)"
             ></LocaleDropdown>
           ) : undefined}
-          {message.value ? (
+          {/* message.value ? (
             <Message class="custom-hover" color="var(--top-header-text-color)"></Message>
-          ) : undefined}
+          ) : undefined */}
           <UserInfo></UserInfo>
         </div>
       </div>
