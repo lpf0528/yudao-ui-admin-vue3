@@ -24,6 +24,7 @@ export interface ZCSalesOrderMaterial {
   amount?: number           // 小计金额
   note?: string             // 备注
   // —— 仅展示用（后端返回，前端不回传）
+  status?: string           // 配料状态：NOT_PEILIAO=未配料，HAVE_PEILIAO=已裁剪
   elementName?: string      // 组件类型名称
   productName?: string      // 货号名称
   batchNo?: string          // 批次号

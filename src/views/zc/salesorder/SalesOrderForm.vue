@@ -353,9 +353,17 @@
                   class="mb-2px items-center rounded bg-blue-50 px-2px py-2px"
                 >
                   <el-col :span="1" class="flex justify-center">
-                    <el-button v-if="!isConfirmed" link type="danger" size="small" @click="removeMaterial(structure, mIdx)">
-                      <Icon icon="ep:delete" />
-                    </el-button>
+                    <!-- 已裁剪的用料行禁止删除，需先撤销裁剪 -->
+                    <el-tooltip
+                      v-if="!isConfirmed"
+                      :content="material.status === 'HAVE_PEILIAO' ? '该用料明细已完成裁剪，请先撤销裁剪后再删除' : ''"
+                      :disabled="material.status !== 'HAVE_PEILIAO'"
+                      placement="top"
+                    >
+                      <el-button link type="danger" size="small" :disabled="material.status === 'HAVE_PEILIAO'" @click="removeMaterial(structure, mIdx)">
+                        <Icon icon="ep:delete" />
+                      </el-button>
+                    </el-tooltip>
                   </el-col>
                   <el-col :span="3">
                     <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1" :disabled="isConfirmed">
@@ -368,30 +376,30 @@
                     </el-select>
                   </el-col>
                   <el-col :span="3">
-                    <!-- 显示产品名称，未确认时回车或双击打开批次选择弹窗 -->
-                    <div @dblclick="!isConfirmed && batchSelectRef?.open(material, formData.customerId)">
+                    <!-- 显示产品名称，未确认且未裁剪时回车或双击打开批次选择弹窗 -->
+                    <div @dblclick="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.productName"
                         placeholder="货号(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="isConfirmed"
-                        @keyup.enter="!isConfirmed && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="isConfirmed || material.status === 'HAVE_PEILIAO'"
+                        @keyup.enter="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
                   <el-col :span="3">
-                    <!-- 显示批次号，未确认时回车或双击打开批次选择弹窗 -->
-                    <div @dblclick="!isConfirmed && batchSelectRef?.open(material, formData.customerId)">
+                    <!-- 已裁剪行的批次字段只读（库存已绑定，不允许变更） -->
+                    <div @dblclick="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.batchNo"
                         placeholder="批次(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="isConfirmed"
-                        @keyup.enter="!isConfirmed && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="isConfirmed || material.status === 'HAVE_PEILIAO'"
+                        @keyup.enter="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
@@ -842,6 +850,11 @@ const addMaterial = (structure: StructureWithMaterials) => {
 }
 
 const removeMaterial = (structure: StructureWithMaterials, index: number) => {
+  // 已裁剪的用料行与库存扣减记录绑定，禁止删除
+  if (structure.materials[index]?.status === 'HAVE_PEILIAO') {
+    message.warning('该用料明细已完成裁剪，请先撤销裁剪后再删除')
+    return
+  }
   structure.materials.splice(index, 1)
 }
 

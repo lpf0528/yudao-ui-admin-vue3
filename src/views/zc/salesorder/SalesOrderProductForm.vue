@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { SalesOrderApi, SalesOrderType } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderType, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -246,15 +246,17 @@ const selectedCustomerBalance = ref<number | null>(null)
  * 以便直接传给 ProductBatchSelectDialog 回填；提交时映射为 product_id / batch_id（后端约定）
  */
 interface BatchRow {
-  id?: number           // 产品行 ID（编辑时回传，新增行为 undefined）
-  productId?: number    // 产品 ID
-  productName?: string  // 货号名称（展示用）
-  batchId?: number      // 批次 ID
-  batchNo?: string      // 批次号（展示用）
-  price?: number        // 单价
-  quantity?: number     // 数量
-  amount?: number       // 金额（数量 × 单价，自动计算）
-  note?: string         // 备注
+  id?: number              // 用料明细行 ID（更新时回传，新增行为 undefined）
+  curtainRowId?: number    // 窗帘行 ID（更新时回传，新增行为 undefined）
+  structureRowId?: number  // 结构行 ID（更新时回传，新增行为 undefined）
+  productId?: number       // 产品 ID
+  productName?: string     // 货号名称（展示用）
+  batchId?: number         // 批次 ID
+  batchNo?: string         // 批次号（展示用）
+  price?: number           // 单价
+  quantity?: number        // 数量
+  amount?: number          // 金额（数量 × 单价，自动计算）
+  note?: string            // 备注
 }
 
 // ======================== 表单数据 ========================
@@ -396,6 +398,31 @@ watch(
 )
 
 // ======================== 弹窗控制 ========================
+
+/**
+ * 将后端返回的 curtains 三层结构映射为面料批次行列表。
+ * 面料单每个 curtain 固定对应 structures[0].materials[0]，需同时保存三层 id
+ * 以便整单更新时后端能做 UPDATE/INSERT/DELETE 三路 merge。
+ */
+const mapCurtainsToBatchRows = (curtains: SalesOrderDetailCurtain[]): BatchRow[] =>
+  curtains.map((c) => {
+    const s = c.structures?.[0]
+    const m = s?.materials?.[0] ?? {}
+    return {
+      curtainRowId: c.id,      // 窗帘行 ID，更新时必须回传
+      structureRowId: s?.id,   // 结构行 ID，更新时必须回传
+      id: m.id,                // 用料明细行 ID，更新时必须回传
+      productId: m.productId,
+      productName: m.productName,
+      batchId: m.batchId,
+      batchNo: m.batchNo,
+      price: m.price,
+      quantity: m.quantity,
+      amount: m.amount,
+      note: m.note,
+    }
+  })
+
 /** 打开弹窗；编辑模式下从接口加载数据并回填批次列表 */
 const open = async (type: string, id?: number) => {
   dialogVisible.value = true
@@ -406,23 +433,9 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       const data = await SalesOrderApi.getSalesOrderDetail(id)
-      // 面料单：每个 curtain 对应一条面料，从各自的 structures[0].materials[0] 反解
       formData.value = {
         ...data,
-        batchs: (data.curtains ?? []).map((c) => {
-          const m = c.structures?.[0]?.materials?.[0] ?? {}
-          return {
-            id: m.id,
-            productId: m.productId,
-            productName: m.productName,
-            batchId: m.batchId,
-            batchNo: m.batchNo,
-            price: m.price,
-            quantity: m.quantity,
-            amount: m.amount,
-            note: m.note,
-          }
-        }),
+        batchs: mapCurtainsToBatchRows(data.curtains ?? []),
       } as any
       if (data?.customerId) {
         const customer = props.customersList.find((item) => item.id === data.customerId)
@@ -453,11 +466,15 @@ const submitForm = async () => {
   formLoading.value = true
   try {
     // 每条面料独立为一个 curtain，各自放在 structures[0].materials[0]
+    // 更新时需携带三层 id（curtainRowId/structureRowId/id），后端据此做 UPDATE/INSERT/DELETE merge
     const curtains = formData.value.batchs.map((b) => ({
+      id: b.curtainRowId,
       amount: b.amount,
       note: b.note,
       structures: [{
+        id: b.structureRowId,
         materials: [{
+          id: b.id,
           productId: b.productId,
           batchId: b.batchId,
           price: b.price,
@@ -483,14 +500,11 @@ const submitForm = async () => {
     if (formType.value === 'create') {
       const newId = await SalesOrderApi.createSalesOrderFabric(fabricPayload)
       message.success(t('common.createSuccess'))
-      // 创建成功后立即拉取详情，回填后端生成的字段（订单号、ID 等），并切换为编辑模式
+      // 创建成功后立即拉取详情，回填后端生成的字段（订单号、三层 ID 等），并切换为编辑模式
       const detail = await SalesOrderApi.getSalesOrderDetail(newId)
       formData.value = {
         ...detail,
-        batchs: (detail.curtains ?? []).map((c) => {
-          const m = c.structures?.[0]?.materials?.[0] ?? {}
-          return { ...m, _key: Date.now() + Math.random() }
-        }),
+        batchs: mapCurtainsToBatchRows(detail.curtains ?? []),
       } as any
       formType.value = 'update'
       dialogTitle.value = '编辑面料单'
