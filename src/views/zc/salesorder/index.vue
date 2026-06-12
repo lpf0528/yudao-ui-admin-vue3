@@ -184,6 +184,11 @@
         </template>
       </el-table-column>
       <el-table-column label="订单号" align="center" prop="orderNo" min-width="180px"/>
+        <el-table-column label="状态" align="center" prop="status" min-width="90px">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ZC_ORDER_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
       <el-table-column label="客户" align="center" prop="customerName" min-width="160px"/>
 
       <el-table-column label="下单日期" align="center" prop="orderDate" width="110px">
@@ -201,11 +206,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status" min-width="90px">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_ORDER_STATUS" :value="scope.row.status" />
-        </template>
-      </el-table-column>
+    
       <el-table-column label="结算状态" align="center" prop="payStatus" min-width="90px">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_ORDER_PAY_STATUS" :value="scope.row.payStatus" />

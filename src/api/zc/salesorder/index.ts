@@ -101,6 +101,7 @@ export interface SalesOrder {
   logisticName?: string
   creatorName?: string
   createTime?: number
+  currentNodeName?: string              // 当前工序名称快照（订单推进工序时更新）
 }
 
 /** 销售订单详情：窗帘 → 结构 → 用料 三层嵌套 */

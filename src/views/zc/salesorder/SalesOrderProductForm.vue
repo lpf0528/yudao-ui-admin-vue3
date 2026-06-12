@@ -491,6 +491,7 @@ const submitForm = async () => {
       mobile: formData.value.mobile,
       brandId: formData.value.brandId,
       orderDate: formData.value.orderDate,
+      deliveryDate: formData.value.deliveryDate,
       logisticId: formData.value.logisticId,
       receiver: formData.value.receiver,
       deliveryAddress: formData.value.deliveryAddress,
