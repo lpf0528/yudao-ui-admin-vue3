@@ -258,6 +258,46 @@ export interface SalesOrderProductVO {
   batchs: SalesOrderProductBatch[]
 }
 
+// ======================== 工序记录 ========================
+
+/** 订单工序记录响应 VO */
+export interface ZcOrderProcessRecordRespVO {
+  id: number               // 主键
+  orderId: number          // 销售订单 ID
+  orderNo: string          // 订单号
+  curtainName: string      // 窗帘款式名称
+  curtainId: number        // 窗帘行 ID
+  structureId: number      // 结构行 ID
+  materialId: number       // 用料明细 ID
+  nodeId: number           // 工序节点 ID
+  nodeName: string         // 工序名称（快照）
+  nodeGroup: number        // 工序节点分组：0=系统配置，1=手工配置
+  status: number           // 状态：1=完成，2=撤销
+  masterId: number         // 主操作人员 ID
+  masterName: string       // 主操作人员名称
+  assistantId: number      // 副操作人员 ID
+  assistantName: string    // 副操作人员名称
+  note: string             // 备注
+  imageUrls: string[]      // 现场照片 URL 列表
+  createTime: string       // 记录创建时间
+  updateTime: string       // 最后更新时间（撤销时更新）
+}
+
+// 订单工序记录 API
+export const OrderProcessRecordApi = {
+  // 获取订单工序时间线（按时间降序），对应后端：GET /zc/order-process-record/list
+  getOrderProcessRecordList: async (params: {
+    orderId?: number
+    masterId?: number
+    curtainId?: number
+    structureId?: number
+    materialId?: number
+    nodeId?: number
+  }): Promise<ZcOrderProcessRecordRespVO[]> => {
+    return await request.get({ url: `/zc/order-process-record/list`, params })
+  }
+}
+
 export const SalesOrderProductApi = {
   /**
    * 查询面料单详情（含批次列表）
