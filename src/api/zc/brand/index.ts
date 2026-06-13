@@ -8,6 +8,7 @@ import type { Dayjs } from 'dayjs';
 export interface BrandSimpleVO {
   id: number
   name: string
+  isDefault: boolean // 是否默认品牌
 }
 
 /** 品牌信息 */
@@ -18,6 +19,7 @@ export interface Brand {
           mobile: string; // 电话
           address: string; // 地址
           note: string; // 备注
+          isDefault: boolean; // 是否默认：true-是，false-否
   }
 
 // 品牌 API

@@ -65,6 +65,13 @@
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="电话" align="center" prop="mobile" />
       <el-table-column label="地址" align="center" prop="address" />
+      <el-table-column label="是否默认" align="center" prop="isDefault" width="100">
+        <template #default="scope">
+          <el-tag :type="scope.row.isDefault ? 'success' : 'info'">
+            {{ scope.row.isDefault ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"

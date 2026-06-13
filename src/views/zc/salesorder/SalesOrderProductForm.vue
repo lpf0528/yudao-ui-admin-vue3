@@ -61,7 +61,7 @@
         </el-form-item>
         <!-- 客户 3：需展示姓名/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
+          <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
             <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -75,13 +75,13 @@
         </el-form-item>
         <!-- 品牌 2 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+          <el-select v-model="formData.brandId" clearable filterable placeholder="请选择品牌" class="w-full">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 2 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -134,12 +134,13 @@
         <!-- 列表标题行 -->
         <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-4px px-4px">
           <el-col :span="1" />
-          <el-col :span="6">货号</el-col>
-          <el-col :span="5">批次</el-col>
+          <el-col :span="5">货号</el-col>
+          <el-col :span="3">规格</el-col>
+          <el-col :span="4">批次</el-col>
           <el-col :span="3">用料</el-col>
           <el-col :span="3">单价</el-col>
           <el-col :span="3">金额</el-col>
-          <el-col :span="3">备注</el-col>
+          <el-col :span="2">备注</el-col>
         </el-row>
         <!-- 批次数据行 -->
         <el-row
@@ -154,7 +155,7 @@
             </el-button>
           </el-col>
           <!-- 货号（由面板回填，只读展示） -->
-          <el-col :span="6">
+          <el-col :span="5">
             <el-input
               v-model="batch.productName"
               placeholder="货号"
@@ -163,8 +164,18 @@
               readonly
             />
           </el-col>
+          <!-- 规格（由面板回填，只读展示） -->
+          <el-col :span="3">
+            <el-input
+              v-model="batch.specValue"
+              placeholder="规格"
+              size="small"
+              class="!w-full"
+              readonly
+            />
+          </el-col>
           <!-- 批次号（由面板回填，只读展示） -->
-          <el-col :span="5">
+          <el-col :span="4">
             <el-input
               v-model="batch.batchNo"
               placeholder="批次"
@@ -191,7 +202,7 @@
               class="!w-full"
             />
           </el-col>
-          <!-- 金额由匹数 × 单价自动计算，禁止手动编辑 -->
+          <!-- 金额由数量 × 单价自动计算，禁止手动编辑 -->
           <el-col :span="3">
             <el-input-number
               v-model="batch.amount"
@@ -202,7 +213,7 @@
               disabled
             />
           </el-col>
-          <el-col :span="3">
+          <el-col :span="2">
             <el-input v-model="batch.note" placeholder="备注" size="small" />
           </el-col>
         </el-row>
@@ -298,6 +309,13 @@ interface BatchRow {
 }
 
 // ======================== 表单数据 ========================
+/** 从品牌列表中取默认品牌 ID：优先 isDefault=true 的，否则取第一个 */
+const getDefaultBrandId = () => {
+  const list = props.brandsList
+  if (!list?.length) return undefined
+  return (list.find((b) => b.isDefault) ?? list[0]).id
+}
+
 const todayStr = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -329,7 +347,10 @@ const formData = ref(getInitFormData())
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
-  // orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
+  mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
+  logisticId: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
+  receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
+  deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
 }
 
 const formRef = ref()
@@ -351,7 +372,7 @@ const handleCustomerChange = async (customerId: number) => {
     return
   }
   formData.value.mobile = customer.mobile
-  formData.value.brandId = customer.brandId
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
   formData.value.logisticId = customer.logisticId
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
@@ -472,6 +493,10 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = type === 'create' ? '新增面料单' : '编辑面料单'
   formType.value = type
   resetForm()
+  // 新建时自动选中默认品牌
+  if (type === 'create') {
+    formData.value.brandId = getDefaultBrandId()
+  }
   if (id) {
     formLoading.value = true
     try {

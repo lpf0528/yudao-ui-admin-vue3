@@ -48,7 +48,7 @@
         </el-form-item>
         <!-- 客户：展示简称/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
-          <el-select v-model="formData.customerId" clearable placeholder="请选择客户" class="w-full" :disabled="isConfirmed" @change="handleCustomerChange">
+          <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="w-full" :disabled="isConfirmed" @change="handleCustomerChange">
             <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -68,7 +68,7 @@
         </el-form-item>
         <!-- 物流 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable placeholder="请选择物流" class="w-full">
+          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -171,7 +171,7 @@
               <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
             </el-form-item>
           </el-col>
-          <el-col :span="3">
+          <el-col :span="3" style="display:none">
             <el-form-item label="折扣率">
               <el-input-number v-model="curtain.discountRate" placeholder="请输入折扣率" :controls="false" class="!w-full" :disabled="isConfirmed" />
             </el-form-item>
@@ -350,7 +350,7 @@
                   <el-col :span="2">单价</el-col>
                   <el-col :span="2">用料</el-col>
                   <el-col :span="2">单位</el-col>
-                  <el-col :span="2">折扣率</el-col>
+                  <el-col :span="2" style="display:none">折扣率</el-col>
                   <el-col :span="2">小计</el-col>
                   <el-col :span="2">备注</el-col>
                 </el-row>
@@ -431,7 +431,7 @@
                       />
                     </el-select>
                   </el-col>
-                  <el-col :span="2">
+                  <el-col :span="2" style="display:none">
                     <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
                   </el-col>
                   <el-col :span="2">
@@ -542,6 +542,13 @@ const props = defineProps<{ customersList: CustomerSimpleVO[]; brandsList: Brand
 
 const selectedCustomerBalance = ref<number | null>(null)
 
+/** 从品牌列表中取默认品牌 ID：优先 isDefault=true 的，否则取第一个 */
+const getDefaultBrandId = () => {
+  const list = props.brandsList
+  if (!list?.length) return undefined
+  return (list.find((b) => b.isDefault) ?? list[0]).id
+}
+
 const todayStr = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -554,7 +561,7 @@ const handleCustomerChange = (customerId: number) => {
     return
   }
   formData.value.mobile = customer.mobile
-  formData.value.brandId = customer.brandId
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
   formData.value.logisticId = customer.logisticId
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
@@ -677,7 +684,10 @@ const formData = ref(getInitFormData())
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
-  // orderDate: [{ required: true, message: '下单日期不能为空', trigger: 'blur' }],
+  mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
+  brandId: [{ required: true, message: '品牌不能为空', trigger: 'blur' }],
+  logisticId: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
+  receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
@@ -786,6 +796,10 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  // 新建时自动选中默认品牌
+  if (type === 'create') {
+    formData.value.brandId = getDefaultBrandId()
+  }
   // 编辑模式：通过 detail 接口一次性获取完整订单（主表 + 三层嵌套明细）
   if (id) {
     formLoading.value = true

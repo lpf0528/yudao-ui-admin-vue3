@@ -16,6 +16,9 @@
       <el-form-item label="地址" prop="address">
         <el-input v-model="formData.address" placeholder="请输入地址" />
       </el-form-item>
+      <el-form-item label="是否默认" prop="isDefault">
+        <el-switch v-model="formData.isDefault" active-text="是" inactive-text="否" />
+      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -44,6 +47,7 @@ const formData = ref({
   name: undefined,
   mobile: undefined,
   address: undefined,
+  isDefault: false, // 是否默认，新增时默认为否
   note: undefined,
 })
 const formRules = reactive({
@@ -100,6 +104,7 @@ const resetForm = () => {
     name: undefined,
     mobile: undefined,
     address: undefined,
+    isDefault: false,
     note: undefined,
   }
   formRef.value?.resetFields()
