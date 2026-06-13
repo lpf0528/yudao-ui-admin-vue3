@@ -40,27 +40,27 @@
               box-sizing: border-box;
             "
           >
-            <!-- 抬头（所有页相同，不含物流和地址） -->
-            <!-- 标题行：品牌+加工单 居左，二维码 居右 -->
-            <div style="display: flex; align-items: center; margin-bottom: 3px;">
-              <div style="flex: 1; font-size: 23px; letter-spacing: 3px; text-align: center;">
-                {{ brandName ? brandName + ' ' : '' }}加工单
+            <!-- 抬头：左侧标题+信息，右侧二维码 -->
+            <div style="display: flex; align-items: flex-start; margin-bottom: 3px;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 23px; letter-spacing: 3px; text-align: center; margin-bottom: 2px;">
+                  {{ brandName ? brandName + ' ' : '' }}加工单
+                </div>
+                <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
+                <div style="padding: 2px 0; font-size: 13px; margin-bottom: 2px;">客户：{{ customerName }}</div>
+                <div style="padding: 2px 0; font-size: 13px;">房间：</div>
+                <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
               </div>
-              <div style="width: 82px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+              <div style="width: 123px; flex-shrink: 0; padding-left: 6px; text-align: center;">
                 <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
-                  <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="72" height="72" style="display: block; margin: 0 auto;" />
+                  <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="108" height="108" style="display: block; margin: 0 auto;" />
                 </template>
                 <div
                   v-else
-                  style="width: 72px; height: 72px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
+                  style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
                 >二维码</div>
               </div>
             </div>
-            <!-- 信息行：全宽展示，不再受二维码遮挡 -->
-            <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
-            <div style="padding: 2px 0; font-size: 13px; margin-bottom: 2px;">客户：{{ customerName }}&nbsp;&nbsp;交付：{{ formData?.deliveryDate || '-' }}</div>
-            <div style="padding: 2px 0; font-size: 13px;">房间：</div>
-            <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
 
             <!-- 分隔线 -->
             <div style="border-top: 1px solid #ccc; margin: 3px 0 5px;"></div>
@@ -285,7 +285,7 @@ const open = async (data: FormDataType) => {
         targetRoute: '/pages-curtain/order/curtain-order-detail/curtain-item/index',
         codeContent
       })
-      const url = await QRCode.toDataURL(codeId, { width: 120, margin: 1 })
+      const url = await QRCode.toDataURL(codeId, { width: 180, margin: 1 })
       structureQrCodes.value[`${cIdx}-${sIdx}`] = { url, code: codeId }
     }
   }
@@ -323,19 +323,19 @@ const handlePrint = async () => {
   const buildHeaderHtml = (cIdx: number, sIdx: number) => {
     const qrEntry = structureQrCodes.value[`${cIdx}-${sIdx}`]
     const qrImg = qrEntry
-      ? `<img src="${qrEntry.url}" width="72" height="72" style="display:block;margin:0 auto;" />`
-      : `<div style="width:72px;height:72px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
+      ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
+      : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
     return `
-      <div style="display:flex;align-items:center;margin-bottom:2px;">
-        <div style="flex:1;font-size:20pt;letter-spacing:3px;text-align:center;">
-          ${bName ? bName + '&nbsp;' : ''}加工单
+      <div style="display:flex;align-items:flex-start;margin-bottom:2px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:1px;">${bName ? bName + '&nbsp;' : ''}加工单</div>
+          <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
+          <div style="padding:1px 0;font-size:11pt;margin-bottom:1px;">客户：${cName}</div>
+          <div style="padding:1px 0;font-size:11pt;">房间：</div>
+          ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
         </div>
-        <div style="width:78px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
+        <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
       </div>
-      <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
-      <div style="padding:1px 0;font-size:11pt;margin-bottom:1px;">客户：${cName}&nbsp;&nbsp;交付：${fd.deliveryDate || '-'}</div>
-      <div style="padding:1px 0;font-size:11pt;">房间：</div>
-      ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
       <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     `
   }

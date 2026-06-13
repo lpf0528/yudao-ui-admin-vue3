@@ -35,26 +35,24 @@
           box-sizing: border-box;
         "
       >
-        <!-- 标题居中独立行 -->
-        <div style="text-align: center; font-size: 21px; letter-spacing: 3px; line-height: 1.3; margin-bottom: 5px;">
-          {{ brandName ? brandName + ' ' : '' }}加工单
-        </div>
-
-        <!-- 订单头信息：左侧字段多行 + 右上角二维码 -->
-        <div style="display: flex; align-items: flex-start;">
+        <!-- 抬头：左侧标题+信息，右侧二维码 -->
+        <div style="display: flex; align-items: flex-start; margin-bottom: 4px;">
           <div style="flex: 1; min-width: 0;">
+            <div style="text-align: center; font-size: 21px; letter-spacing: 3px; line-height: 1.3; margin-bottom: 3px;">
+              {{ brandName ? brandName + ' ' : '' }}加工单
+            </div>
             <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
-            <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}&nbsp;&nbsp;交付：{{ formData?.deliveryDate || '-' }}</div>
+            <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}</div>
             <div style="padding: 2px 0; font-size: 13px;">房间：</div>
           </div>
-          <!-- 右上角二维码 -->
+          <!-- 右侧二维码 -->
           <div style="flex-shrink: 0; padding-left: 6px; text-align: center;">
             <template v-if="orderQrCode">
-              <img :src="orderQrCode.url" width="64" height="64" style="display: block; margin: 0 auto;" />
+              <img :src="orderQrCode.url" width="96" height="96" style="display: block; margin: 0 auto;" />
             </template>
             <div
               v-else
-              style="width: 64px; height: 64px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
+              style="width: 96px; height: 96px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
             >二维码</div>
           </div>
         </div>
@@ -168,7 +166,7 @@ const open = async (data: FormDataType) => {
     targetRoute: '/pages-curtain/order/fabric-detail/index',
     codeContent: JSON.stringify({ id: data.id })
   })
-  const url = await QRCode.toDataURL(codeId, { width: 80, margin: 1 })
+  const url = await QRCode.toDataURL(codeId, { width: 120, margin: 1 })
   orderQrCode.value = { url, code: codeId }
 }
 
@@ -214,8 +212,8 @@ const handlePrint = async () => {
     </tr>`).join('')
 
   const qrHtml = orderQrCode.value
-    ? `<img src="${orderQrCode.value.url}" width="64" height="64" style="display:block;margin:0 auto;" />`
-    : `<div style="width:64px;height:64px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>`
+    ? `<img src="${orderQrCode.value.url}" width="96" height="96" style="display:block;margin:0 auto;" />`
+    : `<div style="width:96px;height:96px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -242,10 +240,9 @@ const handlePrint = async () => {
       </div>
       <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
       <div style="padding:1px 0;font-size:11pt;">客户：${cName}</div>
-      <div style="padding:1px 0;font-size:11pt;">交付：${fd.deliveryDate || '-'}</div>
       <div style="padding:1px 0;font-size:11pt;">房间：</div>
     </div>
-    <div style="width:78px;flex-shrink:0;padding-left:5px;text-align:center;min-height:80px;">${qrHtml}</div>
+    <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;min-height:120px;">${qrHtml}</div>
   </div>
   <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
   <table style="width:100%;border-collapse:collapse;font-size:11pt;margin-top:2px;">
