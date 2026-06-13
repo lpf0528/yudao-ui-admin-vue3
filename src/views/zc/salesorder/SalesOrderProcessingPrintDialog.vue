@@ -1,6 +1,6 @@
 <!--
   加工单打印预览弹窗
-  每个窗帘下的每个结构单独生成一页，页面尺寸 100mm × 70mm
+  每个窗帘下的每个结构单独生成一页，页面尺寸 宽70mm × 高100mm
   所有页面共用相同的订单抬头，用于生产加工单打印
   父组件通过 open(formData) 方法打开
 -->
@@ -19,7 +19,7 @@
       </div>
     </template>
 
-    <!-- 预览区：每个结构一页，比例 100:70 -->
+    <!-- 预览区：每个结构一页，宽70mm × 高100mm（比例 70:100） -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
       <template v-if="formData?.curtains?.length">
         <template v-for="(curtain, cIdx) in formData.curtains" :key="cIdx">
@@ -172,7 +172,7 @@ import type { CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import type { CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import type { SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
-/** 加工单打印预览弹窗（每个结构单独一页，100mm × 70mm） */
+/** 加工单打印预览弹窗（每个结构单独一页，宽70mm × 高100mm） */
 defineOptions({ name: 'SalesOrderProcessingPrintDialog' })
 
 // ======================== 类型定义 ========================
@@ -255,13 +255,14 @@ const open = async (data: FormDataType) => {
   for (const [cIdx, curtain] of (data.curtains || []).entries()) {
     for (const [sIdx, structure] of ((curtain as any).structures || []).entries()) {
       const codeContent = JSON.stringify({
-         orderNo: data.orderNo,
+        orderId: data.id,
+        orderNo: data.orderNo,
         curtainId: curtain.id ?? cIdx + 1,
         structureId: structure.id ?? sIdx + 1
       })
       const codeId = await BarcodeRegistryApi.create({
-        codeType: 'PROCESS_QR',
-        targetRoute: '/pages-curtain/process-node/index',
+        codeType: 'ORDER_QR',
+        targetRoute: '/pages-curtain/order/curtain-order-detail/curtain-item/index',
         codeContent
       })
       const url = await QRCode.toDataURL(codeId, { width: 80, margin: 1 })
@@ -399,7 +400,7 @@ const handlePrint = () => {
     }
   }
 
-  // 组装完整 HTML，页面尺寸 100mm × 70mm
+  // 组装完整 HTML，页面尺寸 宽70mm × 高100mm
   const html = `<!DOCTYPE html>
 <html>
 <head>

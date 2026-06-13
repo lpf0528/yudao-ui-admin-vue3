@@ -38,6 +38,14 @@
       >
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
+      <!-- 销售单预览打印：订单已保存时可打印 -->
+      <el-button v-if="formData.id" type="info" @click="handlePrint">
+        <Icon icon="ep:printer" class="mr-4px" />销售单
+      </el-button>
+      <!-- 面料加工单预览打印：订单已保存时可打印 -->
+      <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
+        <Icon icon="ep:document" class="mr-4px" />加工单
+      </el-button>
     </div>
 
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
@@ -206,6 +214,21 @@
     <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
     <el-divider content-position="left">选择面料</el-divider>
     <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
+
+    <!-- 面料单打印预览弹窗 -->
+    <SalesOrderProductPrintDialog
+      ref="printDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :logistics-list="props.logisticsList"
+    />
+    <!-- 面料加工单打印预览弹窗 -->
+    <SalesOrderProductProcessingPrintDialog
+      ref="processingPrintDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :logistics-list="props.logisticsList"
+    />
   </Dialog>
 </template>
 
@@ -217,6 +240,8 @@ import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
+import SalesOrderProductPrintDialog from './SalesOrderProductPrintDialog.vue'
+import SalesOrderProductProcessingPrintDialog from './SalesOrderProductProcessingPrintDialog.vue'
 
 /** 面料单 表单 */
 defineOptions({ name: 'SalesOrderProductForm' })
@@ -227,7 +252,7 @@ const props = defineProps<{
   logisticsList: LogisticsSimpleVO[]
 }>()
 
-const emit = defineEmits(['success'])
+const emit = defineEmits(['success', 'openSalesOrderForm'])
 
 const { t } = useI18n()
 const message = useMessage()
@@ -295,6 +320,8 @@ const formRules = {
 }
 
 const formRef = ref()
+const printDialogRef = ref<InstanceType<typeof SalesOrderProductPrintDialog>>()
+const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProductProcessingPrintDialog>>()
 
 
 // ======================== 客户选择 ========================
@@ -553,6 +580,17 @@ const handleExpedite = async () => {
   } finally {
     formLoading.value = false
   }
+}
+
+// ======================== 打印 ========================
+/** 打开面料单销售单打印预览弹窗 */
+const handlePrint = () => {
+  printDialogRef.value?.open(formData.value as any)
+}
+
+/** 打开面料加工单打印预览弹窗 */
+const handlePrintProcessing = () => {
+  processingPrintDialogRef.value?.open(formData.value as any)
 }
 </script>
 

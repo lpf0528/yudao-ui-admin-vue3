@@ -31,26 +31,9 @@
           font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
         "
       >
-        <!-- 标题区：左侧空白平衡，标题居中，右侧二维码 -->
-        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
-          <div style="width: 80px; flex-shrink: 0;"></div>
-          <div style="flex: 1; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2;">
-            {{ brandName ? brandName + ' ' : '' }}销售单
-          </div>
-          <!-- 订单号二维码 -->
-          <div style="width: 80px; flex-shrink: 0; text-align: center;">
-            <img v-if="qrCodeUrl" :src="qrCodeUrl" width="80" height="80" style="display: block;" />
-            <div
-              v-else
-              style="
-                width: 80px; height: 80px;
-                border: 1px dashed #bbb;
-                display: flex; align-items: center; justify-content: center;
-                color: #bbb; font-size: 11px;
-              "
-            >二维码</div>
-<!--            <div v-if="qrCodeUrl" style="font-size: 10px; color: #888; margin-top: 2px;">{{ formData?.orderNo }}</div>-->
-          </div>
+        <!-- 标题区：居中显示 -->
+        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 20px;">
+          {{ brandName ? brandName + ' ' : '' }}成品销售单
         </div>
 
         <!-- 订单头信息（无外边框，两列布局） -->
@@ -152,9 +135,9 @@
               <template v-if="structure.width != null">　宽：{{ structure.width }}</template>
               <template v-if="structure.leftCorner">　左转角：{{ structure.leftCorner }}</template>
               <template v-if="structure.rightCorner">　右转角：{{ structure.rightCorner }}</template>
-              <template v-if="structure.pasteDirection">　粘贴方向：{{ structure.pasteDirection }}</template>
-              <template v-if="structure.openMethod">　打开方式：{{ structure.openMethod }}</template>
-              <template v-if="structure.processType">　加工类型：{{ structure.processType }}</template>
+              <template v-if="structure.pasteDirection">　粘贴方向：{{ getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) }}</template>
+              <template v-if="structure.openMethod">　打开方式：{{ getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod) }}</template>
+              <template v-if="structure.processType">　加工类型：{{ getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType) }}</template>
               <template v-if="structure.pleatsNum != null">　总褶数：{{ structure.pleatsNum }}</template>
               <template v-if="structure.pleatsDistance != null">　褶距：{{ structure.pleatsDistance }}</template>
               <template v-if="structure.skirtHeight != null">　裙摆高度：{{ structure.skirtHeight }}</template>
@@ -176,7 +159,6 @@
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center; font-weight: 600;">单位</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">折扣率</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">小计</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
@@ -189,7 +171,6 @@
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.batchNo || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.price ?? '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.quantity ?? '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center;">{{ material.unitValue || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.discountRate ?? '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ material.amount ?? '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.note || '' }}</td>
@@ -239,7 +220,6 @@
 </template>
 
 <script setup lang="ts">
-import QRCode from 'qrcode'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -247,6 +227,7 @@ import type { CurtainSimpleVO } from '@/api/zc/curtain'
 import type { CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import type { CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import type { SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 
 /** 销售单打印预览弹窗 */
 defineOptions({ name: 'SalesOrderPrintDialog' })
@@ -269,8 +250,6 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 订单号二维码的 base64 data URL */
-const qrCodeUrl = ref<string>('')
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -309,14 +288,10 @@ const getElementName = (id?: number): string => {
 }
 
 // ======================== 对外方法 ========================
-/** 打开预览弹窗，传入当前表单数据，并生成订单号二维码 */
+/** 打开预览弹窗，传入当前表单数据 */
 const open = async (data: FormDataType) => {
   formData.value = data
   visible.value = true
-  qrCodeUrl.value = ''
-  if (data.orderNo) {
-    qrCodeUrl.value = await QRCode.toDataURL(String(data.orderNo), { width: 80, margin: 1 })
-  }
 }
 
 defineExpose({ open })
@@ -352,9 +327,9 @@ const handlePrint = () => {
         structure.width != null ? `宽：${structure.width}` : '',
         structure.leftCorner ? `左转角：${structure.leftCorner}` : '',
         structure.rightCorner ? `右转角：${structure.rightCorner}` : '',
-        structure.pasteDirection ? `粘贴方向：${structure.pasteDirection}` : '',
-        structure.openMethod ? `打开方式：${structure.openMethod}` : '',
-        structure.processType ? `加工类型：${structure.processType}` : '',
+        structure.pasteDirection ? `粘贴方向：${getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection)}` : '',
+        structure.openMethod ? `打开方式：${getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod)}` : '',
+        structure.processType ? `加工类型：${getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType)}` : '',
         structure.pleatsNum != null ? `总褶数：${structure.pleatsNum}` : '',
         structure.pleatsDistance != null ? `褶距：${structure.pleatsDistance}` : '',
         structure.skirtHeight != null ? `裙摆高度：${structure.skirtHeight}` : '',
@@ -372,7 +347,6 @@ const handlePrint = () => {
                 <th style="${thS}text-align:left;">批次</th>
                 <th style="${thS}text-align:right;">单价</th>
                 <th style="${thS}text-align:right;">用料</th>
-                <th style="${thS}text-align:center;">单位</th>
                 <th style="${thS}text-align:right;">折扣率</th>
                 <th style="${thS}text-align:right;">小计</th>
                 <th style="${thS}text-align:left;">备注</th>
@@ -386,7 +360,6 @@ const handlePrint = () => {
                   <td style="${tdS}">${m.batchNo || '-'}</td>
                   <td style="${tdS}text-align:right;">${m.price ?? '-'}</td>
                   <td style="${tdS}text-align:right;">${m.quantity ?? '-'}</td>
-                  <td style="${tdS}text-align:center;">${m.unitValue || '-'}</td>
                   <td style="${tdS}text-align:right;">${m.discountRate ?? '-'}</td>
                   <td style="${tdS}text-align:right;font-weight:600;">${m.amount ?? '-'}</td>
                   <td style="${tdS}">${m.note || ''}</td>
@@ -434,11 +407,6 @@ const handlePrint = () => {
       </div>
     </div>`
 
-  // 二维码图片 HTML（复用预览时已生成的 data URL，避免重复生成）
-  const qrImg = qrCodeUrl.value
-    ? `<img src="${qrCodeUrl.value}" width="80" height="80" style="display:block;" /><div style="font-size:10px;color:#888;margin-top:2px;text-align:center;">${fd.orderNo || ''}</div>`
-    : `<div style="width:80px;height:80px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
-
   // ---- 组装完整 HTML ----
   const html = `<!DOCTYPE html>
 <html>
@@ -453,13 +421,9 @@ const handlePrint = () => {
   </style>
 </head>
 <body>
-  <!-- 标题居中，右侧二维码，左侧等宽空白平衡 -->
-  <div style="display:flex;align-items:flex-start;margin-bottom:20px;">
-    <div style="width:80px;flex-shrink:0;"></div>
-    <div style="flex:1;text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;">
-      ${bName ? bName + '&nbsp;' : ''}销售单
-    </div>
-    <div style="width:80px;flex-shrink:0;">${qrImg}</div>
+  <!-- 标题居中 -->
+  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:20px;">
+    ${bName ? bName + '&nbsp;' : ''}销售单
   </div>
 
   <!-- 订单头信息（无外边框） -->

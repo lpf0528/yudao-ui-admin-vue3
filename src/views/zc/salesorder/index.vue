@@ -283,7 +283,7 @@
   <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
 
   <!-- 面料单表单弹窗 -->
-  <SalesOrderProductForm ref="productFormRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" />
+  <SalesOrderProductForm ref="productFormRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" @openSalesOrderForm="formRef?.open('create')" />
 
   <!-- 收款弹窗 -->
   <CollectionDialog ref="collectionDialogRef" :customersList="customersList" @success="getList" />
