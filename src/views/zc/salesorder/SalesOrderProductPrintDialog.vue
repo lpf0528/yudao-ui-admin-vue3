@@ -7,7 +7,9 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">面料单预览</span>
-        <div class="flex gap-8px mr-24px">
+        <div class="flex items-center gap-16px mr-24px">
+          <!-- 隐藏价格开关：启用后单价和金额全部显示为 *** -->
+          <el-checkbox v-model="hidePrices" border size="small" style="color: #DC2626;">隐藏价格</el-checkbox>
           <el-tooltip content="打印 / 选择打印机 / 另存为PDF" placement="top">
             <el-button type="primary" @click="handlePrint">
               <Icon icon="ep:printer" class="mr-4px" />打印
@@ -94,8 +96,8 @@
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.productName || '-' }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.batchNo || '-' }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ batch.price ?? '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ batch.amount ?? '-' }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ hidePrices ? '***' : (batch.price ?? '-') }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ hidePrices ? '***' : (batch.amount ?? '-') }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
@@ -105,13 +107,14 @@
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
           <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center;">
             <div v-if="formData?.freight">
-              <b>运费：</b>¥{{ formData.freight }}
+              <b>运费：</b>{{ hidePrices ? '***' : `¥${formData.freight}` }}
             </div>
             <div v-if="formData?.discountAmount">
-              <b>优惠金额：</b><span style="color: #16A34A;">-¥{{ formData.discountAmount }}</span>
+              <b>优惠金额：</b>
+              <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
             </div>
             <div style="font-size: 16px; font-weight: bold;">
-              合计：<span style="color: #DC2626;">¥{{ formData?.amount ?? 0 }}</span>
+              合计：<span style="color: #DC2626;">{{ hidePrices ? '***' : `¥${formData?.amount ?? 0}` }}</span>
             </div>
           </div>
         </div>
@@ -175,6 +178,8 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
+/** 隐藏价格模式：开启后单价和金额全部显示为 *** */
+const hidePrices = ref(false)
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -221,14 +226,16 @@ const handlePrint = () => {
   const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
   const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
   const infoTd = 'padding:4px 12px 4px 0;vertical-align:top;'
+  /** 价格掩码辅助：隐藏价格模式下返回 *** */
+  const mp = (val: any, prefix = '') => hidePrices.value ? '***' : `${prefix}${val ?? '-'}`
 
   const batchRowsHtml = (fd.batchs || []).map((b) => `
     <tr>
       <td style="${tdS}">${b.productName || '-'}</td>
       <td style="${tdS}">${b.batchNo || '-'}</td>
       <td style="${tdS}text-align:right;">${b.quantity ?? '-'}</td>
-      <td style="${tdS}text-align:right;">${b.price ?? '-'}</td>
-      <td style="${tdS}text-align:right;font-weight:600;">${b.amount ?? '-'}</td>
+      <td style="${tdS}text-align:right;">${mp(b.price)}</td>
+      <td style="${tdS}text-align:right;font-weight:600;">${mp(b.amount)}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
 
@@ -284,9 +291,9 @@ const handlePrint = () => {
   </table>
   <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
     <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;">
-      ${fd.freight ? `<div><b>运费：</b>¥${fd.freight}</div>` : ''}
-      ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">-¥${fd.discountAmount}</span></div>` : ''}
-      <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">¥${fd.amount ?? 0}</span></div>
+      ${fd.freight ? `<div><b>运费：</b>${mp(fd.freight, '¥')}</div>` : ''}
+      ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
+      <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${mp(fd.amount ?? 0, '¥')}</span></div>
     </div>
   </div>
   <div style="margin-top:40px;display:flex;justify-content:space-between;font-size:13px;color:#555;">

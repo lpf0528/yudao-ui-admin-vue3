@@ -7,7 +7,9 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">销售单预览</span>
-        <div class="flex gap-8px mr-24px">
+        <div class="flex items-center gap-16px mr-24px">
+          <!-- 隐藏价格开关：启用后单价和金额全部显示为 *** -->
+          <el-checkbox v-model="hidePrices" border size="small" style="color: #DC2626;">隐藏价格</el-checkbox>
           <el-tooltip content="打印 / 选择打印机 / 另存为PDF" placement="top">
             <el-button type="primary" @click="handlePrint">
               <Icon icon="ep:printer" class="mr-4px" />打印
@@ -113,7 +115,7 @@
               &nbsp;|&nbsp;<span style="font-weight: 400;">配件：</span>{{ Array.isArray(curtain.mountings) ? curtain.mountings.join('、') : curtain.mountings }}
             </template>
             <span style="float: right; color: #DC2626; font-size: 14px;">
-              金额：¥{{ curtain.amount ?? '-' }}
+              金额：{{ hidePrices ? '***' : `¥${curtain.amount ?? '-'}` }}
             </span>
           </div>
 
@@ -169,10 +171,10 @@
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.productName || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.batchNo || '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.price ?? '-' }}</td>
+                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ hidePrices ? '***' : (material.price ?? '-') }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.quantity ?? '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.discountRate ?? '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ material.amount ?? '-' }}</td>
+                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ hidePrices ? '***' : (material.amount ?? '-') }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.note || '' }}</td>
                 </tr>
               </tbody>
@@ -192,13 +194,14 @@
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
           <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center;">
             <div v-if="formData?.freight">
-              <b>运费：</b>¥{{ formData.freight }}
+              <b>运费：</b>{{ hidePrices ? '***' : `¥${formData.freight}` }}
             </div>
             <div v-if="formData?.discountAmount">
-              <b>优惠金额：</b><span style="color: #16A34A;">-¥{{ formData.discountAmount }}</span>
+              <b>优惠金额：</b>
+              <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
             </div>
             <div style="font-size: 16px; font-weight: bold;">
-              合计：<span style="color: #DC2626;">¥{{ formData?.amount ?? 0 }}</span>
+              合计：<span style="color: #DC2626;">{{ hidePrices ? '***' : `¥${formData?.amount ?? 0}` }}</span>
             </div>
           </div>
         </div>
@@ -250,6 +253,8 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
+/** 隐藏价格模式：开启后单价和金额全部显示为 *** */
+const hidePrices = ref(false)
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -312,6 +317,8 @@ const handlePrint = () => {
   const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
   const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
   const infoTd = 'padding:4px 12px 4px 0;vertical-align:top;'
+  /** 价格掩码辅助：隐藏价格模式下返回 *** */
+  const mp = (val: any, prefix = '') => hidePrices.value ? '***' : `${prefix}${val ?? '-'}`
 
   // ---- 构建窗帘明细 HTML ----
   const curtainsHtml = (fd.curtains || []).map((curtain, idx) => {
@@ -358,10 +365,10 @@ const handlePrint = () => {
                   <td style="${tdS}">${getElementName(m.elementId) || m.elementName || '-'}</td>
                   <td style="${tdS}">${m.productName || '-'}</td>
                   <td style="${tdS}">${m.batchNo || '-'}</td>
-                  <td style="${tdS}text-align:right;">${m.price ?? '-'}</td>
+                  <td style="${tdS}text-align:right;">${mp(m.price)}</td>
                   <td style="${tdS}text-align:right;">${m.quantity ?? '-'}</td>
                   <td style="${tdS}text-align:right;">${m.discountRate ?? '-'}</td>
-                  <td style="${tdS}text-align:right;font-weight:600;">${m.amount ?? '-'}</td>
+                  <td style="${tdS}text-align:right;font-weight:600;">${mp(m.amount)}</td>
                   <td style="${tdS}">${m.note || ''}</td>
                 </tr>`).join('')}
             </tbody>
@@ -390,7 +397,7 @@ const handlePrint = () => {
           ${curtain.pleatRatioValue != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">褶倍：</span>${curtain.pleatRatioValue}` : ''}
           ${curtain.discountRate != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">折扣率：</span>${curtain.discountRate}` : ''}
           ${mountingsStr ? `&nbsp;|&nbsp;<span style="font-weight:400;">配件：</span>${mountingsStr}` : ''}
-          <span style="float:right;color:#DC2626;font-size:14px;">金额：¥${curtain.amount ?? '-'}</span>
+          <span style="float:right;color:#DC2626;font-size:14px;">金额：${mp(curtain.amount, '¥')}</span>
         </div>
         ${noteRow}
         ${structuresHtml}
@@ -401,9 +408,9 @@ const handlePrint = () => {
   const summaryHtml = `
     <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
       <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;">
-        ${fd.freight ? `<div><b>运费：</b>¥${fd.freight}</div>` : ''}
-        ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">-¥${fd.discountAmount}</span></div>` : ''}
-        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">¥${fd.amount ?? 0}</span></div>
+        ${fd.freight ? `<div><b>运费：</b>${mp(fd.freight, '¥')}</div>` : ''}
+        ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
+        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${mp(fd.amount ?? 0, '¥')}</span></div>
       </div>
     </div>`
 
