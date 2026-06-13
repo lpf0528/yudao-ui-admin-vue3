@@ -28,6 +28,7 @@ export interface ZCSalesOrderMaterial {
   elementName?: string      // 组件类型名称
   productName?: string      // 货号名称
   batchNo?: string          // 批次号
+  specValue?: string        // 产品规格（批次选择后回填，仅前端展示）
 }
 
 /** 窗帘行信息 */

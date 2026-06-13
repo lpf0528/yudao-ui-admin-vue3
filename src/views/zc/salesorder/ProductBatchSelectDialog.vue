@@ -190,6 +190,7 @@ const handleSelect = async (row: ProductBatchRow) => {
   currentMaterial.value.productName = row.productName
   currentMaterial.value.batchId = row.id
   currentMaterial.value.batchNo = row.batchNo
+  currentMaterial.value.specValue = row.specValue
   currentMaterial.value.unitValue = row.unitValue
   // 先用 productPrice 初始化，若无则清空
   currentMaterial.value.price = row.productPrice ?? undefined

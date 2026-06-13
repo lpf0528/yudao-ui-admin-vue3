@@ -303,7 +303,10 @@
               </el-col>
               <el-col :span="3" v-if="hasAttr(structure.structureId, 'isShaping')">
                 <el-form-item label="是否定型">
-                  <el-input v-model="structure.isShaping" placeholder="是否定型" :disabled="isConfirmed" />
+                  <el-select v-model="structure.isShaping" placeholder="是否定型" :disabled="isConfirmed" style="width: 100%">
+                    <el-option label="是" :value="true" />
+                    <el-option label="否" :value="false" />
+                  </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
@@ -339,12 +342,13 @@
                   <el-col :span="3">组件类型</el-col>
                   <el-col :span="3">货号</el-col>
                   <el-col :span="3">批次</el-col>
+                  <el-col :span="2">规格</el-col>
                   <el-col :span="2">单价</el-col>
                   <el-col :span="2">用料</el-col>
                   <el-col :span="2">单位</el-col>
                   <el-col :span="2">折扣率</el-col>
                   <el-col :span="2">小计</el-col>
-                  <el-col :span="4">备注</el-col>
+                  <el-col :span="2">备注</el-col>
                 </el-row>
                 <el-row
                   v-for="(material, mIdx) in structure.materials"
@@ -404,6 +408,10 @@
                     </div>
                   </el-col>
                   <el-col :span="2">
+                    <!-- 规格：批次选定后自动回填，只读 -->
+                    <el-input v-model="material.specValue" placeholder="规格" size="small" class="!w-full" readonly :disabled="isConfirmed" />
+                  </el-col>
+                  <el-col :span="2">
                     <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
                   </el-col>
                   <el-col :span="2">
@@ -426,7 +434,7 @@
                     <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
                     <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
                   </el-col>
-                  <el-col :span="4">
+                  <el-col :span="2">
                     <el-input v-model="material.note" placeholder="备注" size="small" :disabled="isConfirmed" />
                   </el-col>
                 </el-row>
@@ -908,6 +916,7 @@ const handlePrintOrder = () => {
 
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
+  console.log('[加工单] 打印数据：', JSON.parse(JSON.stringify(formData.value)))
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
