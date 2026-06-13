@@ -97,7 +97,6 @@
 
 <script setup lang="ts">
 import QRCode from 'qrcode'
-import fontTtfUrl from '@/assets/fonts/font.ttf'
 import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
@@ -181,20 +180,6 @@ defineExpose({ open })
 const handlePrint = async () => {
   if (!formData.value) return
 
-  // 通过 Vite 静态资源导入拿到正确 URL，转为 base64 内嵌到打印窗口
-  const fontBase64 = await (async () => {
-    const res = await fetch(fontTtfUrl)
-    const buf = await res.arrayBuffer()
-    const bytes = new Uint8Array(buf)
-    // 分块拼接避免超出调用栈，每次处理 8192 字节
-    let bin = ''
-    const CHUNK = 8192
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-      bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
-    }
-    return btoa(bin)
-  })()
-
   const fd = formData.value
   const cName = customerName.value
   const bName = brandName.value
@@ -221,10 +206,9 @@ const handlePrint = async () => {
   <meta charset="utf-8">
   <title>${bName ? bName + ' ' : ''}加工单 - ${fd.orderNo || ''}</title>
   <style>
-    @font-face { font-family: 'PrintFont'; src: url('data:font/truetype;base64,${fontBase64}') format('truetype'); }
     @page { size: 100mm 120mm; margin: 0mm; }
     html, body { margin: 0; padding: 0; }
-    * { box-sizing: border-box; font-family: 'PrintFont', 'Microsoft YaHei', sans-serif; font-weight: normal; }
+    * { box-sizing: border-box; font-family: 'SimHei', '黑体', 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: normal; }
     body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
     b, strong { font-weight: normal; }
     .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.75mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }

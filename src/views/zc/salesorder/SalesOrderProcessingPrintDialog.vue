@@ -301,17 +301,6 @@ defineExpose({ open })
 const handlePrint = async () => {
   if (!formData.value) return
 
-  // 将字体文件转为 base64 内嵌，避免新窗口无法访问本地资源
-  const fontBase64 = await (async () => {
-    const url = new URL('/src/assets/fonts/font.ttf', import.meta.url).href
-    const res = await fetch(url)
-    const buf = await res.arrayBuffer()
-    const bytes = new Uint8Array(buf)
-    let bin = ''
-    bytes.forEach((b) => (bin += String.fromCharCode(b)))
-    return btoa(bin)
-  })()
-
   const fd = formData.value
   const cName = customerName.value
   const bName = brandName.value
@@ -411,10 +400,9 @@ const handlePrint = async () => {
   <meta charset="utf-8">
   <title>${bName ? bName + ' ' : ''}加工单 - ${fd.orderNo || ''}</title>
   <style>
-    @font-face { font-family: 'PrintFont'; src: url('data:font/truetype;base64,${fontBase64}') format('truetype'); }
     @page { size: 100mm 120mm; margin: 0mm; }
     html, body { margin: 0; padding: 0; }
-    * { box-sizing: border-box; font-family: 'PrintFont', 'Microsoft YaHei', sans-serif; font-weight: normal; }
+    * { box-sizing: border-box; font-family: 'SimHei', '黑体', 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: normal; }
     body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
     b, strong { font-weight: normal; }
     .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.2mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }
