@@ -164,6 +164,7 @@ export interface BatchConfirmItem {
   batchId?: number      // 批次 ID；仅选产品时为 undefined
   productId?: number
   productName?: string
+  specValue?: string    // 产品规格
   batchNo?: string
   unitValue?: string
   productPrice?: number
@@ -287,6 +288,7 @@ const rowToItem = (r: BatchRow): BatchConfirmItem => ({
   batchId: r.id,
   productId: r.productId,
   productName: r.productName,
+  specValue: r.specValue,
   batchNo: r.batchNo,
   unitValue: r.unitValue,
   productPrice: r.productPrice,

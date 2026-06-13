@@ -41,16 +41,12 @@
             "
           >
             <!-- 抬头（所有页相同，不含物流和地址） -->
-            <div style="display: flex; align-items: flex-start; margin-bottom: 5px;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 23px; letter-spacing: 3px; text-align: center; margin-bottom: 4px;">
-                  {{ brandName ? brandName + ' ' : '' }}加工单
-                </div>
-                <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
-                <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}&nbsp;&nbsp;交付：{{ formData?.deliveryDate || '-' }}</div>
-                <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
+            <!-- 标题行：品牌+加工单 居左，二维码 居右 -->
+            <div style="display: flex; align-items: center; margin-bottom: 3px;">
+              <div style="flex: 1; font-size: 23px; letter-spacing: 3px; text-align: center;">
+                {{ brandName ? brandName + ' ' : '' }}加工单
               </div>
-              <div style="width: 82px; flex-shrink: 0; padding-left: 6px; text-align: center; min-height: 80px;">
+              <div style="width: 82px; flex-shrink: 0; padding-left: 6px; text-align: center;">
                 <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
                   <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="72" height="72" style="display: block; margin: 0 auto;" />
                 </template>
@@ -60,6 +56,11 @@
                 >二维码</div>
               </div>
             </div>
+            <!-- 信息行：全宽展示，不再受二维码遮挡 -->
+            <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
+            <div style="padding: 2px 0; font-size: 13px; margin-bottom: 2px;">客户：{{ customerName }}&nbsp;&nbsp;交付：{{ formData?.deliveryDate || '-' }}</div>
+            <div style="padding: 2px 0; font-size: 13px;">房间：</div>
+            <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
 
             <!-- 分隔线 -->
             <div style="border-top: 1px solid #ccc; margin: 3px 0 5px;"></div>
@@ -87,9 +88,9 @@
               </tr>
             </table>
 
-            <!-- 用料表 -->
+            <!-- 用料表：仅展示 elementIsPrint !== false 的行 -->
             <table
-              v-if="(structure as any).materials?.length"
+              v-if="(structure as any).materials?.filter((m: any) => m.elementIsPrint !== false).length"
               style="width: 100%; border-collapse: collapse; font-size: 14px;"
             >
               <thead>
@@ -102,7 +103,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(material, mIdx) in (structure as any).materials" :key="mIdx">
+                <tr v-for="(material, mIdx) in (structure as any).materials?.filter((m: any) => m.elementIsPrint !== false)" :key="mIdx">
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.productName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.specValue || '-' }}</td>
@@ -112,7 +113,7 @@
               </tbody>
             </table>
             <div
-              v-if="!(structure as any).materials?.length"
+              v-if="!(structure as any).materials?.filter((m: any) => m.elementIsPrint !== false).length"
               style="padding: 3px 8px; color: #9CA3AF; border: 1px solid #D1D5DB;"
             >
               （无用料）
@@ -222,7 +223,7 @@ const getStructureAttrs = (structure: any): StructureAttr[] => {
   if (structure.skirtHeight != null) attrs.push({ label: '裙摆', value: String(structure.skirtHeight) })
   // 加工和安装工艺强制另起最后一行，并排展示
   if (structure.processType) attrs.push({ label: '加工方式', value: String(getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType) || structure.processType).slice(0, 2), smallValue: true, rowBreakBefore: true })
-  if (structure.installProcessName) attrs.push({ label: '安装工艺', value: structure.installProcessName, colspan: 3 })
+  if (structure.installProcessName) attrs.push({ label: '安装工艺', value: structure.installProcessName, colspan: 3, smallValue: true })
   return attrs
 }
 
@@ -325,17 +326,16 @@ const handlePrint = async () => {
       ? `<img src="${qrEntry.url}" width="72" height="72" style="display:block;margin:0 auto;" />`
       : `<div style="width:72px;height:72px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
     return `
-      <div style="display:flex;align-items:flex-start;margin-bottom:4px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:3px;">
-            ${bName ? bName + '&nbsp;' : ''}加工单
-          </div>
-          <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
-          <div style="padding:1px 0;font-size:11pt;">客户：${cName}&nbsp;&nbsp;交付：${fd.deliveryDate || '-'}</div>
-          ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
+      <div style="display:flex;align-items:center;margin-bottom:2px;">
+        <div style="flex:1;font-size:20pt;letter-spacing:3px;text-align:center;">
+          ${bName ? bName + '&nbsp;' : ''}加工单
         </div>
-        <div style="width:78px;flex-shrink:0;padding-left:5px;text-align:center;min-height:80px;">${qrImg}</div>
+        <div style="width:78px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
       </div>
+      <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
+      <div style="padding:1px 0;font-size:11pt;margin-bottom:1px;">客户：${cName}&nbsp;&nbsp;交付：${fd.deliveryDate || '-'}</div>
+      <div style="padding:1px 0;font-size:11pt;">房间：</div>
+      ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
       <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     `
   }
@@ -369,7 +369,8 @@ const handlePrint = async () => {
         </table>
       `
 
-      const mats: any[] = structure.materials || []
+      // 仅打印 elementIsPrint !== false 的用料行
+      const mats: any[] = (structure.materials || []).filter((m: any) => m.elementIsPrint !== false)
       const materialsHtml = mats.length
         ? `<table style="width:100%;border-collapse:collapse;font-size:11pt;margin-top:2px;">
             <thead>
@@ -411,17 +412,16 @@ const handlePrint = async () => {
   <title>${bName ? bName + ' ' : ''}加工单 - ${fd.orderNo || ''}</title>
   <style>
     @font-face { font-family: 'PrintFont'; src: url('data:font/truetype;base64,${fontBase64}') format('truetype'); }
-    @page { size: 100mm 120mm; margin: 0; }
+    @page { size: 100mm 120mm; margin: 0mm; }
+    html, body { margin: 0; padding: 0; }
     * { box-sizing: border-box; font-family: 'PrintFont', 'Microsoft YaHei', sans-serif; font-weight: normal; }
-    body { margin: 0; padding: 0; color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
+    body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
     b, strong { font-weight: normal; }
-    .page { page-break-after: always; overflow: hidden; padding: 0.75mm 3mm 3mm; width: 100mm; box-sizing: border-box; }
+    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.2mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }
     .page:last-child { page-break-after: auto; }
   </style>
 </head>
-<body>
-  ${pages.join('')}
-</body>
+<body>${pages.join('')}</body>
 </html>`
 
   const win = window.open('', '_blank', 'width=900,height=700')

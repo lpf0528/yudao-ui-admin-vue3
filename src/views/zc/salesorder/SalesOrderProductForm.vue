@@ -276,6 +276,7 @@ interface BatchRow {
   structureRowId?: number  // 结构行 ID（更新时回传，新增行为 undefined）
   productId?: number       // 产品 ID
   productName?: string     // 货号名称（展示用）
+  specValue?: string       // 产品规格（展示用）
   batchId?: number         // 批次 ID
   batchNo?: string         // 批次号（展示用）
   price?: number           // 单价
@@ -388,6 +389,7 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
       return {
         productId: row.productId,
         productName: row.productName,
+        specValue: row.specValue,
         batchId: row.batchId,   // 仅选产品时为 undefined
         batchNo: row.batchNo,
         price,
@@ -441,6 +443,7 @@ const mapCurtainsToBatchRows = (curtains: SalesOrderDetailCurtain[]): BatchRow[]
       id: m.id,                // 用料明细行 ID，更新时必须回传
       productId: m.productId,
       productName: m.productName,
+      specValue: m.specValue,
       batchId: m.batchId,
       batchNo: m.batchNo,
       price: m.price,

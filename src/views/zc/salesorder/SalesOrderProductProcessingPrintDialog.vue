@@ -1,6 +1,6 @@
 <!--
   面料加工单打印预览弹窗
-  所有批次在单页以表格形式展示（货号 / 批次 / 用料 / 备注），不显示单价和金额
+  所有批次在单页以表格形式展示（货号 / 规格 / 批次 / 用料 / 备注），不显示单价和金额
   父组件通过 open(formData) 方法打开，支持打印（含打印机选择）及浏览器截图/另存为PDF
 -->
 <template>
@@ -18,7 +18,7 @@
       </div>
     </template>
 
-    <!-- 预览区：宽70mm × 高100mm（比例 70:100） -->
+    <!-- 预览区：宽70mm × 高100mm（比例 70:100，屏幕等比放大） -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
       <div
         style="
@@ -26,9 +26,9 @@
           width: 420px;
           height: 600px;
           margin: 0 auto;
-          padding: 12px 14px;
+          padding: 6px 14px 12px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-          font-size: 12px;
+          font-size: 15px;
           color: #1a1a1a;
           font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
           overflow: hidden;
@@ -36,57 +36,61 @@
         "
       >
         <!-- 标题居中独立行 -->
-        <div style="text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 3px; line-height: 1.2; margin-bottom: 6px;">
-          {{ brandName ? brandName + ' ' : '' }}面料加工单
+        <div style="text-align: center; font-size: 21px; letter-spacing: 3px; line-height: 1.3; margin-bottom: 5px;">
+          {{ brandName ? brandName + ' ' : '' }}加工单
         </div>
 
         <!-- 订单头信息：左侧字段多行 + 右上角二维码 -->
         <div style="display: flex; align-items: flex-start;">
           <div style="flex: 1; min-width: 0;">
-            <div style="padding: 2px 0;"><b>客户：</b>{{ customerName }}</div>
-            <div style="padding: 2px 0;"><b>订单号：</b>{{ formData?.orderNo || '-' }}</div>
-            <div style="padding: 2px 0;"><b>交付日期：</b>{{ formData?.deliveryDate || '-' }}</div>
-            <div v-if="formData?.note" style="padding: 2px 0;"><b>备注：</b>{{ formData.note }}</div>
+            <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
+            <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}&nbsp;&nbsp;交付：{{ formData?.deliveryDate || '-' }}</div>
+            <div style="padding: 2px 0; font-size: 13px;">房间：</div>
           </div>
           <!-- 右上角二维码 -->
           <div style="flex-shrink: 0; padding-left: 6px; text-align: center;">
             <template v-if="orderQrCode">
-              <img :src="orderQrCode.url" width="56" height="56" style="display: block; margin: 0 auto;" />
-              <div style="font-size: 9px; word-break: break-all; margin-top: 2px; line-height: 1.2; max-width: 56px;">
-                {{ orderQrCode.code }}
-              </div>
+              <img :src="orderQrCode.url" width="64" height="64" style="display: block; margin: 0 auto;" />
             </template>
             <div
               v-else
-              style="width: 56px; height: 56px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 10px;"
+              style="width: 64px; height: 64px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
             >二维码</div>
           </div>
         </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 4px 0 8px;"></div>
+        <div style="border-top: 1px solid #ccc; margin: 4px 0 6px;"></div>
 
         <!-- 面料批次明细表格（不含单价和金额） -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
           <thead>
             <tr style="background: #F3F4F6;">
-              <th style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: left; font-weight: 600;">序号</th>
-              <th style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: left; font-weight: 600;">货号</th>
-              <th style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: left; font-weight: 600;">批次</th>
-              <th style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: right; font-weight: 600;">用料</th>
-              <th style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: left; font-weight: 600;">备注</th>
+              <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: center;">序号</th>
+              <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: left;">货号</th>
+              <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: left;">规格</th>
+              <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">用料</th>
+              <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: left;">备注</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(batch, idx) in formData?.batchs" :key="idx">
-              <td style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: center;">{{ idx + 1 }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 3px 4px;">{{ batch.productName || '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 3px 4px;">{{ batch.batchNo || '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 3px 4px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 3px 4px;">{{ batch.note || '' }}</td>
+            <tr v-for="(batch, idx) in formData?.batchs?.filter((b) => b.elementIsPrint !== false)" :key="idx">
+              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: center;">{{ idx + 1 }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.productName || '-' }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.specValue || '-' }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
         </table>
+
+        <!-- 订单备注放最后一行 -->
+        <div
+          v-if="formData?.note"
+          style="margin-top: 4px; padding: 3px 8px; font-size: 13px; border: 1px solid #D1D5DB; background: #FFFBEB;"
+        >
+          <span style="color: #6B7280;">备注：</span>{{ formData.note }}
+        </div>
 
       </div>
     </div>
@@ -95,6 +99,7 @@
 
 <script setup lang="ts">
 import QRCode from 'qrcode'
+import fontTtfUrl from '@/assets/fonts/font.ttf'
 import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
@@ -106,9 +111,11 @@ defineOptions({ name: 'SalesOrderProductProcessingPrintDialog' })
 // ======================== 类型定义 ========================
 interface BatchRow {
   productName?: string
+  specValue?: string  // 产品规格
   batchNo?: string
   quantity?: number
   note?: string
+  elementIsPrint?: boolean  // false 时不显示、不打印
 }
 
 interface FormDataType {
@@ -133,7 +140,7 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 整单二维码信息（url = data URL，code = 注册后的 codeId 文本） */
+/** 整单二维码信息 */
 const orderQrCode = ref<{ url: string; code: string } | null>(null)
 
 // ======================== 计算属性 ========================
@@ -170,72 +177,91 @@ defineExpose({ open })
 // ======================== 打印 ========================
 /**
  * 在新窗口生成干净的面料加工单 HTML 并自动触发打印对话框。
- * 单页 A4，所有批次以表格展示，不含单价和金额。
+ * 单页 （100mm × 120mm），所有批次以表格展示，不含单价和金额。
+ * 字体通过 Vite 静态资源导入后转 base64 内嵌，开发和生产均有效。
  */
-const handlePrint = () => {
+const handlePrint = async () => {
   if (!formData.value) return
+
+  // 通过 Vite 静态资源导入拿到正确 URL，转为 base64 内嵌到打印窗口
+  const fontBase64 = await (async () => {
+    const res = await fetch(fontTtfUrl)
+    const buf = await res.arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    // 分块拼接避免超出调用栈，每次处理 8192 字节
+    let bin = ''
+    const CHUNK = 8192
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+    }
+    return btoa(bin)
+  })()
 
   const fd = formData.value
   const cName = customerName.value
   const bName = brandName.value
 
-  const thS = 'border:1px solid #D1D5DB;padding:3px 4px;font-weight:600;'
-  const tdS = 'border:1px solid #D1D5DB;padding:3px 4px;'
-  const infoTd = 'padding:2px 5px 2px 0;vertical-align:top;'
+  const thS = 'border:1px solid #4B5563;padding:3px 5px;'
+  const tdS = 'border:1px solid #4B5563;padding:3px 5px;'
 
-  const batchRowsHtml = (fd.batchs || []).map((b, idx) => `
+  const batchRowsHtml = (fd.batchs || []).filter((b) => b.elementIsPrint !== false).map((b, idx) => `
     <tr>
       <td style="${tdS}text-align:center;">${idx + 1}</td>
       <td style="${tdS}">${b.productName || '-'}</td>
-      <td style="${tdS}">${b.batchNo || '-'}</td>
+      <td style="${tdS}">${b.specValue || '-'}</td>
       <td style="${tdS}text-align:right;">${b.quantity ?? '-'}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
+
+  const qrHtml = orderQrCode.value
+    ? `<img src="${orderQrCode.value.url}" width="64" height="64" style="display:block;margin:0 auto;" />`
+    : `<div style="width:64px;height:64px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>`
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${bName ? bName + ' ' : ''}面料加工单 - ${fd.orderNo || ''}</title>
+  <title>${bName ? bName + ' ' : ''}加工单 - ${fd.orderNo || ''}</title>
   <style>
-    @page { size: 70mm 100mm; margin: 3mm; }
-    * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
-    body { margin: 0; padding: 0; color: #1a1a1a; font-size: 9pt; }
-    b { font-weight: 600; }
+    @font-face { font-family: 'PrintFont'; src: url('data:font/truetype;base64,${fontBase64}') format('truetype'); }
+    @page { size: 100mm 120mm; margin: 0mm; }
+    html, body { margin: 0; padding: 0; }
+    * { box-sizing: border-box; font-family: 'PrintFont', 'Microsoft YaHei', sans-serif; font-weight: normal; }
+    body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
+    b, strong { font-weight: normal; }
+    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.75mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }
+    .page:last-child { page-break-after: auto; }
   </style>
 </head>
 <body>
-  <div style="text-align:center;font-size:15pt;font-weight:bold;letter-spacing:3px;line-height:1.2;margin-bottom:4px;">
-    ${bName ? bName + '&nbsp;' : ''}面料加工单
-  </div>
-  <div style="display:flex;align-items:flex-start;">
+<div class="page">
+  <div style="display:flex;align-items:flex-start;margin-bottom:4px;">
     <div style="flex:1;min-width:0;">
-      <div style="padding:2px 0;"><b>客户：</b>${cName}</div>
-      <div style="padding:2px 0;"><b>订单号：</b>${fd.orderNo || '-'}</div>
-      <div style="padding:2px 0;"><b>交付日期：</b>${fd.deliveryDate || '-'}</div>
-      ${fd.note ? `<div style="padding:2px 0;"><b>备注：</b>${fd.note}</div>` : ''}
+      <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:3px;">
+        ${bName ? bName + '&nbsp;' : ''}加工单
+      </div>
+      <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
+      <div style="padding:1px 0;font-size:11pt;">客户：${cName}</div>
+      <div style="padding:1px 0;font-size:11pt;">交付：${fd.deliveryDate || '-'}</div>
+      <div style="padding:1px 0;font-size:11pt;">房间：</div>
     </div>
-    <div style="flex-shrink:0;padding-left:6px;text-align:center;">
-      ${orderQrCode.value
-        ? `<img src="${orderQrCode.value.url}" width="56" height="56" style="display:block;margin:0 auto;" />
-           <div style="font-size:7pt;word-break:break-all;margin-top:2px;line-height:1.2;max-width:56px;">${orderQrCode.value.code}</div>`
-        : `<div style="width:56px;height:56px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:8px;">二维码</div>`
-      }
-    </div>
+    <div style="width:78px;flex-shrink:0;padding-left:5px;text-align:center;min-height:80px;">${qrHtml}</div>
   </div>
-  <div style="border-top:1px solid #ccc;margin:4px 0 6px;"></div>
-  <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+  <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
+  <table style="width:100%;border-collapse:collapse;font-size:11pt;margin-top:2px;">
     <thead>
       <tr style="background:#F3F4F6;">
         <th style="${thS}text-align:center;">序号</th>
         <th style="${thS}text-align:left;">货号</th>
-        <th style="${thS}text-align:left;">批次</th>
+        <th style="${thS}text-align:left;">规格</th>
         <th style="${thS}text-align:right;">用料</th>
         <th style="${thS}text-align:left;">备注</th>
       </tr>
     </thead>
     <tbody>${batchRowsHtml}</tbody>
   </table>
+  ${fd.note ? `<div style="margin-top:3px;padding:2px 8px;font-size:11pt;border:1px solid #D1D5DB;background:#FFFBEB;"><span style="color:#6B7280;">备注：</span>${fd.note}</div>` : ''}
+</div>
 </body>
 </html>`
 
@@ -246,7 +272,6 @@ const handlePrint = () => {
   }
   win.document.write(html)
   win.document.close()
-  // 部分浏览器需等文档渲染完成才能调用 print
   setTimeout(() => {
     win.focus()
     win.print()
