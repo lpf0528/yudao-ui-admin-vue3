@@ -68,6 +68,22 @@
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
         <el-button
+          type="warning"
+          plain
+          @click="handleImport"
+          v-hasPermi="['zc:customer:import']"
+        >
+          <Icon icon="ep:upload" class="mr-5px" /> 导入
+        </el-button>
+        <el-button
+          type="info"
+          plain
+          @click="handleDownloadTemplate"
+          v-hasPermi="['zc:customer:import']"
+        >
+          <Icon icon="ep:download" class="mr-5px" /> 下载模板
+        </el-button>
+        <!-- <el-button
           type="success"
           plain
           @click="handleExport"
@@ -75,7 +91,7 @@
           v-hasPermi="['zc:customer:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -141,6 +157,8 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <CustomerForm ref="formRef" :logisticsList="logisticsList" :brandList="brandList" @success="getList" />
+  <!-- 导入弹窗 -->
+  <CustomerImportForm ref="importFormRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -150,6 +168,7 @@ import { CustomerApi, Customer } from '@/api/zc/customer'
 import { LogisticsApi, Logistics } from '@/api/zc/logistics'
 import { BrandApi, Brand } from '@/api/zc/brand'
 import CustomerForm from './CustomerForm.vue'
+import CustomerImportForm from './CustomerImportForm.vue'
 
 /** 客户资料 列表 */
 defineOptions({ name: 'ZcCustomer' })
@@ -201,6 +220,18 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 导入按钮操作 */
+const importFormRef = ref()
+const handleImport = () => {
+  importFormRef.value.open()
+}
+
+/** 下载客户导入模板 */
+const handleDownloadTemplate = async () => {
+  const res = await CustomerApi.importTemplate()
+  download.excel(res, '客户导入模板.xls')
 }
 
 /** 删除按钮操作 */

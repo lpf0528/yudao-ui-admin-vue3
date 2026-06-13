@@ -74,4 +74,9 @@ export const CustomerApi = {
   getCustomerSimpleList: async () => {
     return await request.get<CustomerSimpleVO[]>({ url: `/zc/customer/simple-list` })
   },
+
+  // 下载客户导入模板
+  importTemplate: async () => {
+    return await request.download({ url: `/zc/customer/get-import-template` })
+  },
 }
