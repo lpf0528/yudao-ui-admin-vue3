@@ -46,6 +46,10 @@
       <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
+      <!-- 发货联按钮：订单已保存时显示，打印发货联（品牌+收货信息） -->
+      <el-button v-if="formData.id" type="success" plain @click="handlePrintShipping">
+        <Icon icon="ep:van" class="mr-4px" />发货联
+      </el-button>
     </div>
 
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
@@ -229,6 +233,13 @@
       :brands-list="props.brandsList"
       :logistics-list="props.logisticsList"
     />
+    <!-- 发货联打印预览弹窗 -->
+    <SalesOrderShippingDialog
+      ref="shippingDialogRef"
+      :customers-list="props.customersList"
+      :brands-list="props.brandsList"
+      :logistics-list="props.logisticsList"
+    />
   </Dialog>
 </template>
 
@@ -242,6 +253,7 @@ import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
 import SalesOrderProductPrintDialog from './SalesOrderProductPrintDialog.vue'
 import SalesOrderProductProcessingPrintDialog from './SalesOrderProductProcessingPrintDialog.vue'
+import SalesOrderShippingDialog from './SalesOrderShippingDialog.vue'
 
 /** 面料单 表单 */
 defineOptions({ name: 'SalesOrderProductForm' })
@@ -323,6 +335,7 @@ const formRules = {
 const formRef = ref()
 const printDialogRef = ref<InstanceType<typeof SalesOrderProductPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProductProcessingPrintDialog>>()
+const shippingDialogRef = ref<InstanceType<typeof SalesOrderShippingDialog>>()
 
 
 // ======================== 客户选择 ========================
@@ -594,6 +607,11 @@ const handlePrint = () => {
 /** 打开面料加工单打印预览弹窗 */
 const handlePrintProcessing = () => {
   processingPrintDialogRef.value?.open(formData.value as any)
+}
+
+/** 打开发货联打印预览弹窗 */
+const handlePrintShipping = () => {
+  shippingDialogRef.value?.open(formData.value as any)
 }
 </script>
 
