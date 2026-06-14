@@ -48,9 +48,12 @@
         </el-form-item>
         <!-- 客户：展示简称/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
-          <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="w-full" :disabled="isConfirmed" @change="handleCustomerChange">
-            <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
-          </el-select>
+          <div class="flex items-center w-full gap-4px">
+            <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="flex-1" :disabled="isConfirmed" @change="handleCustomerChange">
+              <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
+            </el-select>
+            <el-button :icon="SearchIcon" circle size="small" :disabled="isConfirmed" @click="handleOpenCustomerSearch" title="搜索客户" />
+          </div>
         </el-form-item>
         <!-- 手机 -->
         <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
@@ -448,6 +451,8 @@
         </div>
       </el-card>
     </div>
+    <!-- 客户搜索弹窗 -->
+    <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
     <!-- 批次选择弹窗 -->
     <ProductBatchSelectDialog ref="batchSelectRef" />
     <!-- 销售单打印预览弹窗 -->
@@ -517,10 +522,12 @@
 </template>
 
 <script setup lang="ts">
+import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
-import { CustomerSimpleVO } from '@/api/zc/customer'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
@@ -552,6 +559,25 @@ const getDefaultBrandId = () => {
 const todayStr = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
+
+/** 打开客户搜索弹窗 */
+const handleOpenCustomerSearch = () => {
+  customerSearchDialogRef.value?.open()
+}
+
+/** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
+const handleSelectCustomerFromSearch = (customer: any) => {
+  formData.value.customerId = customer.id
+  formData.value.mobile = customer.mobile
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
+  formData.value.logisticId = customer.logisticId
+  formData.value.receiver = customer.contactName
+  formData.value.deliveryAddress = customer.deliveryAddress
+  selectedCustomerBalance.value = customer.balance
+  if (formData.value.curtains.length === 0) addCurtain()
 }
 
 const handleCustomerChange = (customerId: number) => {

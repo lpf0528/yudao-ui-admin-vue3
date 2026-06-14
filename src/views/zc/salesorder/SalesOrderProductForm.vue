@@ -61,9 +61,12 @@
         </el-form-item>
         <!-- 客户 3：需展示姓名/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="w-full" @change="handleCustomerChange">
-            <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
-          </el-select>
+          <div class="flex items-center w-full gap-4px">
+            <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="flex-1" @change="handleCustomerChange">
+              <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
+            </el-select>
+            <el-button :icon="SearchIcon" circle size="small" @click="customerSearchDialogRef?.open()" title="搜索客户" />
+          </div>
         </el-form-item>
         <!-- 手机 2 -->
         <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
@@ -251,13 +254,17 @@
       :brands-list="props.brandsList"
       :logistics-list="props.logisticsList"
     />
+    <!-- 客户搜索弹窗 -->
+    <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
   </Dialog>
 </template>
 
 <script setup lang="ts">
+import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { SalesOrderApi, SalesOrderType, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
+import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
@@ -358,6 +365,32 @@ const printDialogRef = ref<InstanceType<typeof SalesOrderProductPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProductProcessingPrintDialog>>()
 const shippingDialogRef = ref<InstanceType<typeof SalesOrderShippingDialog>>()
 
+
+// ======================== 客户搜索弹窗 ========================
+const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
+
+/** 客户搜索弹窗选中回调：直接使用接口返回的完整数据填充表单 */
+const handleSelectCustomerFromSearch = async (customer: any) => {
+  formData.value.customerId = customer.id
+  formData.value.mobile = customer.mobile
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
+  formData.value.logisticId = customer.logisticId
+  formData.value.receiver = customer.contactName
+  formData.value.deliveryAddress = customer.deliveryAddress
+  selectedCustomerBalance.value = customer.balance
+  // 更新已选面料的授权价
+  const batchs = formData.value.batchs
+  if (!batchs.length) return
+  await Promise.all(
+    batchs.map(async (batch) => {
+      if (!batch.productId) return
+      try {
+        const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(customer.id, batch.productId)
+        if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
+      } catch {}
+    })
+  )
+}
 
 // ======================== 客户选择 ========================
 /**

@@ -18,19 +18,22 @@
         />
       </el-form-item>
       <el-form-item label="客户" prop="customerId">
-        <el-select
-          v-model="queryParams.customerId"
-          placeholder="请选择客户"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="item in customersList"
-            :key="item.id"
-            :label="`${item.shortName}/${item.contactName}`"
-            :value="item.id"
-          />
-        </el-select>
+        <div class="flex items-center gap-4px">
+          <el-select
+            v-model="queryParams.customerId"
+            placeholder="请选择客户"
+            clearable
+            class="!w-200px"
+          >
+            <el-option
+              v-for="item in customersList"
+              :key="item.id"
+              :label="`${item.shortName}/${item.contactName}`"
+              :value="item.id"
+            />
+          </el-select>
+          <el-button :icon="SearchIcon" circle size="small" @click="customerSearchDialogRef?.open()" title="搜索客户" />
+        </div>
       </el-form-item>
       <el-form-item label="下单日期" prop="orderDate">
         <el-date-picker
@@ -287,6 +290,8 @@
 
   <!-- 收款弹窗 -->
   <CollectionDialog ref="collectionDialogRef" :customersList="customersList" @success="getList" />
+  <!-- 客户搜索弹窗（列表页筛选用） -->
+  <CustomerSearchDialog ref="customerSearchDialogRef" @select="(c) => (queryParams.customerId = c.id)" />
 
   <!-- 工序记录弹窗 -->
   <el-dialog v-model="processRecordVisible" title="工序记录" width="600px" destroy-on-close>
@@ -332,6 +337,7 @@
 </template>
 
 <script setup lang="ts">
+import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
@@ -344,6 +350,7 @@ import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/z
 import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderProductForm from './SalesOrderProductForm.vue'
 import CollectionDialog from './CollectionDialog.vue'
+import CustomerSearchDialog from './CustomerSearchDialog.vue'
 
 /** 销售订单 列表 */
 defineOptions({ name: 'ZcSalesOrder' })
@@ -437,6 +444,9 @@ const collectionDialogRef = ref()
 const openCollectionDialog = () => {
   collectionDialogRef.value.open()
 }
+
+/** 客户搜索弹窗（列表页用） */
+const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
 
 /** 删除按钮操作：面料单走 SalesOrderProductApi，其余走 SalesOrderApi */
 const handleDelete = async (id: number, types: string) => {
