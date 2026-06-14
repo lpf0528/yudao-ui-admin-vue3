@@ -7,11 +7,11 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="简称" prop="shortName">
-        <el-input v-model="formData.shortName" placeholder="请输入简称" />
-      </el-form-item>
       <el-form-item label="全称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入全称" />
+      </el-form-item>
+      <el-form-item label="简称" prop="shortName">
+        <el-input v-model="formData.shortName" placeholder="请输入简称" />
       </el-form-item>
       <el-form-item label="联系人" prop="contactName">
         <el-input v-model="formData.contactName" placeholder="请输入联系人" />
@@ -89,7 +89,6 @@ const formData = ref({
   note: undefined,
 })
 const formRules = reactive({
-  shortName: [{ required: true, message: '简称不能为空', trigger: 'blur' }],
   name: [{ required: true, message: '全称不能为空', trigger: 'blur' }],
   contactName: [{ required: true, message: '联系人不能为空', trigger: 'blur' }],
 })
