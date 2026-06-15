@@ -64,6 +64,24 @@
           </el-select>
         </template>
       </el-table-column>
+      <el-table-column label="规格" width="150">
+        <template #default="{ $index }">
+          <el-select
+            v-model="rows[$index].spec"
+            :disabled="!getProductSpecs(rows[$index].productId)?.length"
+            :required="getProductSpecs(rows[$index].productId)?.length > 0"
+            placeholder="请选择规格"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="spec in getProductSpecs(rows[$index].productId)"
+              :key="spec"
+              :label="spec"
+              :value="spec"
+            />
+          </el-select>
+        </template>
+      </el-table-column>
       <el-table-column label="进货价" width="130">
         <template #default="{ $index }">
           <el-input-number
@@ -161,6 +179,7 @@ interface BatchRow {
   inboundQuantity: number | undefined
   quantity: number | undefined
   note: string | undefined
+  spec: string | undefined
 }
 
 const createEmptyRow = (): BatchRow => ({
@@ -168,7 +187,8 @@ const createEmptyRow = (): BatchRow => ({
   inboundPrice: undefined,
   inboundQuantity: undefined,
   quantity: undefined,
-  note: undefined
+  note: undefined,
+  spec: undefined
 })
 
 const rows = ref<BatchRow[]>([createEmptyRow()])
@@ -180,9 +200,22 @@ const removeRow = (index: number) => {
   rows.value.splice(index, 1)
 }
 
+const getProductSpecs = (productId: number | undefined): string[] => {
+  if (!productId) return []
+  const product = props.productList.find((item) => item.id === productId)
+  return product?.specs ?? []
+}
+
 const onProductChange = (id: number | undefined, index: number) => {
   const product = props.productList.find((item) => item.id === id)
   rows.value[index].inboundPrice = product?.inboundPrice ?? undefined
+  // 如果产品有规格且只有一个，默认选中第一个
+  const specs = product?.specs ?? []
+  if (specs.length === 1) {
+    rows.value[index].spec = specs[0]
+  } else {
+    rows.value[index].spec = undefined
+  }
 }
 
 const onInboundQuantityChange = (val: number | undefined, index: number) => {
@@ -205,10 +238,18 @@ const emit = defineEmits(['success'])
 
 const submitForm = async () => {
   await headerFormRef.value.validate()
-  const invalidRow = rows.value.find((r) => !r.productId || r.inboundQuantity == null)
-  if (invalidRow) {
-    message.warning('请完整填写每行的产品和入库数量')
-    return
+  // 验证每行数据
+  for (const [index, row] of rows.value.entries()) {
+    if (!row.productId || row.inboundQuantity == null) {
+      message.warning('请完整填写每行的产品和入库数量')
+      return
+    }
+    // 如果产品有规格，必须选择规格
+    const specs = getProductSpecs(row.productId)
+    if (specs.length > 0 && !row.spec) {
+      message.warning(`第${index + 1}行：请选择规格`)
+      return
+    }
   }
   formLoading.value = true
   try {
@@ -220,7 +261,8 @@ const submitForm = async () => {
       inboundPrice: row.inboundPrice ?? 0,
       inboundQuantity: row.inboundQuantity,
       quantity: row.quantity ?? row.inboundQuantity,
-      note: row.note ?? ''
+      note: row.note ?? '',
+      spec: row.spec ?? ''
     })) as unknown as ProductBatch[]
     console.log('[批量新增批次] 提交报文:', JSON.stringify(payloadList, null, 2))
     await ProductBatchApi.createProductBatchList(payloadList)

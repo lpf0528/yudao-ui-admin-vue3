@@ -58,6 +58,24 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="规格" prop="spec">
+        <el-input
+          v-model="queryParams.spec"
+          placeholder="请输入规格"
+          clearable
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable class="!w-160px">
+          <el-option
+            v-for="item in getIntDictOptions(DICT_TYPE.ZC_PRODUCT_BATCH_STATUS)"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -117,7 +135,12 @@
       <el-table-column label="批号" align="center" prop="batchNo" />
       <el-table-column label="入库日期" align="center" prop="inboundDate" />
       <el-table-column label="产品" align="center" prop="productName" />
-      <el-table-column label="规格" align="center" prop="specValue" />
+      <el-table-column label="规格" align="center" prop="spec" />
+      <el-table-column label="状态" align="center" prop="status">
+        <template #default="scope">
+          <DictTag :type="DICT_TYPE.ZC_PRODUCT_BATCH_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
       <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
       <el-table-column label="入库数量" align="center" prop="inboundQuantity" />
@@ -178,12 +201,14 @@
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductBatchBatchForm from './ProductBatchBatchForm.vue'
 import InventoryRecordForm from './InventoryRecordForm.vue'
+import { DictTag } from '@/components/DictTag'
 
 /** 产品批次 列表 */
 defineOptions({ name: 'ZcProductBatch' })
@@ -205,6 +230,8 @@ const queryParams = reactive({
   productId: undefined,
   warehouseId: undefined,
   supplierId: undefined,
+  spec: undefined,
+  status: undefined,
   createTime: []
 })
 const queryFormRef = ref() // 搜索的表单

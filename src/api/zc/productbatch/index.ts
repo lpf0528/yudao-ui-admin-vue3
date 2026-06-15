@@ -7,12 +7,22 @@ export interface ProductBatch {
           batchNo?: string; // 批号
           inboundDate?: string | Dayjs; // 入库日期
           productId?: number; // 产品
-          inboundPrice: number; // 进货价
+          inboundPrice?: number; // 进货价
           inboundQuantity?: number; // 入库数量
           quantity?: number; // 剩余数量
-          warehouseId: number; // 仓库
-          supplierId: number; // 供应商
-          note: string; // 备注
+          warehouseId?: number; // 仓库
+          supplierId?: number; // 供应商
+          note?: string; // 备注
+          spec?: string; // 规格
+          status?: number; // 状态: 1:整匹、0:零裁、-1:余料
+          productName?: string; // 产品名称
+          productPrice?: number; // 产品价格
+          versionName?: string; // 版本名称
+          supplierName?: string; // 供应商名称
+          warehouseName?: string; // 仓库名称
+          unitValue?: string; // 单位（来自产品版本）
+          barcode?: string; // 条码
+          createTime?: string; // 创建时间
   }
 
 // 产品批次 API

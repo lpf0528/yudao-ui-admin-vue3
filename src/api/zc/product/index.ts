@@ -3,14 +3,15 @@ import type { Dayjs } from 'dayjs';
 
 /** 产品简要信息
  * 接口：GET /zc/product/simple-list
- * 返回：{ id: number, name: string }[]
  */
 export interface ProductSimpleVO {
-  id: number
-  name: string
-  inboundPrice: number
-  onePrice?: number   // 一级销售价
-  specValue?: string  // 规格展示值
+  id: number           // 主键
+  name: string         // 名称
+  versionId: number    // 版本
+  inboundPrice: number // 进货价
+  onePrice: number     // 一级销售价
+  supplierId: number   // 供应商
+  specs: string[]      // 规格列表
 }
 
 /** 产品信息 */
@@ -74,8 +75,8 @@ export const ProductApi = {
     return await request.download({ url: `/zc/product/export-excel`, params })
   },
 
-  // 查询产品简单列表，可按版本过滤
-  getProductSimpleList: async (versionId?: number) => {
-    return await request.get<ProductSimpleVO[]>({ url: `/zc/product/simple-list`, params: { versionId } })
+  // 查询产品简单列表，可按名称和版本过滤
+  getProductSimpleList: async (params?: { name?: string; versionId?: string }) => {
+    return await request.get<ProductSimpleVO[]>({ url: `/zc/product/simple-list`, params })
   },
 }
