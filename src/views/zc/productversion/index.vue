@@ -168,6 +168,16 @@
         </template>
       </el-table-column>
       <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="规格" align="center" prop="specs" min-width="160px">
+        <template #default="scope">
+          <el-tag
+            v-for="spec in scope.row.specs"
+            :key="spec"
+            class="mr-4px mb-4px"
+            size="small"
+          >{{ spec }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column
         label="创建时间"

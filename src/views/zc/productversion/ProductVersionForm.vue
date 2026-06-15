@@ -70,6 +70,27 @@
           />
         </el-select>
       </el-form-item>
+      <!-- 规格：以标签形式动态添加/删除 -->
+      <el-form-item label="规格" prop="specs">
+        <div class="w-1/1">
+          <el-tag
+            v-for="(spec, index) in formData.specs"
+            :key="index"
+            closable
+            class="mr-8px mb-8px"
+            @close="removeSpec(index)"
+          >{{ spec }}</el-tag>
+          <div class="flex items-center gap-8px mt-4px">
+            <el-input
+              v-model="specInput"
+              placeholder="输入规格后回车或点击添加"
+              class="!w-200px"
+              @keyup.enter="addSpec"
+            />
+            <el-button type="primary" plain size="small" @click="addSpec">添加</el-button>
+          </div>
+        </div>
+      </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" type="textarea" placeholder="请输入备注" />
       </el-form-item>
@@ -108,8 +129,29 @@ const formData = ref({
   onePrice: undefined,
   classify: undefined,
   supplierId: undefined,
-  note: undefined
+  note: undefined,
+  specs: [] as string[]
 })
+
+/** 规格输入框临时值 */
+const specInput = ref('')
+
+/** 添加规格：去重、去空 */
+const addSpec = () => {
+  const val = specInput.value.trim()
+  if (!val) return
+  if (formData.value.specs.includes(val)) {
+    message.warning('该规格已存在')
+    return
+  }
+  formData.value.specs.push(val)
+  specInput.value = ''
+}
+
+/** 删除指定位置的规格 */
+const removeSpec = (index: number) => {
+  formData.value.specs.splice(index, 1)
+}
 const formRules = reactive({
   name: [{ required: true, message: '版本名称不能为空', trigger: 'blur' }],
   sellingPriceType: [{ required: true, message: '出货价类型不能为空', trigger: 'change' }],
@@ -166,7 +208,9 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await ProductVersionApi.getProductVersion(id)
+      const data = await ProductVersionApi.getProductVersion(id)
+      // specs 后端可能返回 null，统一转为空数组
+      formData.value = { ...data, specs: data.specs ?? [] }
     } finally {
       formLoading.value = false
     }
@@ -214,8 +258,10 @@ const resetForm = () => {
     onePrice: undefined,
     classify: undefined,
     supplierId: undefined,
-    note: undefined
+    note: undefined,
+    specs: []
   }
+  specInput.value = ''
   formRef.value?.resetFields()
 }
 </script>

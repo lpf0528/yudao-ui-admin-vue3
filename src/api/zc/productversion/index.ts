@@ -27,6 +27,7 @@ export interface ProductVersion {
           classify?: number; // 分类
           supplierId: number; // 供应商
           note: string; // 备注
+          specs?: string[]; // 规格列表，如 ["12","45","wq"]
   }
 
 // 产品版本 API
