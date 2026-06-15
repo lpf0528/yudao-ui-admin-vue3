@@ -65,5 +65,10 @@ export const ProductBatchApi = {
   // 导出产品批次 Excel
   exportProductBatch: async (params) => {
     return await request.download({ url: `/zc/product-batch/export-excel`, params })
+  },
+
+  // 更新产品批次状态
+  updateProductBatchStatus: async (data: { id: number; status: number }) => {
+    return await request.put({ url: `/zc/product-batch/update-status`, data })
   }
 }

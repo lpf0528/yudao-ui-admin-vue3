@@ -138,7 +138,17 @@
       <el-table-column label="规格" align="center" prop="spec" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
-          <DictTag :type="DICT_TYPE.ZC_PRODUCT_BATCH_STATUS" :value="scope.row.status" />
+          <span class="flex items-center gap-2">
+            <DictTag :type="DICT_TYPE.ZC_PRODUCT_BATCH_STATUS" :value="scope.row.status" />
+            <span
+              class="cursor-pointer text-blue-500 hover:text-blue-700"
+              @click="handleUpdateStatus(scope.row)"
+              title="点击更新状态"
+            >
+              <Icon v-if="scope.row.status === 1" icon="ep:lock" class="w-4 h-4" />
+              <Icon v-else icon="fa:scissors" class="w-4 h-4" />
+            </span>
+          </span>
         </template>
       </el-table-column>
       <el-table-column label="版本" align="center" prop="versionName" />
@@ -281,6 +291,35 @@ const handleDelete = async (id: number) => {
     // 发起删除
     await ProductBatchApi.deleteProductBatch(id)
     message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {}
+}
+
+/** 更新批次状态操作 */
+const handleUpdateStatus = async (row: ProductBatch) => {
+  try {
+    let targetStatus: number
+    let statusText: string
+    
+    // 根据当前状态确定目标状态
+    if (row.status === 1) {
+      // 整匹 -> 零裁
+      targetStatus = 0
+      statusText = '零裁'
+    } else {
+      // 零裁或余料 -> 整匹
+      targetStatus = 1
+      statusText = '整匹'
+    }
+    
+    // 确认更新
+    await message.confirm(`确定要将批次【${row.batchNo}】的状态更新为【${statusText}】吗？`)
+    
+    // 发起更新
+    await ProductBatchApi.updateProductBatchStatus({ id: row.id!, status: targetStatus })
+    message.success('状态更新成功')
+    
     // 刷新列表
     await getList()
   } catch {}
