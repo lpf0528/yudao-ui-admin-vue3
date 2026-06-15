@@ -23,16 +23,6 @@
       <el-form-item label="进货价" prop="inboundPrice">
         <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
       </el-form-item>
-      <el-form-item label="规格" prop="specId">
-        <el-select v-model="formData.specId" clearable placeholder="请选择规格" class="w-1/1">
-          <el-option
-            v-for="item in props.specList"
-            :key="item.id"
-            :label="item.value"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="一级销售价" prop="onePrice">
         <!-- 版本出货价类型为统一价时自动填入且不可修改 -->
         <el-input
@@ -64,7 +54,6 @@
 <script setup lang="ts">
 import { ProductApi, Product } from '@/api/zc/product'
 import { ProductVersionSimpleVO } from '@/api/zc/productversion'
-import { ProductSpecSimpleVO } from '@/api/zc/productspec'
 import { SupplierSimpleVO } from '@/api/zc/supplier'
 
 /** 产品 表单 */
@@ -72,7 +61,6 @@ defineOptions({ name: 'ProductForm' })
 
 const props = defineProps<{
   versionList: ProductVersionSimpleVO[]
-  specList: ProductSpecSimpleVO[]
   supplierList: SupplierSimpleVO[]
 }>()
 
@@ -91,7 +79,6 @@ const formData = ref({
   name: undefined,
   versionId: undefined,
   inboundPrice: undefined,
-  specId: undefined,
   onePrice: undefined,
   supplierId: undefined,
   note: undefined
@@ -219,7 +206,6 @@ const resetForm = () => {
     name: undefined,
     versionId: undefined,
     inboundPrice: undefined,
-    specId: undefined,
     onePrice: undefined,
     supplierId: undefined,
     note: undefined

@@ -19,7 +19,6 @@ export interface Product {
           name?: string; // 名称
           versionId?: number; // 版本
           inboundPrice: number; // 进货价
-          specId: number; // 规格
           onePrice: number; // 一级销售价
           supplierId: number; // 供应商
           note: string; // 备注
@@ -32,8 +31,6 @@ export interface ProductPageVO {
   versionId?: number
   versionName?: string  // 版本名称
   inboundPrice: number
-  specId?: number
-  specValue?: string    // 规格展示值
   onePrice?: number     // 一级销售价
   supplierId?: number
   supplierName?: string // 供应商名称

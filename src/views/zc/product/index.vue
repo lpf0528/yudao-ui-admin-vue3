@@ -27,16 +27,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="规格" prop="specId">
-        <el-select v-model="queryParams.specId" placeholder="请选择规格" clearable class="!w-240px">
-          <el-option
-            v-for="item in specList"
-            :key="item.id"
-            :label="item.value"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
         <el-select v-model="queryParams.supplierId" placeholder="请选择供应商" clearable class="!w-240px">
           <el-option
@@ -106,7 +96,6 @@
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="规格" align="center" prop="specValue" />
       <el-table-column label="一级销售价" align="center" prop="onePrice" />
       <el-table-column label="供应商" align="center" prop="supplierName" />
       <el-table-column label="备注" align="center" prop="note" />
@@ -148,7 +137,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <ProductForm ref="formRef" :versionList="versionList" :specList="specList" :supplierList="supplierList" @success="getList" />
+  <ProductForm ref="formRef" :versionList="versionList" :supplierList="supplierList" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -157,7 +146,6 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { ProductApi, Product } from '@/api/zc/product'
 import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
-import { ProductSpecApi, ProductSpecSimpleVO } from '@/api/zc/productspec'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductForm from './ProductForm.vue'
 
@@ -175,14 +163,12 @@ const queryParams = reactive({
   pageSize: 10,
   name: undefined,
   versionId: undefined,
-  specId: undefined,
   supplierId: undefined,
   createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const versionList = ref<ProductVersionSimpleVO[]>([])
-const specList = ref<ProductSpecSimpleVO[]>([])
 const supplierList = ref<SupplierSimpleVO[]>([])
 
 /** 查询列表 */
@@ -263,7 +249,6 @@ const handleExport = async () => {
 /** 初始化 **/
 onMounted(async () => {
   versionList.value = await ProductVersionApi.getProductVersionSimpleList()
-  specList.value = await ProductSpecApi.getProductSpecSimpleList()
   supplierList.value = await SupplierApi.getSupplierSimpleList()
   await getList()
 })
