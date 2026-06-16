@@ -1,0 +1,64 @@
+---
+description: API 文件规范（zc/mes 自研模块命名空间模式 vs 系统模块独立函数模式）
+globs: src/api/**/*.ts
+alwaysApply: false
+---
+
+# API 文件规范
+
+## 模块区分（重要）
+
+### zc / mes 等自研模块 → 命名空间对象模式
+
+类型接口与函数写在同一 `index.ts`，**不分 types.ts**：
+
+```ts
+// src/api/zc/customer/index.ts
+import request from '@/config/axios'
+
+/** 客户简要信息（用于下拉选择） */
+export interface CustomerSimpleVO {
+  id: number
+  shortName: string // 简称
+  name: string      // 全称
+}
+
+/** 客户详细信息 */
+export interface Customer {
+  id?: number
+  shortName?: string
+  mobile: string  // 手机
+  balance: number // 账户余额
+}
+
+// 客户资料 API
+export const CustomerApi = {
+  // 查询分页列表，对应后端：GET /zc/customer/page
+  getCustomerPage: async (params: any) => {
+    return await request.get({ url: `/zc/customer/page`, params })
+  },
+  // 新增，对应后端：POST /zc/customer/create
+  createCustomer: async (data: Customer) => {
+    return await request.post({ url: `/zc/customer/create`, data })
+  },
+  // 修改，对应后端：PUT /zc/customer/update
+  updateCustomer: async (data: Customer) => {
+    return await request.put({ url: `/zc/customer/update`, data })
+  },
+  // 删除，对应后端：DELETE /zc/customer/delete
+  deleteCustomer: async (id: number) => {
+    return await request.delete({ url: `/zc/customer/delete?id=` + id })
+  }
+}
+```
+
+### system / infra 等系统内置模块 → 独立函数导出 + types.ts 分离
+
+保持框架原有风格，类型写在单独的 `types.ts` 文件。
+
+## TypeScript 规范
+
+- **尽量避免 `any`**，优先使用 `unknown` 或具体类型
+- 查询参数类型复杂时可酌情使用 `any`
+- 接口每个字段都需要注释说明含义
+- 枚举值优先使用 `const enum`，避免运行时开销

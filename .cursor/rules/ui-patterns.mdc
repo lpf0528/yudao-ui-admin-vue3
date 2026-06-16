@@ -1,0 +1,97 @@
+---
+description: 权限控制、字典使用、列表页与表单弹窗标准模式
+globs: src/views/**/*.vue
+alwaysApply: false
+---
+
+# UI 标准模式
+
+## 权限控制
+
+```vue
+<!-- 单个权限 -->
+<el-button v-hasPermi="['system:user:create']">新增</el-button>
+
+<!-- 多个权限（满足其一即可） -->
+<el-button v-hasPermi="['system:user:update', 'system:user:admin']">编辑</el-button>
+
+<!-- 角色权限 -->
+<div v-hasRole="['super_admin']">超管专区</div>
+```
+
+## 字典使用
+
+```vue
+<template>
+  <!-- 表单下拉选择 -->
+  <el-select v-model="formData.status">
+    <el-option
+      v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
+      :key="dict.value" :label="dict.label" :value="dict.value"
+    />
+  </el-select>
+
+  <!-- 列表标签展示（带颜色） -->
+  <DictTag :type="DICT_TYPE.COMMON_STATUS" :value="row.status" />
+</template>
+
+<script setup lang="ts">
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+</script>
+```
+
+**不要硬编码字典值**，统一使用 `DICT_TYPE` 常量。
+
+## 列表页标准结构
+
+- 搜索区域：`el-form :inline="true"` + 搜索/重置按钮
+- 操作区域：新增等按钮行（加 `v-hasPermi`）
+- 数据表格：`el-table v-loading` + 操作列（编辑/删除加 `v-hasPermi`）
+- 分页：`<Pagination>` 组件绑定 `total`、`pageNo`、`pageSize`
+- 弹窗：`<XxxForm ref="formRef" @success="getList" />`
+
+```vue
+<script setup lang="ts">
+defineOptions({ name: 'ModuleExample' }) // 必须设置组件名，用于 keep-alive 缓存匹配
+
+const loading = ref(false)
+const total = ref(0)
+const list = ref<ExampleVO[]>([])
+const queryParams = reactive({ pageNo: 1, pageSize: 10 })
+
+onMounted(() => getList())
+
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = await XxxApi.getXxxPage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleQuery = () => { queryParams.pageNo = 1; getList() }
+
+const formRef = ref<InstanceType<typeof XxxForm>>()
+const openForm = (type: 'create' | 'update', id?: number) => {
+  formRef.value?.open(type, id)
+}
+
+const handleDelete = async (id: number) => {
+  await message.delConfirm()
+  await XxxApi.deleteXxx(id)
+  message.success('删除成功')
+  getList()
+}
+</script>
+```
+
+## 新增业务页面标准流程
+
+1. 定义 API 类型 → `src/api/{模块}/index.ts`
+2. 创建页面目录 → `src/views/{模块}/{功能}/`
+3. 实现列表页 → `index.vue`
+4. 实现表单弹窗 → `{Name}Form.vue`
+5. 在后端菜单管理中配置路由

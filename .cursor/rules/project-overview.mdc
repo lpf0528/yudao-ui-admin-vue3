@@ -1,0 +1,37 @@
+---
+description: 项目概览与技术栈说明（yudao-ui-admin-vue3）
+alwaysApply: true
+---
+
+# 项目概览
+
+**yudao-ui-admin-vue3** 是芋道（ruoyi-vue-pro）的管理后台前端，基于 `vue-element-plus-admin` 二次开发。
+
+| 维度 | 说明 |
+|---|---|
+| 框架 | Vue 3.3 + Vite 4 + TypeScript 5 |
+| UI 组件库 | Element Plus 2.4 |
+| 状态管理 | Pinia 2 |
+| 路由 | Vue Router 4（动态路由，权限驱动） |
+| 样式方案 | UnoCSS（原子化 CSS）+ SCSS |
+| 图标 | Iconify（在线图标库） |
+| 国际化 | vue-i18n 9 |
+| HTTP 请求 | Axios（二次封装） |
+| 工具库 | VueUse 10 |
+| 包管理器 | **pnpm**（强制，Node.js ≥ 16.18.0，pnpm ≥ 8.6.0） |
+
+## 目录说明
+
+- `src/api/zc/` — 【自研】窗帘业务核心模块
+- `src/api/mes/` — 【自研】制造执行系统接口
+- `src/views/zc/` — 窗帘业务核心页面
+- `src/views/mes/` — 制造执行系统页面
+
+## 常用命令
+
+```bash
+pnpm install      # 安装依赖
+pnpm dev          # 启动开发服务器
+pnpm build:prod   # 生产构建
+pnpm lint:fix     # 代码格式修复
+```

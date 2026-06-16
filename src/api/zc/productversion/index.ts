@@ -1,5 +1,4 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs';
 
 /** 产品版本简要信息（用于下拉选择及字段回显）
  * 接口：GET /zc/product-version/simple-list
@@ -9,26 +8,56 @@ export interface ProductVersionSimpleVO {
   name: string
   unitValue: string       // 单位
   categoryId: number      // 类别ID
-  sellingPriceType: string // 出货价类型：fixed_price=统一价
-  inboundPrice: number    // 进货价
-  onePrice: number        // 一级类销售价
   supplierId: number      // 供应商ID
 }
 
+/** 产品版本规格信息 */
+export interface ZcProductVersionSpcSaveReqVO {
+  id?: number // 主键
+  versionId: number // 版本ID
+  spec: string // 规格
+  inboundPrice?: number // 进货价
+  onePrice?: number // 一级类销售价
+  note?: string // 备注
+}
+
+/** 产品版本规格响应信息 */
+export interface ZcProductVersionSpcRespVO {
+  id: number // 主键
+  versionId: number // 版本ID
+  spec: string // 规格
+  inboundPrice?: number // 进货价
+  onePrice?: number // 一级类销售价
+  note?: string // 备注
+  createTime?: string // 创建时间
+}
+
 /** 产品版本信息 */
-export interface ProductVersion {
-          id: number; // 主键
-          name?: string; // 版本名称
-          unitValue: string; // 单位
-          categoryId: number; // 类别ID
-          sellingPriceType?: string; // 出货价类型
-          inboundPrice: number; // 进货价
-          onePrice: number; // 一级类销售价
-          classify?: number; // 分类
-          supplierId: number; // 供应商
-          note: string; // 备注
-          specs?: string[]; // 规格列表，如 ["12","45","wq"]
-  }
+export interface ZcProductVersionSaveReqVO {
+  id?: number // 主键
+  name: string // 版本名称
+  unitValue?: string // 单位
+  categoryId?: number // 类别ID
+  classify: string // 分类
+  supplierId?: number // 供应商
+  note?: string // 备注
+  specConfs?: ZcProductVersionSpcSaveReqVO[] // 规格信息列表
+}
+
+/** 产品版本响应信息 */
+export interface ZcProductVersionRespVO {
+  id: number // 主键
+  name: string // 版本名称
+  unitValue?: string // 单位
+  categoryId?: number // 类别ID
+  classify: string // 分类
+  supplierId?: number // 供应商
+  note?: string // 备注
+  specConfs?: ZcProductVersionSpcRespVO[] // 规格信息列表
+  categoryValue?: string // 类别名称
+  supplierName?: string // 供应商名称
+  createTime?: string // 创建时间
+}
 
 // 产品版本 API
 export const ProductVersionApi = {
@@ -43,12 +72,12 @@ export const ProductVersionApi = {
   },
 
   // 新增产品版本
-  createProductVersion: async (data: ProductVersion) => {
+  createProductVersion: async (data: ZcProductVersionSaveReqVO) => {
     return await request.post({ url: `/zc/product-version/create`, data })
   },
 
   // 修改产品版本
-  updateProductVersion: async (data: ProductVersion) => {
+  updateProductVersion: async (data: ZcProductVersionSaveReqVO) => {
     return await request.put({ url: `/zc/product-version/update`, data })
   },
 

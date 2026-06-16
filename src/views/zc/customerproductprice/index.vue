@@ -114,7 +114,6 @@
             >
               <el-table-column label="名称" prop="name" min-width="140px" show-overflow-tooltip />
               <el-table-column label="版本" prop="versionName" min-width="100px" />
-              <el-table-column label="规格" prop="specValue" min-width="80px" />
               <el-table-column label="进货价" prop="inboundPrice" min-width="90px" align="right" />
               <el-table-column label="一级销售价" prop="onePrice" min-width="100px" align="right" />
               <el-table-column label="供应商" prop="supplierName" min-width="120px" show-overflow-tooltip />

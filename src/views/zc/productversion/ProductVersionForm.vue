@@ -30,26 +30,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="出货价类型" prop="sellingPriceType">
-        <el-select v-model="formData.sellingPriceType" placeholder="请选择出货价类型">
-          <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_SELLING_PRICE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="进货价" prop="inboundPrice">
-        <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
-      </el-form-item>
-      <el-form-item
-        v-if="formData.sellingPriceType === 'fixed_price'"
-        label="一级类销售价"
-        prop="onePrice"
-      >
-        <el-input v-model="formData.onePrice" placeholder="请输入一级类销售价" />
-      </el-form-item>
       <el-form-item label="分类" prop="classify">
         <el-select v-model="formData.classify" placeholder="请选择分类">
           <el-option
@@ -70,26 +50,62 @@
           />
         </el-select>
       </el-form-item>
-      <!-- 规格：以标签形式动态添加/删除 -->
-      <el-form-item label="规格" prop="specs">
-        <div class="w-1/1">
-          <el-tag
-            v-for="(spec, index) in formData.specs"
-            :key="index"
-            closable
-            class="mr-8px mb-8px"
-            @close="removeSpec(index)"
-          >{{ spec }}</el-tag>
-          <div class="flex items-center gap-8px mt-4px">
-            <el-input
-              v-model="specInput"
-              placeholder="输入规格后回车或点击添加"
-              class="!w-200px"
-              @keyup.enter="addSpec"
-            />
-            <el-button type="primary" plain size="small" @click="addSpec">添加</el-button>
-          </div>
-        </div>
+      <!-- 规格配置列表 -->
+      <el-form-item label="规格信息">
+        <el-table
+          v-model="formData.specConfs"
+          :data="formData.specConfs"
+          border
+          class="w-1/1"
+          :show-header="true"
+        >
+          <el-table-column label="规格" prop="spec">
+            <template #default="scope">
+              <el-input v-model="scope.row.spec" placeholder="请输入规格" />
+            </template>
+          </el-table-column>
+          <el-table-column label="进货价" prop="inboundPrice">
+            <template #default="scope">
+              <el-input-number
+                v-model="scope.row.inboundPrice"
+                :min="0"
+                :precision="2"
+                :controls="false"
+                :value-on-clear="null"
+                size="small"
+                placeholder="进货价"
+                style="width: 100px"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="一级类销售价" prop="onePrice">
+            <template #default="scope">
+              <el-input-number
+                v-model="scope.row.onePrice"
+                :min="0"
+                :precision="2"
+                :controls="false"
+                :value-on-clear="null"
+                size="small"
+                placeholder="一级销售价"
+                style="width: 110px"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80">
+            <template #default="scope">
+              <el-button
+                type="text"
+                size="small"
+                @click="removeSpecConf(scope.$index)"
+                :disabled="formData.specConfs.length <= 1"
+              >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-button type="primary" plain size="small" @click="addSpecConf" class="mt-8px">
+          + 添加规格
+        </el-button>
       </el-form-item>
       <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" type="textarea" placeholder="请输入备注" />
@@ -103,7 +119,11 @@
 </template>
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import {
+  ProductVersionApi,
+  ZcProductVersionSaveReqVO,
+  ZcProductVersionSpcSaveReqVO
+} from '@/api/zc/productversion'
 import { ProductCategorySimpleVO } from '@/api/zc/productcategory'
 import { SupplierSimpleVO } from '@/api/zc/supplier'
 
@@ -124,78 +144,33 @@ const formData = ref({
   name: undefined,
   unitValue: undefined,
   categoryId: undefined,
-  sellingPriceType: undefined,
-  inboundPrice: undefined,
-  onePrice: undefined,
   classify: undefined,
   supplierId: undefined,
   note: undefined,
-  specs: [] as string[]
+  specConfs: [] as ZcProductVersionSpcSaveReqVO[]
 })
 
-/** 规格输入框临时值 */
-const specInput = ref('')
-
-/** 添加规格：去重、去空 */
-const addSpec = () => {
-  const val = specInput.value.trim()
-  if (!val) return
-  if (formData.value.specs.includes(val)) {
-    message.warning('该规格已存在')
-    return
-  }
-  formData.value.specs.push(val)
-  specInput.value = ''
+/** 添加规格配置 */
+const addSpecConf = () => {
+  formData.value.specConfs.push({
+    versionId: formData.value.id ?? 0,
+    spec: '',
+    inboundPrice: undefined,
+    onePrice: undefined,
+    note: ''
+  })
 }
 
-/** 删除指定位置的规格 */
-const removeSpec = (index: number) => {
-  formData.value.specs.splice(index, 1)
+/** 删除指定位置的规格配置 */
+const removeSpecConf = (index: number) => {
+  formData.value.specConfs.splice(index, 1)
 }
+
 const formRules = reactive({
   name: [{ required: true, message: '版本名称不能为空', trigger: 'blur' }],
-  sellingPriceType: [{ required: true, message: '出货价类型不能为空', trigger: 'change' }],
-  classify: [{ required: true, message: '分类不能为空', trigger: 'change' }],
-  inboundPrice: [
-    {
-      validator: (_rule: any, value: any, callback: any) => {
-        if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
-          callback(new Error('进货价不能小于0'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ],
-  onePrice: [
-    {
-      validator: (_rule: any, value: any, callback: any) => {
-        if (formData.value.sellingPriceType === 'fixed_price' && !value && value !== 0) {
-          callback(new Error('选择统一价时，一级类销售价不能为空'))
-        } else if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
-          callback(new Error('一级类销售价不能小于0'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ]
+  classify: [{ required: true, message: '分类不能为空', trigger: 'change' }]
 })
 
-// 切换出货价类型时处理一级类销售价：统一价重新触发校验，其他类型清空并清除校验
-watch(
-  () => formData.value.sellingPriceType,
-  (val) => {
-    if (val !== 'fixed_price') {
-      formData.value.onePrice = undefined
-      formRef.value?.clearValidate('onePrice')
-    } else {
-      formRef.value?.validateField('onePrice')
-    }
-  }
-)
 const formRef = ref() // 表单 Ref
 
 /** 打开弹窗 */
@@ -209,8 +184,8 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       const data = await ProductVersionApi.getProductVersion(id)
-      // specs 后端可能返回 null，统一转为空数组
-      formData.value = { ...data, specs: data.specs ?? [] }
+      // specConfs 后端可能返回 null，统一转为空数组
+      formData.value = { ...data, specConfs: data.specConfs ?? [] }
     } finally {
       formLoading.value = false
     }
@@ -223,14 +198,26 @@ const emit = defineEmits(['success']) // 定义 success 事件，用于操作成
 const submitForm = async () => {
   // 校验表单
   await formRef.value.validate()
+  // 至少需要一条有效规格（spec 字段不能为空）
+  const validSpecs = formData.value.specConfs.filter((item) => item.spec?.trim())
+  if (validSpecs.length === 0) {
+    message.warning('请至少配置一条规格信息')
+    return
+  }
   // 提交请求
   formLoading.value = true
   try {
     const data = {
       ...formData.value,
       categoryId: formData.value.categoryId ?? null,
-      supplierId: formData.value.supplierId ?? null
-    } as unknown as ProductVersion
+      supplierId: formData.value.supplierId ?? null,
+      specConfs: formData.value.specConfs.map((item) => ({
+        ...item,
+        versionId: formData.value.id ?? 0,
+        inboundPrice: item.inboundPrice ?? null,
+        onePrice: item.onePrice ?? null
+      }))
+    } as unknown as ZcProductVersionSaveReqVO
     if (formType.value === 'create') {
       await ProductVersionApi.createProductVersion(data)
       message.success(t('common.createSuccess'))
@@ -246,22 +233,18 @@ const submitForm = async () => {
   }
 }
 
-/** 重置表单 */
+/** 重置表单，新增时自动追加一条空规格，确保用户必须填写规格 */
 const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
     unitValue: undefined,
     categoryId: undefined,
-    sellingPriceType: undefined,
-    inboundPrice: undefined,
-    onePrice: undefined,
     classify: undefined,
     supplierId: undefined,
     note: undefined,
-    specs: []
+    specConfs: [{ versionId: 0, spec: '', inboundPrice: undefined, onePrice: undefined, note: '' }]
   }
-  specInput.value = ''
   formRef.value?.resetFields()
 }
 </script>

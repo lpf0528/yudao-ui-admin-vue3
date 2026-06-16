@@ -47,21 +47,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="出货价类型" prop="sellingPriceType" label-width="88px">
-        <el-select
-          v-model="queryParams.sellingPriceType"
-          placeholder="请选择出货价类型"
-          clearable
-          class="!w-100px"
-        >
-          <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.ZC_SELLING_PRICE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="分类" prop="classify">
         <el-select
           v-model="queryParams.classify"
@@ -144,8 +129,32 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
+        :expand-row-keys="expandedKeys"
         @selection-change="handleRowCheckboxChange"
+        @expand-change="handleExpandChange"
     >
+      <el-table-column type="expand">
+        <template #default="scope">
+          <div class="pr-4 py-4 bg-gray-50" style="padding-left: 180px;">
+            <div class="mb-4">
+              <h4 class="font-bold text-gray-800 mb-2">规格详情</h4>
+              <el-table
+                v-if="scope.row.specConfs && scope.row.specConfs.length > 0"
+                :data="scope.row.specConfs"
+                border
+                class="w-auto"
+                size="small"
+              >
+                <el-table-column label="规格名称" prop="spec" width="120" />
+                <el-table-column label="进货价" prop="inboundPrice" width="100" />
+                <el-table-column label="一级类销售价" prop="onePrice" width="120" />
+                <!-- <el-table-column label="创建时间" prop="createTime" width="150" /> -->
+              </el-table>
+              <p v-else class="text-gray-500 text-center py-4">暂无规格信息</p>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="版本名称" align="center" prop="name" />
@@ -155,27 +164,15 @@
         </template>
       </el-table-column>
       <el-table-column label="类别" align="center" prop="categoryValue" />
-      <el-table-column label="出货价类型" align="center" prop="sellingPriceType">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_SELLING_PRICE_TYPE" :value="scope.row.sellingPriceType" />
-        </template>
-      </el-table-column>
-      <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="一级类销售价" align="center" prop="onePrice" />
       <el-table-column label="分类" align="center" prop="classify">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ZC_PRODUCT_CLASSIFY" :value="scope.row.classify" />
         </template>
       </el-table-column>
       <el-table-column label="供应商" align="center" prop="supplierName" />
-      <el-table-column label="规格" align="center" prop="specs" min-width="160px">
+      <el-table-column label="规格数量" align="center" width="100">
         <template #default="scope">
-          <el-tag
-            v-for="spec in scope.row.specs"
-            :key="spec"
-            class="mr-4px mb-4px"
-            size="small"
-          >{{ spec }}</el-tag>
+          <el-tag size="small">{{ scope.row.specConfs?.length || 0 }} 个</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
@@ -225,7 +222,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { ProductVersionApi, ProductVersion } from '@/api/zc/productversion'
+import { ProductVersionApi, ZcProductVersionRespVO } from '@/api/zc/productversion'
 import { ProductCategoryApi, ProductCategorySimpleVO } from '@/api/zc/productcategory'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
 import ProductVersionForm from './ProductVersionForm.vue'
@@ -237,7 +234,7 @@ const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
-const list = ref<ProductVersion[]>([]) // 列表的数据
+const list = ref<ZcProductVersionRespVO[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -245,7 +242,6 @@ const queryParams = reactive({
   name: undefined,
   unitValue: undefined,
   categoryId: undefined,
-  sellingPriceType: undefined,
   classify: undefined,
   supplierId: undefined,
   createTime: []
@@ -254,6 +250,22 @@ const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const categoryList = ref<ProductCategorySimpleVO[]>([])
 const supplierList = ref<SupplierSimpleVO[]>([])
+const expandedKeys = ref<number[]>([]) // 展开的行ID
+
+/** 处理展开/折叠事件
+ * expand-change 第二个参数是当前所有已展开行的数组，需判断当前行是否在其中
+ */
+const handleExpandChange = (row: ZcProductVersionRespVO, expandedRows: ZcProductVersionRespVO[]) => {
+  const isExpanded = expandedRows.some((r) => r.id === row.id)
+  if (isExpanded) {
+    expandedKeys.value.push(row.id)
+  } else {
+    const index = expandedKeys.value.indexOf(row.id)
+    if (index > -1) {
+      expandedKeys.value.splice(index, 1)
+    }
+  }
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -311,7 +323,7 @@ const handleDeleteBatch = async () => {
 }
 
 const checkedIds = ref<number[]>([])
-const handleRowCheckboxChange = (records: ProductVersion[]) => {
+const handleRowCheckboxChange = (records: ZcProductVersionRespVO[]) => {
   checkedIds.value = records.map((item) => item.id!);
 }
 
