@@ -1,14 +1,26 @@
 import request from '@/config/axios'
 
+/** 产品版本规格精简信息（simple-list 响应内嵌） */
+export interface ProductVersionSpecSimpleVO {
+  id: number            // 规格主键
+  versionId: number     // 所属版本ID
+  spec: string          // 规格名称
+  inboundPrice?: number // 进货价
+  onePrice?: number     // 一级类销售价
+  note?: string         // 备注
+  createTime?: string   // 创建时间
+}
+
 /** 产品版本简要信息（用于下拉选择及字段回显）
  * 接口：GET /zc/product-version/simple-list
  */
 export interface ProductVersionSimpleVO {
   id: number
   name: string
-  unitValue: string       // 单位
-  categoryId: number      // 类别ID
-  supplierId: number      // 供应商ID
+  unitValue: string                          // 单位
+  categoryId: number                         // 类别ID
+  supplierId: number                         // 供应商ID
+  specConfs?: ProductVersionSpecSimpleVO[]   // 规格信息列表
 }
 
 /** 产品版本规格信息 */

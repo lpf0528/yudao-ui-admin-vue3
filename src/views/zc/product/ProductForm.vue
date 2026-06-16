@@ -20,17 +20,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="进货价" prop="inboundPrice">
-        <el-input v-model="formData.inboundPrice" placeholder="请输入进货价" />
-      </el-form-item>
-      <el-form-item label="一级销售价" prop="onePrice">
-        <!-- 版本出货价类型为统一价时自动填入且不可修改 -->
-        <el-input
-          v-model="formData.onePrice"
-          placeholder="请输入一级销售价"
-          :disabled="isOnePriceFixed"
-        />
-      </el-form-item>
       <el-form-item label="供应商" prop="supplierId">
         <el-select v-model="formData.supplierId" clearable placeholder="请选择供应商" class="w-1/1">
           <el-option
@@ -78,76 +67,14 @@ const formData = ref({
   id: undefined,
   name: undefined,
   versionId: undefined,
-  inboundPrice: undefined,
-  onePrice: undefined,
   supplierId: undefined,
   note: undefined
 })
-// 型号价时一级销售价必填，统一价时由版本自动填入无需校验
-const formRules = computed(() => ({
+const formRules = {
   name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
-  versionId: [{ required: true, message: '版本不能为空', trigger: 'blur' }],
-  inboundPrice: [
-    {
-      validator: (_rule: any, value: any, callback: any) => {
-        if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
-          callback(new Error('进货价不能小于0'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ],
-  onePrice: isOnePriceFixed.value
-    ? []
-    : [
-        { required: true, message: '一级销售价不能为空', trigger: 'blur' },
-        {
-          validator: (_rule: any, value: any, callback: any) => {
-            if (value !== undefined && value !== '' && value !== null && Number(value) < 0) {
-              callback(new Error('一级销售价不能小于0'))
-            } else {
-              callback()
-            }
-          },
-          trigger: 'blur'
-        }
-      ]
-}))
+  versionId: [{ required: true, message: '版本不能为空', trigger: 'blur' }]
+}
 const formRef = ref() // 表单 Ref
-
-/** 当前选中版本是否为统一价（fixed_price），若是则一级销售价只读且自动填入 */
-const isOnePriceFixed = ref(false)
-/** 编辑回填数据时跳过 watch 的清空逻辑，避免覆盖接口返回的 onePrice */
-const skipVersionWatch = ref(false)
-
-/** 监听版本选择变化，自动回显进货价、供应商、一级销售价 */
-watch(
-  () => formData.value.versionId,
-  (versionId) => {
-    if (skipVersionWatch.value) return
-    if (!versionId) {
-      isOnePriceFixed.value = false
-      return
-    }
-    const version = props.versionList.find((v) => v.id === versionId)
-    if (!version) return
-
-    formData.value.inboundPrice = version.inboundPrice as any
-    formData.value.supplierId = version.supplierId as any
-
-    if (version.sellingPriceType === 'fixed_price') {
-      // 统一价：自动填入一级销售价且不允许修改
-      isOnePriceFixed.value = true
-      formData.value.onePrice = version.onePrice as any
-    } else {
-      // 型号价：清空一级销售价，由用户手动填写
-      isOnePriceFixed.value = false
-      formData.value.onePrice = undefined as any
-    }
-  }
-)
 
 // ======================== 弹窗操作 ========================
 /** 打开弹窗 */
@@ -160,14 +87,7 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      // 先暂停 watch，避免赋值 versionId 时触发清空 onePrice 的逻辑
-      skipVersionWatch.value = true
       formData.value = await ProductApi.getProduct(id)
-      await nextTick()
-      skipVersionWatch.value = false
-      // 编辑模式下根据已有版本判断一级销售价是否只读
-      const version = props.versionList.find((v) => v.id === formData.value.versionId)
-      isOnePriceFixed.value = version?.sellingPriceType === 'fixed_price'
     } finally {
       formLoading.value = false
     }
@@ -205,12 +125,9 @@ const resetForm = () => {
     id: undefined,
     name: undefined,
     versionId: undefined,
-    inboundPrice: undefined,
-    onePrice: undefined,
     supplierId: undefined,
     note: undefined
   }
-  isOnePriceFixed.value = false
   formRef.value?.resetFields()
 }
 </script>

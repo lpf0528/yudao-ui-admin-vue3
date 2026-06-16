@@ -5,37 +5,34 @@ import type { Dayjs } from 'dayjs';
  * 接口：GET /zc/product/simple-list
  */
 export interface ProductSimpleVO {
-  id: number           // 主键
-  name: string         // 名称
-  versionId: number    // 版本
-  inboundPrice: number // 进货价
-  onePrice: number     // 一级销售价
-  supplierId: number   // 供应商
-  specs: string[]      // 规格列表
+  id: number        // 主键
+  name: string      // 名称
+  versionId: number // 版本
+  supplierId: number // 供应商
+  specs: string[]   // 规格列表
 }
 
-/** 产品信息 */
+/** 产品新增/修改 Request VO */
 export interface Product {
-          id: number; // 主键
-          name?: string; // 名称
-          versionId?: number; // 版本
-          inboundPrice: number; // 进货价
-          onePrice: number; // 一级销售价
-          supplierId: number; // 供应商
-          note: string; // 备注
-  }
+  id?: number       // 主键
+  name?: string     // 名称
+  versionId?: number // 版本
+  supplierId?: number // 供应商
+  note?: string     // 备注
+}
 
-/** 产品分页查询结果 VO（后端关联查询填充版本名、规格值、供应商名） */
+/** 产品分页查询结果 VO（后端关联查询填充版本名、供应商名） */
 export interface ProductPageVO {
   id: number
   name: string
   versionId?: number
   versionName?: string  // 版本名称
-  inboundPrice: number
-  onePrice?: number     // 一级销售价
+  unitValue?: string    // 单位
   supplierId?: number
   supplierName?: string // 供应商名称
+  creatorName?: string  // 创建人名称
   note?: string
+  createTime?: string   // 创建时间
 }
 
 // 产品 API

@@ -95,8 +95,6 @@
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="版本" align="center" prop="versionName" />
-      <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="一级销售价" align="center" prop="onePrice" />
       <el-table-column label="供应商" align="center" prop="supplierName" />
       <el-table-column label="备注" align="center" prop="note" />
       <el-table-column

@@ -45,6 +45,25 @@
     <!-- 商品明细表格 -->
     <el-table :data="rows" border stripe>
       <el-table-column label="序号" type="index" width="55" align="center" />
+      <el-table-column label="产品版本" min-width="180">
+        <template #default="{ $index }">
+          <el-select
+            v-model="rows[$index].versionId"
+            clearable
+            filterable
+            placeholder="请选择产品版本"
+            style="width: 100%"
+            @change="(val) => onVersionChange(val, $index)"
+          >
+            <el-option
+              v-for="item in versionList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </template>
+      </el-table-column>
       <el-table-column label="产品" min-width="180">
         <template #default="{ $index }">
           <el-select
@@ -56,7 +75,7 @@
             @change="(val) => onProductChange(val, $index)"
           >
             <el-option
-              v-for="item in props.productList"
+              v-for="item in getFilteredProducts($index)"
               :key="item.id"
               :label="item.name"
               :value="item.id"
@@ -68,16 +87,16 @@
         <template #default="{ $index }">
           <el-select
             v-model="rows[$index].spec"
-            :disabled="!getProductSpecs(rows[$index].productId)?.length"
-            :required="getProductSpecs(rows[$index].productId)?.length > 0"
+            :disabled="!getRowSpecs($index).length"
             placeholder="请选择规格"
             style="width: 100%"
+            @change="(val) => onSpecChange(val, $index)"
           >
             <el-option
-              v-for="spec in getProductSpecs(rows[$index].productId)"
-              :key="spec"
-              :label="spec"
-              :value="spec"
+              v-for="spec in getRowSpecs($index)"
+              :key="spec.spec"
+              :label="spec.spec"
+              :value="spec.spec"
             />
           </el-select>
         </template>
@@ -145,6 +164,11 @@ import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierSimpleVO } from '@/api/zc/supplier'
+import {
+  ProductVersionApi,
+  ProductVersionSimpleVO,
+  ProductVersionSpecSimpleVO
+} from '@/api/zc/productversion'
 
 defineOptions({ name: 'ProductBatchBatchForm' })
 
@@ -161,6 +185,9 @@ const dialogVisible = ref(false)
 const formLoading = ref(false)
 const headerFormRef = ref()
 
+/** 产品版本精简列表，用于行内版本下拉 */
+const versionList = ref<ProductVersionSimpleVO[]>([])
+
 const headerForm = ref({
   inboundDate: new Date().toISOString().slice(0, 10),
   warehouseId: undefined as number | undefined,
@@ -174,6 +201,7 @@ const headerRules = {
 }
 
 interface BatchRow {
+  versionId: number | undefined  // 产品版本ID
   productId: number | undefined
   inboundPrice: number | undefined
   inboundQuantity: number | undefined
@@ -183,6 +211,7 @@ interface BatchRow {
 }
 
 const createEmptyRow = (): BatchRow => ({
+  versionId: undefined,
   productId: undefined,
   inboundPrice: undefined,
   inboundQuantity: undefined,
@@ -200,21 +229,73 @@ const removeRow = (index: number) => {
   rows.value.splice(index, 1)
 }
 
-const getProductSpecs = (productId: number | undefined): string[] => {
-  if (!productId) return []
-  const product = props.productList.find((item) => item.id === productId)
-  return product?.specs ?? []
+/**
+ * 获取某行对应的规格列表
+ * 优先从已选版本的 specConfs 中取；若无版本则从产品列表中取
+ */
+const getRowSpecs = (index: number): ProductVersionSpecSimpleVO[] => {
+  const row = rows.value[index]
+  if (row.versionId) {
+    const version = versionList.value.find((v) => v.id === row.versionId)
+    return version?.specConfs ?? []
+  }
+  // 兼容未选版本时从产品列表取规格（保持原有逻辑）
+  if (row.productId) {
+    const product = props.productList.find((p) => p.id === row.productId)
+    return (product?.specs ?? []).map((s) => ({ id: 0, versionId: 0, spec: s }))
+  }
+  return []
+}
+
+/**
+ * 按当前行已选版本过滤产品列表
+ * 未选版本时展示全部产品
+ */
+const getFilteredProducts = (index: number) => {
+  const versionId = rows.value[index].versionId
+  if (!versionId) return props.productList
+  return props.productList.filter((p) => p.versionId === versionId)
+}
+
+/** 版本切换：清空已选产品、规格和价格，若仅有一个规格则自动选中 */
+const onVersionChange = (id: number | undefined, index: number) => {
+  const version = versionList.value.find((v) => v.id === id)
+  const specs = version?.specConfs ?? []
+  // 版本变化时重置产品选择，避免产品与版本不匹配
+  rows.value[index].productId = undefined
+  rows.value[index].spec = specs.length === 1 ? specs[0].spec : undefined
+  rows.value[index].inboundPrice = specs.length === 1 ? (specs[0].inboundPrice ?? undefined) : undefined
+}
+
+/** 规格切换：自动填入对应进货价 */
+const onSpecChange = (specValue: string | undefined, index: number) => {
+  const row = rows.value[index]
+  if (!specValue || !row.versionId) return
+  const version = versionList.value.find((v) => v.id === row.versionId)
+  const specConf = version?.specConfs?.find((s) => s.spec === specValue)
+  if (specConf) {
+    row.inboundPrice = specConf.inboundPrice ?? undefined
+  }
 }
 
 const onProductChange = (id: number | undefined, index: number) => {
+  const row = rows.value[index]
   const product = props.productList.find((item) => item.id === id)
-  rows.value[index].inboundPrice = product?.inboundPrice ?? undefined
-  // 如果产品有规格且只有一个，默认选中第一个
-  const specs = product?.specs ?? []
-  if (specs.length === 1) {
-    rows.value[index].spec = specs[0]
+
+  // 未选版本时，根据产品的 versionId 自动选中对应版本
+  if (!row.versionId && product?.versionId) {
+    row.versionId = product.versionId
+  }
+
+  // 版本确定后，从版本的 specConfs 中取规格；若仅一个则自动选中并填充进货价
+  const version = versionList.value.find((v) => v.id === row.versionId)
+  const specConfs = version?.specConfs ?? []
+  if (specConfs.length === 1) {
+    row.spec = specConfs[0].spec
+    row.inboundPrice = specConfs[0].inboundPrice ?? undefined
   } else {
-    rows.value[index].spec = undefined
+    row.spec = undefined
+    row.inboundPrice = undefined
   }
 }
 
@@ -222,7 +303,7 @@ const onInboundQuantityChange = (val: number | undefined, index: number) => {
   rows.value[index].quantity = val
 }
 
-const open = () => {
+const open = async () => {
   dialogVisible.value = true
   headerForm.value = {
     inboundDate: new Date().toISOString().slice(0, 10),
@@ -231,6 +312,8 @@ const open = () => {
   }
   rows.value = [createEmptyRow()]
   headerFormRef.value?.resetFields()
+  // 加载产品版本精简列表（供行内版本下拉使用）
+  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
 }
 defineExpose({ open })
 
@@ -244,8 +327,8 @@ const submitForm = async () => {
       message.warning('请完整填写每行的产品和入库数量')
       return
     }
-    // 如果产品有规格，必须选择规格
-    const specs = getProductSpecs(row.productId)
+    // 如果当前行有可选规格，必须选择规格
+    const specs = getRowSpecs(index)
     if (specs.length > 0 && !row.spec) {
       message.warning(`第${index + 1}行：请选择规格`)
       return
@@ -257,6 +340,7 @@ const submitForm = async () => {
       inboundDate: headerForm.value.inboundDate,
       warehouseId: headerForm.value.warehouseId!,
       supplierId: headerForm.value.supplierId!,
+      versionId: row.versionId,
       productId: row.productId,
       inboundPrice: row.inboundPrice ?? 0,
       inboundQuantity: row.inboundQuantity,
