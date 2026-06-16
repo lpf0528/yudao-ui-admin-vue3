@@ -11,6 +11,17 @@ export interface ProductVersionSpecSimpleVO {
   createTime?: string   // 创建时间
 }
 
+/** 版本规格分页列表响应 VO（包含版本名称） */
+export interface ZcProductVersionSpcSimpleRespVO {
+  id: number            // 主键
+  versionId: number     // 版本编号
+  versionName: string   // 版本名称
+  spec: string          // 规格
+  inboundPrice?: number // 进货价
+  onePrice?: number     // 一级类销售价
+  note?: string         // 备注
+}
+
 /** 产品版本简要信息（用于下拉选择及字段回显）
  * 接口：GET /zc/product-version/simple-list
  */
@@ -111,5 +122,18 @@ export const ProductVersionApi = {
   // 查询产品版本简单列表
   getProductVersionSimpleList: async () => {
     return await request.get<ProductVersionSimpleVO[]>({ url: `/zc/product-version/simple-list` })
+  },
+
+  // 查询版本规格分页列表（含版本名称），对应后端：GET /zc/product-version/spec/list
+  getProductVersionSpecPage: async (params: {
+    pageNo: number
+    pageSize: number
+    versionId?: number
+    spec?: string
+  }) => {
+    return await request.get<{ list: ZcProductVersionSpcSimpleRespVO[]; total: number }>({
+      url: `/zc/product-version/spec/list`,
+      params,
+    })
   },
 }

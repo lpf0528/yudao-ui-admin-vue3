@@ -57,12 +57,12 @@
           </div>
         </div>
 
-        <!-- 产品选择器（始终显示，双击产品直接添加到右侧授权价列表） -->
+        <!-- 版本规格选择器（始终显示，双击产品直接添加到右侧授权价列表） -->
         <div class="picker-section">
           <div class="panel-header">
             <div class="panel-title">
               <Icon icon="ep:goods" class="panel-title-icon" />
-              <span>选择产品</span>
+              <span>选择版本规格</span>
               <el-tag type="warning" size="small" class="ml-8px">双击添加授权价</el-tag>
             </div>
           </div>
@@ -73,10 +73,10 @@
               :inline="true"
               class="-mb-15px mb-8px"
             >
-              <el-form-item label="名称" prop="name">
+              <el-form-item label="规格" prop="spec">
                 <el-input
-                  v-model="pickerQueryParams.name"
-                  placeholder="请输入名称"
+                  v-model="pickerQueryParams.spec"
+                  placeholder="请输入规格名称"
                   clearable
                   @keyup.enter="handlePickerQuery"
                   class="!w-200px"
@@ -112,11 +112,10 @@
               @row-dblclick="confirmPickerSelect"
               style="width: 100%"
             >
-              <el-table-column label="名称" prop="name" min-width="140px" show-overflow-tooltip />
-              <el-table-column label="版本" prop="versionName" min-width="100px" />
+              <el-table-column label="版本" prop="versionName" min-width="120px" show-overflow-tooltip />
+              <el-table-column label="规格" prop="spec" min-width="120px" show-overflow-tooltip />
               <el-table-column label="进货价" prop="inboundPrice" min-width="90px" align="right" />
               <el-table-column label="一级销售价" prop="onePrice" min-width="100px" align="right" />
-              <el-table-column label="供应商" prop="supplierName" min-width="120px" show-overflow-tooltip />
               <el-table-column label="备注" prop="note" min-width="120px" show-overflow-tooltip />
             </el-table>
             <Pagination
@@ -131,14 +130,14 @@
 
       </div>
 
-      <!-- 右侧：产品授权价 -->
+      <!-- 右侧：版本规格授权价 -->
       <div class="split-right">
         <template v-if="selectedCustomer">
           <div class="panel-header">
             <div class="panel-title">
               <Icon icon="ep:price-tag" class="panel-title-icon" />
               <span>{{ selectedCustomer.shortName || selectedCustomer.name }}</span>
-              <el-tag type="primary" size="small" class="ml-8px">产品授权价</el-tag>
+              <el-tag type="primary" size="small" class="ml-8px">版本规格授权价</el-tag>
             </div>
             <el-button type="primary" size="small" @click="saveAll" :loading="saveLoading">
               <Icon icon="ep:check" class="mr-5px" /> 保存
@@ -146,12 +145,12 @@
           </div>
           <div class="panel-body">
             <el-table v-loading="priceLoading" :data="priceList" border style="width: 100%">
-              <el-table-column label="产品" prop="productName" min-width="200px" show-overflow-tooltip />
+              <el-table-column label="版本规格" prop="productName" min-width="200px" show-overflow-tooltip />
               <el-table-column label="一级销售价" prop="onePrice" min-width="120px" align="right" />
               <el-table-column label="授权价格" prop="authorizedPrice" min-width="160px">
                 <template #default="{ row }">
+                  <!-- 授权价格始终可直接编辑，无需切换编辑状态 -->
                   <el-input-number
-                    v-if="row._editing"
                     v-model="row.authorizedPrice"
                     :precision="2"
                     :step="0.01"
@@ -161,29 +160,14 @@
                     size="small"
                     style="width: 100%"
                   />
-                  <span v-else>{{ row.authorizedPrice }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="160px" align="center">
+              <el-table-column label="操作" width="80px" align="center">
                 <template #default="{ row, $index }">
-                  <el-button
-                    v-if="!row._editing"
-                    link
-                    type="primary"
-                    @click="editPriceRow(row)"
-                    v-hasPermi="['zc:customer-product-price:update']"
-                  >编辑</el-button>
-                  <el-button
-                    v-if="row._editing"
-                    link
-                    type="warning"
-                    @click="cancelEditRow(row, $index)"
-                  >取消</el-button>
                   <el-button
                     link
                     type="danger"
                     @click="deletePriceRow(row, $index)"
-                    v-hasPermi="['zc:customer-product-price:delete']"
                   >删除</el-button>
                 </template>
               </el-table-column>
@@ -204,10 +188,16 @@
 </template>
 
 <script setup lang="ts">
-import { CustomerProductPriceApi, CustomerProductPrice } from '@/api/zc/customerproductprice'
 import { CustomerApi, Customer } from '@/api/zc/customer'
-import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
-import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
+import {
+  ProductVersionApi,
+  ProductVersionSimpleVO,
+  ZcProductVersionSpcSimpleRespVO,
+} from '@/api/zc/productversion'
+import {
+  CustomerVersionSpcPriceApi,
+  ZcCustomerVersionSpcPriceRespVO,
+} from '@/api/zc/customerversionspcprice'
 
 /** 客户产品销售授权价 列表 */
 defineOptions({ name: 'ZcCustomerProductPrice' })
@@ -257,26 +247,29 @@ const handleCustomerSelect = (row: Customer | null) => {
   getPriceList()
 }
 
-// ===== 商品映射（名称 + 一级销售价） =====
-const productSimpleList = ref<ProductSimpleVO[]>([])
-const productNameMap = computed<Record<number, string>>(() =>
-  Object.fromEntries(productSimpleList.value.map((p) => [p.id, p.name]))
+// ===== 规格映射（显示名 + 一级销售价），key 为规格 id =====
+// 规格显示名 = "版本名称 规格"，加载全量数据供右侧价格列表回显使用
+const specSimpleList = ref<ZcProductVersionSpcSimpleRespVO[]>([])
+const specNameMap = computed<Record<number, string>>(() =>
+  Object.fromEntries(
+    specSimpleList.value.map((s) => [s.id, `${s.versionName} ${s.spec}`.trim()])
+  )
 )
-const productOnePriceMap = computed<Record<number, number | undefined>>(() =>
-  Object.fromEntries(productSimpleList.value.map((p) => [p.id, p.onePrice]))
+const specOnePriceMap = computed<Record<number, number | undefined>>(() =>
+  Object.fromEntries(specSimpleList.value.map((s) => [s.id, s.onePrice]))
 )
 
-// ===== 产品授权价列表 =====
+// ===== 版本规格授权价列表 =====
 interface PriceRow {
   id?: number
   customerId?: number
-  productId?: number
-  productName?: string
-  onePrice?: number       // 产品一级销售价，仅展示
+  productId?: number      // 规格 id，用于选择器去重判断
+  versionId?: number      // 版本编号，提交批量保存时使用
+  spec?: string           // 规格名称，提交批量保存时使用
+  productName?: string    // 显示名 = "版本名称 规格"
+  onePrice?: number       // 一级类销售价，仅展示
   authorizedPrice?: number
-  _editing: boolean
   _isNew: boolean
-  _original?: { authorizedPrice?: number }
 }
 
 const priceLoading = ref(false)
@@ -287,16 +280,17 @@ const getPriceList = async () => {
   if (!selectedCustomer.value) return
   priceLoading.value = true
   try {
-    const data = await CustomerProductPriceApi.getCustomerProductPricePage({
-      pageNo: 1,
-      pageSize: 100,
-      customerId: selectedCustomer.value.id,
-    })
-    priceList.value = data.list.map((item: CustomerProductPrice) => ({
-      ...item,
-      productName: item.productId ? (productNameMap.value[item.productId] ?? String(item.productId)) : '',
-      onePrice: item.productId ? productOnePriceMap.value[item.productId] : undefined,
-      _editing: false,
+    const list = await CustomerVersionSpcPriceApi.getCustomerVersionSpcPriceList(
+      selectedCustomer.value.id!
+    )
+    priceList.value = (list ?? []).map((item: ZcCustomerVersionSpcPriceRespVO) => ({
+      id: item.id,
+      customerId: item.customerId,
+      versionId: item.versionId,
+      spec: item.spec,
+      productName: `${item.versionName} ${item.spec}`.trim(),
+      onePrice: item.onePrice,
+      authorizedPrice: item.authorizedPrice,
       _isNew: false,
     }))
   } finally {
@@ -304,56 +298,40 @@ const getPriceList = async () => {
   }
 }
 
-const editPriceRow = (row: PriceRow) => {
-  row._original = { authorizedPrice: row.authorizedPrice }
-  row._editing = true
-}
-
-const cancelEditRow = (row: PriceRow, index: number) => {
-  if (row._isNew) {
-    priceList.value.splice(index, 1)
-  } else {
-    if (row._original) {
-      row.authorizedPrice = row._original.authorizedPrice
-    }
-    row._editing = false
-  }
-}
-
-const deletePriceRow = async (row: PriceRow, index: number) => {
-  if (row._isNew) {
-    priceList.value.splice(index, 1)
-    return
-  }
+const deletePriceRow = async (_row: PriceRow, index: number) => {
+  // 覆盖写语义：删除仅移除本地行，保存时后端将按 customerId+versionId 全量覆盖
   try {
     await message.delConfirm()
-    await CustomerProductPriceApi.deleteCustomerProductPrice(row.id!)
-    message.success(t('common.delSuccess'))
     priceList.value.splice(index, 1)
   } catch {}
 }
 
 const saveAll = async () => {
-  const dirtyRows = priceList.value.filter((row) => row._editing)
-  if (dirtyRows.length === 0) {
-    message.warning('没有需要保存的数据')
+  if (priceList.value.length === 0) {
+    message.warning('授权价列表为空，无需保存')
     return
   }
-  const invalidRows = dirtyRows.filter((row) => !row.productId || row.authorizedPrice == null)
+  // 校验所有行必须填写了授权价格
+  const invalidRows = priceList.value.filter(
+    (row) => !row.versionId || !row.spec || row.authorizedPrice == null
+  )
   if (invalidRows.length > 0) {
     message.warning('存在未填写授权价格的行，请补全后再保存')
     return
   }
   saveLoading.value = true
   try {
-    const data: CustomerProductPrice[] = dirtyRows.map((row) => ({
-      id: row.id as number,
-      customerId: row.customerId,
-      productId: row.productId,
-      authorizedPrice: row.authorizedPrice,
-    }))
-    await CustomerProductPriceApi.createBatchCustomerProductPrice(data)
+    // 覆盖写：先删除该客户所有旧记录，再全量插入
+    await CustomerVersionSpcPriceApi.batchSaveCustomerVersionSpcPrice({
+      customerId: selectedCustomer.value!.id!,
+      specPrices: priceList.value.map((row) => ({
+        versionId: row.versionId!,
+        spec: row.spec!,
+        authorizedPrice: row.authorizedPrice!,
+      })),
+    })
     message.success(t('common.updateSuccess'))
+    // 保存后刷新列表，消除编辑状态
     await getPriceList()
   } finally {
     saveLoading.value = false
@@ -367,7 +345,7 @@ const pickerTotal = ref(0)
 const pickerQueryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  name: undefined as string | undefined,
+  spec: undefined as string | undefined,
   versionId: undefined as number | undefined,
 })
 const pickerFormRef = ref()
@@ -381,7 +359,7 @@ const pickerDisabledIds = computed(() =>
 const getPickerList = async () => {
   pickerLoading.value = true
   try {
-    const data = await ProductApi.getProductPage(pickerQueryParams)
+    const data = await ProductVersionApi.getProductVersionSpecPage(pickerQueryParams)
     pickerList.value = data.list
     pickerTotal.value = data.total
   } finally {
@@ -415,20 +393,26 @@ const confirmPickerSelect = (row: any) => {
   priceList.value.push({
     id: undefined,
     customerId: selectedCustomer.value.id,
-    productId: row.id,
-    productName: row.name,
+    productId: row.id,       // 规格 id，用于选择器去重
+    versionId: row.versionId,
+    spec: row.spec,
+    productName: `${row.versionName || ''} ${row.spec || ''}`.trim(),
     onePrice: row.onePrice,
     authorizedPrice: undefined,
-    _editing: true,
     _isNew: true,
   })
 }
 
 onMounted(async () => {
-  ;[productSimpleList.value, pickerVersionList.value] = await Promise.all([
-    ProductApi.getProductSimpleList(),
-    ProductVersionApi.getProductVersionSimpleList(),
+  // 预加载版本简单列表（用于选择器筛选版本下拉）
+  // 预加载全量规格（pageSize=500）用于右侧价格列表回显规格名称
+  const [, specPage] = await Promise.all([
+    ProductVersionApi.getProductVersionSimpleList().then((list) => {
+      pickerVersionList.value = list
+    }),
+    ProductVersionApi.getProductVersionSpecPage({ pageNo: 1, pageSize: 10 }),
   ])
+  specSimpleList.value = specPage.list
   await Promise.all([getCustomerList(), getPickerList()])
 })
 </script>
