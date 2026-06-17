@@ -167,14 +167,30 @@
               readonly
             />
           </el-col>
-          <!-- 规格（由面板回填，只读展示） -->
+          <!-- 规格：有批次时只读展示；仅选产品时可从版本规格列表中下拉选择 -->
           <el-col :span="3">
-            <el-input
+            <el-select
+              v-if="!batch.batchId && batch.specConfs && batch.specConfs.length > 0"
               v-model="batch.specValue"
               placeholder="规格"
               size="small"
               class="!w-full"
-              readonly
+              clearable
+            >
+              <el-option
+                v-for="sc in batch.specConfs"
+                :key="sc.spec"
+                :label="sc.spec"
+                :value="sc.spec"
+              />
+            </el-select>
+            <el-input
+              v-else
+              v-model="batch.specValue"
+              placeholder="规格"
+              size="small"
+              class="!w-full"
+              :readonly="!!batch.batchId"
             />
           </el-col>
           <!-- 批次号（由面板回填，只读展示） -->
@@ -264,10 +280,11 @@ import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { SalesOrderApi, SalesOrderType, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerSimpleVO } from '@/api/zc/customer'
+import { ProductVersionSpecSimpleVO } from '@/api/zc/productversion'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
-import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
+import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
 import SalesOrderProductPrintDialog from './SalesOrderProductPrintDialog.vue'
 import SalesOrderProductProcessingPrintDialog from './SalesOrderProductProcessingPrintDialog.vue'
@@ -306,7 +323,8 @@ interface BatchRow {
   structureRowId?: number  // 结构行 ID（更新时回传，新增行为 undefined）
   productId?: number       // 产品 ID
   productName?: string     // 货号名称（展示用）
-  specValue?: string       // 产品规格（展示用）
+  specValue?: string       // 产品规格
+  specConfs?: ProductVersionSpecSimpleVO[]  // 当前版本的可选规格列表，仅选产品时用于渲染下拉
   batchId?: number         // 批次 ID
   batchNo?: string         // 批次号（展示用）
   price?: number           // 单价
@@ -383,9 +401,9 @@ const handleSelectCustomerFromSearch = async (customer: any) => {
   if (!batchs.length) return
   await Promise.all(
     batchs.map(async (batch) => {
-      if (!batch.productId) return
+      if (!batch.productId || !batch.specValue) return
       try {
-        const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(customer.id, batch.productId)
+        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId: customer.id, spec: batch.specValue })
         if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
       } catch {}
     })
@@ -416,9 +434,9 @@ const handleCustomerChange = async (customerId: number) => {
   if (!batchs.length) return
   await Promise.all(
     batchs.map(async (batch) => {
-      if (!batch.productId) return
+      if (!batch.productId || !batch.specValue) return
       try {
-        const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(customerId, batch.productId)
+        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId, spec: batch.specValue })
         if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
       } catch {
         // 查询失败保持原单价
@@ -441,22 +459,27 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
   const customerId = formData.value.customerId
   const newBatchs = await Promise.all(
     rows.map(async (row) => {
-      let price = row.productPrice ?? undefined
-      if (customerId && row.productId) {
+      let price = row.onePrice ?? undefined
+      if (customerId && row.productId && row.specValue) {
         try {
-          const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(
+          const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
+            productId: row.productId,
             customerId,
-            row.productId
-          )
+            spec: row.specValue
+          })
           if (priceInfo?.authorizedPrice != null) price = priceInfo.authorizedPrice
         } catch {
-          // 查询失败保持 productPrice
+          // 查询失败保持默认单价
         }
       }
+      // 仅选产品（无批次）时携带规格列表；若只有一个规格则自动选中
+      const specConfs = row.batchId ? undefined : (row.specConfs ?? undefined)
+      const autoSpecValue = !row.batchId && specConfs?.length === 1 ? specConfs[0].spec : row.specValue
       return {
         productId: row.productId,
         productName: row.productName,
-        specValue: row.specValue,
+        specValue: autoSpecValue,
+        specConfs,
         batchId: row.batchId,   // 仅选产品时为 undefined
         batchNo: row.batchNo,
         price,
