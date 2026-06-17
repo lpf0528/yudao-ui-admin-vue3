@@ -73,19 +73,21 @@
 
             <!-- 结构信息 - 4列表格 -->
             <table style="width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #F9FAFB; color: #374151; margin-bottom: 4px; font-size: 14px;">
-              <tr>
-                <td colspan="4" style="border: 1px solid #4B5563; padding: 3px 8px;">
-                  结构 #{{ sIdx + 1 }}：{{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
-                  <span v-if="(structure as any).note" style="color: #6B7280; font-size: 12px; margin-left: 8px;">{{ (structure as any).note }}</span>
-                </td>
-              </tr>
-              <tr v-for="(row, rowIdx) in chunkAttrs(structure, 4)" :key="rowIdx">
-                <td v-for="(cell, cellIdx) in row" :key="cellIdx" :colspan="cell?.colspan || 1" style="border: 1px solid #4B5563; padding: 4px 6px; width: 25%; vertical-align: middle;">
-                  <template v-if="cell">
-                    <span v-if="!cell.noLabel" style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ cell.label }}：</span><span :style="cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold'">{{ cell.value }}</span>
-                  </template>
-                </td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td colspan="4" style="border: 1px solid #4B5563; padding: 3px 8px;">
+                    结构 #{{ sIdx + 1 }}：{{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
+                    <span v-if="(structure as any).note" style="color: #6B7280; font-size: 12px; margin-left: 8px;">{{ (structure as any).note }}</span>
+                  </td>
+                </tr>
+                <tr v-for="(row, rowIdx) in chunkAttrs(structure, 4)" :key="rowIdx">
+                  <td v-for="(cell, cellIdx) in row" :key="cellIdx" :colspan="cell?.colspan || 1" style="border: 1px solid #4B5563; padding: 4px 6px; width: 25%; vertical-align: middle;">
+                    <template v-if="cell">
+                      <span v-if="!cell.noLabel" style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ cell.label }}：</span><span :style="cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold'">{{ cell.value }}</span>
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
             </table>
 
             <!-- 用料表：仅展示 elementIsPrint !== false 的行 -->

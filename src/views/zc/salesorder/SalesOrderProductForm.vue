@@ -299,7 +299,7 @@ const props = defineProps<{
   logisticsList: LogisticsSimpleVO[]
 }>()
 
-const emit = defineEmits(['success', 'openSalesOrderForm'])
+const emit = defineEmits(['success', 'open-sales-order-form'])
 
 const { t } = useI18n()
 const message = useMessage()
