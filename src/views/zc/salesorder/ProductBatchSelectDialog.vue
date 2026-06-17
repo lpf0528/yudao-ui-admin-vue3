@@ -1,183 +1,241 @@
 <!--
-  产品批次选择弹窗
-  通过 open(material) 打开，支持按批号/产品/仓库/供应商筛选；
-  点击"选择"或双击行后，将 productId / batchId / price 回填到传入的 material 对象。
+  产品批次选择弹窗（左右布局）
+  左侧：产品列表（分页），支持按产品名称/版本筛选
+  右侧：批次列表，根据左侧选中的产品加载对应批次
+  点击"选择"或双击批次行后，将 productId / batchId / price 回填到传入的 material 对象。
 -->
 <template>
-  <Dialog title="选择批次" v-model="dialogVisible" width="80%">
-    <!-- 搜索过滤区 -->
-    <el-form :model="queryParams" :inline="true" class="mb-12px">
-      <el-form-item label="批号">
-        <el-input
-          v-model="queryParams.batchNo"
-          placeholder="请输入批号"
-          clearable
-          class="!w-180px"
-          @keyup.enter="handleQuery"
+  <Dialog title="选择批次" v-model="dialogVisible" width="90%">
+    <!-- 左右两列布局 -->
+    <div class="flex gap-12px" style="height: 520px">
+      <!-- ===== 左侧：产品选择 ===== -->
+      <div class="flex flex-col border border-solid border-gray-200 rounded-4px p-12px" style="width: 380px; flex-shrink: 0">
+        <div class="text-14px font-600 mb-8px text-gray-700">产品列表</div>
+
+        <!-- 产品筛选 -->
+        <div class="flex gap-8px mb-8px">
+          <el-input
+            v-model="productQueryParams.name"
+            placeholder="产品名称"
+            clearable
+            size="small"
+            class="flex-1"
+            @keyup.enter="handleProductQuery"
+            @clear="handleProductQuery"
+          />
+          <el-select
+            v-model="productQueryParams.versionId"
+            placeholder="产品版本"
+            clearable
+            size="small"
+            class="flex-1"
+            @change="handleProductQuery"
+          >
+            <el-option
+              v-for="item in versionList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+          <el-button size="small" type="primary" @click="handleProductQuery">
+            <Icon icon="ep:search" />
+          </el-button>
+        </div>
+
+        <el-table
+          v-loading="productLoading"
+          :data="productList"
+          :stripe="true"
+          :show-overflow-tooltip="true"
+          highlight-current-row
+          style="cursor: pointer; flex: 1"
+          size="small"
+          @row-click="handleProductClick"
+        >
+          <el-table-column label="产品名称" prop="name" />
+          <el-table-column label="版本" prop="versionName" width="90px" />
+          <el-table-column label="供应商" prop="supplierName" width="90px" />
+        </el-table>
+        <Pagination
+          :total="productTotal"
+          v-model:page="productQueryParams.pageNo"
+          v-model:limit="productQueryParams.pageSize"
+          layout="prev, pager, next"
+          @pagination="getProductList"
+          class="mt-8px !p-0"
         />
-      </el-form-item>
-      <el-form-item label="产品">
-        <el-select v-model="queryParams.productId" placeholder="请选择产品" clearable class="!w-180px">
-          <el-option v-for="item in productList" :key="item.id" :label="item.name" :value="item.id" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="仓库">
-        <el-select v-model="queryParams.warehouseId" placeholder="请选择仓库" clearable class="!w-150px">
-          <el-option v-for="item in warehouseList" :key="item.id" :label="item.name" :value="item.id" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="供应商">
-        <el-select v-model="queryParams.supplierId" placeholder="请选择供应商" clearable class="!w-150px">
-          <el-option v-for="item in supplierList" :key="item.id" :label="item.shortName" :value="item.id" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleQuery">
-          <Icon icon="ep:search" class="mr-4px" />搜索
-        </el-button>
-        <el-button @click="resetQuery">
-          <Icon icon="ep:refresh" class="mr-4px" />重置
-        </el-button>
-      </el-form-item>
-    </el-form>
+      </div>
 
-    <!-- 批次列表：单击"选择"或双击行均可确认 -->
-    <el-table
-      v-loading="loading"
-      :data="list"
-      :stripe="true"
-      :show-overflow-tooltip="true"
-      highlight-current-row
-      style="cursor: pointer"
-      @row-dblclick="handleSelect"
-    >
-      <el-table-column label="批号" align="center" prop="batchNo" />
-      <el-table-column label="入库日期" align="center" prop="inboundDate" />
-      <el-table-column label="产品" align="center" prop="productName" />
-      <el-table-column label="规格" align="center" prop="spec" />
-      <el-table-column label="版本" align="center" prop="versionName" />
-      <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="单价" align="center" prop="onePrice" />
-      <el-table-column label="剩余数量" align="center" prop="quantity" />
-      <el-table-column label="仓库" align="center" prop="warehouseName" />
-      <el-table-column label="供应商" align="center" prop="supplierName" />
-      <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="操作" align="center" width="80px" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" link size="small" @click="handleSelect(row)">选择</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <Pagination
-      :total="total"
-      v-model:page="queryParams.pageNo"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <!-- ===== 右侧：批次选择 ===== -->
+      <div class="flex flex-col border border-solid border-gray-200 rounded-4px p-12px flex-1 overflow-hidden">
+        <div class="text-14px font-600 mb-8px text-gray-700">
+          批次列表
+          <span v-if="selectedProduct" class="ml-8px text-12px font-400 text-primary">
+            — {{ selectedProduct.name }}
+          </span>
+          <span v-else class="ml-8px text-12px font-400 text-gray-400">（请先在左侧选择产品）</span>
+        </div>
+        <el-table
+          v-loading="batchLoading"
+          :data="batchList"
+          :stripe="true"
+          :show-overflow-tooltip="true"
+          highlight-current-row
+          style="cursor: pointer; flex: 1"
+          size="small"
+          @row-dblclick="handleSelect"
+        >
+          <el-table-column label="批号" prop="batchNo" width="120px" />
+          <el-table-column label="入库日期" prop="inboundDate" width="100px" />
+          <el-table-column label="规格" prop="spec" width="80px" />
+          <el-table-column label="版本" prop="versionName" width="80px" />
+          <el-table-column label="进货价" prop="inboundPrice" width="80px" />
+          <el-table-column label="单价" prop="onePrice" width="80px" />
+          <el-table-column label="剩余数量" prop="quantity" width="80px" />
+          <el-table-column label="仓库" prop="warehouseName" width="90px" />
+          <el-table-column label="供应商" prop="supplierName" width="90px" />
+          <el-table-column label="备注" prop="note" />
+          <el-table-column label="操作" align="center" width="70px" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link size="small" @click="handleSelect(row)">选择</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <Pagination
+          v-if="batchTotal > 0"
+          :total="batchTotal"
+          v-model:page="batchQueryParams.pageNo"
+          v-model:limit="batchQueryParams.pageSize"
+          layout="prev, pager, next"
+          @pagination="getBatchList"
+          class="mt-8px !p-0"
+        />
+      </div>
+    </div>
   </Dialog>
 </template>
 
 <script setup lang="ts">
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
-import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
-import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
-import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
+import { ProductApi, ProductPageVO } from '@/api/zc/product'
+import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import type { ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
-/**
- * 列表行类型：ProductBatch 已包含后端所有响应字段（spec、productName、versionName 等），
- * 此处直接复用，无需额外扩展。
- */
 type ProductBatchRow = ProductBatch
 
 defineOptions({ name: 'ProductBatchSelectDialog' })
 
 // ======================== 弹窗状态 ========================
 const dialogVisible = ref(false)
-/** 当前正在编辑的用料行，选中后直接写入该对象 */
 const currentMaterial = ref<ZCSalesOrderMaterial | null>(null)
-/** 当前订单选中的客户 ID，有值时选批次后查询授权价 */
 const currentCustomerId = ref<number | null>(null)
 
-// ======================== 列表数据 ========================
-const loading = ref(false)
-const list = ref<ProductBatchRow[]>([])
-const total = ref(0)
+// ======================== 左侧：产品列表 ========================
+const productLoading = ref(false)
+const productList = ref<ProductPageVO[]>([])
+const productTotal = ref(0)
+const selectedProduct = ref<ProductPageVO | null>(null)
 
-// ======================== 过滤选项（只在首次打开时加载） ========================
-const productList = ref<ProductSimpleVO[]>([])
-const warehouseList = ref<WarehouseSimpleVO[]>([])
-const supplierList = ref<SupplierSimpleVO[]>([])
-
-const queryParams = reactive({
+const productQueryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  batchNo: undefined as string | undefined,
-  productId: undefined as number | undefined,
-  warehouseId: undefined as number | undefined,
-  supplierId: undefined as number | undefined
+  name: undefined as string | undefined,
+  versionId: undefined as number | undefined
 })
 
+// ======================== 右侧：批次列表 ========================
+const batchLoading = ref(false)
+const batchList = ref<ProductBatchRow[]>([])
+const batchTotal = ref(0)
+
+const batchQueryParams = reactive({
+  pageNo: 1,
+  pageSize: 10
+})
+
+// ======================== 下拉选项 ========================
+const versionList = ref<ProductVersionSimpleVO[]>([])
+
 // ======================== 数据加载 ========================
-const getList = async () => {
-  loading.value = true
+const getProductList = async () => {
+  productLoading.value = true
   try {
-    const data = await ProductBatchApi.getProductBatchPage(queryParams)
-    list.value = data.list
-    total.value = data.total
+    const data = await ProductApi.getProductPage(productQueryParams)
+    productList.value = data.list
+    productTotal.value = data.total
   } finally {
-    loading.value = false
+    productLoading.value = false
   }
 }
 
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
+const getBatchList = async () => {
+  if (!selectedProduct.value) {
+    batchList.value = []
+    batchTotal.value = 0
+    return
+  }
+  batchLoading.value = true
+  try {
+    const data = await ProductBatchApi.getProductBatchPage({
+      ...batchQueryParams,
+      productId: selectedProduct.value.id
+    })
+    batchList.value = data.list
+    batchTotal.value = data.total
+  } finally {
+    batchLoading.value = false
+  }
 }
 
-const resetQuery = () => {
-  queryParams.batchNo = undefined
-  queryParams.productId = undefined
-  queryParams.warehouseId = undefined
-  queryParams.supplierId = undefined
-  handleQuery()
+// ======================== 产品查询 / 重置 ========================
+const handleProductQuery = () => {
+  productQueryParams.pageNo = 1
+  selectedProduct.value = null
+  batchList.value = []
+  batchTotal.value = 0
+  getProductList()
+}
+
+// ======================== 左侧点击产品 ========================
+const handleProductClick = (row: ProductPageVO) => {
+  selectedProduct.value = row
+  batchQueryParams.pageNo = 1
+  getBatchList()
 }
 
 // ======================== 打开弹窗 ========================
-/**
- * 打开批次选择弹窗
- * @param material   当前用料行对象，选中后直接回填
- * @param customerId 当前订单的客户 ID，有值时选批次后查询授权价
- */
 const open = async (material: ZCSalesOrderMaterial, customerId?: number | null) => {
   currentMaterial.value = material
   currentCustomerId.value = customerId ?? null
-  // 若用料已有货号，预填产品过滤以缩小范围
-  queryParams.productId = material.productId ?? undefined
-  queryParams.batchNo = undefined
-  queryParams.warehouseId = undefined
-  queryParams.supplierId = undefined
-  queryParams.pageNo = 1
+  productQueryParams.name = undefined
+  productQueryParams.versionId = undefined
+  productQueryParams.pageNo = 1
+  selectedProduct.value = null
+  batchList.value = []
+  batchTotal.value = 0
   dialogVisible.value = true
-  // 懒加载下拉选项，只在第一次打开时请求
-  if (!productList.value.length) {
-    ;[productList.value, warehouseList.value, supplierList.value] = await Promise.all([
-      ProductApi.getProductSimpleList(),
-      WarehouseApi.getWarehouseSimpleList(),
-      SupplierApi.getSupplierSimpleList()
-    ])
+
+  // 懒加载版本下拉选项
+  if (!versionList.value.length) {
+    versionList.value = await ProductVersionApi.getProductVersionSimpleList()
   }
-  await getList()
+
+  await getProductList()
+
+  // 若用料已关联产品，自动预选并加载对应批次
+  if (material.productId) {
+    const matched = productList.value.find((p) => p.id === material.productId)
+    if (matched) {
+      selectedProduct.value = matched
+      await getBatchList()
+    }
+  }
 }
 defineExpose({ open })
 
 // ======================== 选中批次 ========================
-/**
- * 单击"选择"或双击行：回填基础字段，若已选客户则查询授权价覆盖单价
- */
 const handleSelect = async (row: ProductBatchRow) => {
   if (!currentMaterial.value) return
   currentMaterial.value.productId = row.productId
@@ -186,10 +244,8 @@ const handleSelect = async (row: ProductBatchRow) => {
   currentMaterial.value.batchNo = row.batchNo
   currentMaterial.value.specValue = row.spec
   currentMaterial.value.unitValue = row.unitValue
-  // 用一级类销售价初始化单价，若无则清空
   currentMaterial.value.price = row.onePrice ?? undefined
 
-  // 已选客户且批次关联了产品与规格时，查询该客户的版本规格授权价
   if (currentCustomerId.value && row.productId && row.spec) {
     try {
       const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
@@ -201,7 +257,7 @@ const handleSelect = async (row: ProductBatchRow) => {
         currentMaterial.value.price = priceInfo.authorizedPrice
       }
     } catch {
-      // 查询失败不影响已回填的其他字段，单价保持 onePrice 或空
+      // 查询失败不影响已回填的其他字段
     }
   }
 
