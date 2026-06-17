@@ -127,6 +127,9 @@
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
+          <el-button link type="primary" @click="handlePrintShipping(scope.row)">
+            打印发货联
+          </el-button>
           <el-button
             link
             type="primary"
@@ -159,9 +162,12 @@
   <CustomerForm ref="formRef" :logisticsList="logisticsList" :brandList="brandList" @success="getList" />
   <!-- 导入弹窗 -->
   <CustomerImportForm ref="importFormRef" @success="getList" />
+  <!-- 客户发货联打印弹窗 -->
+  <CustomerShippingPrintDialog ref="shippingPrintDialogRef" />
 </template>
 
 <script setup lang="ts">
+// ======================== 导入与声明 ========================
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerApi, Customer } from '@/api/zc/customer'
@@ -169,6 +175,7 @@ import { LogisticsApi, Logistics } from '@/api/zc/logistics'
 import { BrandApi, Brand } from '@/api/zc/brand'
 import CustomerForm from './CustomerForm.vue'
 import CustomerImportForm from './CustomerImportForm.vue'
+import CustomerShippingPrintDialog from './CustomerShippingPrintDialog.vue'
 
 /** 客户资料 列表 */
 defineOptions({ name: 'ZcCustomer' })
@@ -220,6 +227,12 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 打印客户发货联 */
+const shippingPrintDialogRef = ref<InstanceType<typeof CustomerShippingPrintDialog>>()
+const handlePrintShipping = (row: Customer) => {
+  shippingPrintDialogRef.value?.open(row)
 }
 
 /** 导入按钮操作 */

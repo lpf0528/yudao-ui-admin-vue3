@@ -1,7 +1,7 @@
 <!--
-  发货联打印预览弹窗
-  抬头：品牌名称 + 发货联；内容：订单号、客户名称、物流、收货人、电话、收货地址、打印日期
-  父组件通过 open(formData) 方法打开
+  客户发货联打印预览弹窗
+  功能：按客户信息生成发货联，右上角显示发货二维码（不包含订单号、订单ID）
+  使用方：views/zc/customer/index.vue
 -->
 <template>
   <el-dialog v-model="visible" width="660px" top="6vh" :close-on-click-modal="false">
@@ -38,7 +38,7 @@
                 发货联
               </div>
               <div style="font-size: 24px; font-weight: 800; letter-spacing: 3px; line-height: 1.1; margin-top: 4px;">
-                {{ brandName || '-' }}
+                {{ slipData.brandName || '-' }}
               </div>
             </div>
           </div>
@@ -57,12 +57,8 @@
         <table style="width: 100%; border-collapse: collapse; font-size: 21px; line-height: 2;">
           <tbody>
             <tr>
-              <td style="color: #666; white-space: nowrap; padding-right: 16px; width: 120px;">订单号</td>
-              <td style="font-weight: 600;">{{ slipData.orderNo || '-' }}</td>
-            </tr>
-            <tr>
-              <td style="color: #666; white-space: nowrap; padding-right: 16px;">客户名称</td>
-              <td style="font-weight: 600;">{{ slipData.customerName }}</td>
+              <td style="color: #666; white-space: nowrap; padding-right: 16px; width: 120px;">客户名称</td>
+              <td style="font-weight: 600;">{{ slipData.customerName || '-' }}</td>
             </tr>
             <tr>
               <td style="color: #666; white-space: nowrap; padding-right: 16px;">物流</td>
@@ -92,27 +88,19 @@
 </template>
 
 <script setup lang="ts">
+// ======================== 导入与声明 ========================
 import QRCode from 'qrcode'
 import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
-import type { CustomerSimpleVO } from '@/api/zc/customer'
-import type { BrandSimpleVO } from '@/api/zc/brand'
-import type { LogisticsSimpleVO } from '@/api/zc/logistics'
-import type { SalesOrder } from '@/api/zc/salesorder'
+import type { Customer } from '@/api/zc/customer'
 
-/** 发货联打印预览弹窗 */
-defineOptions({ name: 'SalesOrderShippingDialog' })
-
-// ======================== Props ========================
-const props = defineProps<{
-  customersList: CustomerSimpleVO[]
-  brandsList: BrandSimpleVO[]
-  logisticsList: LogisticsSimpleVO[]
-}>()
+/** 客户发货联打印预览弹窗 */
+defineOptions({ name: 'CustomerShippingPrintDialog' })
 
 // ======================== 类型定义 ========================
 interface SlipData {
-  orderNo: string
+  customerId: number | null
   customerName: string
+  brandName: string
   logisticsName: string
   receiver: string
   mobile: string
@@ -122,12 +110,12 @@ interface SlipData {
 
 // ======================== 响应式状态 ========================
 const visible = ref(false)
-const brandName = ref('')
 /** 发货联二维码（右上角展示） */
 const shippingQrCode = ref<{ url: string; code: string } | null>(null)
 const slipData = ref<SlipData>({
-  orderNo: '',
+  customerId: null,
   customerName: '',
+  brandName: '',
   logisticsName: '',
   receiver: '',
   mobile: '',
@@ -142,28 +130,24 @@ const todayStr = (): string => {
 }
 
 // ======================== 对外方法 ========================
-/** 打开预览弹窗，传入当前表单数据 */
-const open = async (data: SalesOrder) => {
-  const customer = props.customersList.find((item) => item.id === data.customerId)
-  const brand = props.brandsList.find((item) => item.id === data.brandId)
-  const logistics = props.logisticsList.find((item) => item.id === data.logisticId)
-
-  brandName.value = brand?.name || ''
+/** 打开预览弹窗，传入客户行数据 */
+const open = async (data: Customer) => {
   slipData.value = {
-    orderNo: (data.orderNo as string) || '',
-    customerName: customer ? (customer.shortName || customer.name || '') : '-',
-    logisticsName: logistics?.name || '-',
-    receiver: (data.receiver as string) || '',
-    mobile: (data.mobile as string) || '',
-    deliveryAddress: (data.deliveryAddress as string) || '',
+    customerId: data.id ?? null,
+    customerName: data.shortName || data.name || '-',
+    brandName: data.brandName || '-',
+    logisticsName: data.logisticName || '-',
+    receiver: data.contactName || '-',
+    mobile: data.mobile || '-',
+    deliveryAddress: data.deliveryAddress || '-',
     printDate: todayStr()
   }
-  // 每次打开重新生成二维码，避免旧订单二维码残留
+
+  // 客户发货码仅包含客户维度信息，不传订单号、订单ID
   shippingQrCode.value = null
   const codeContent = JSON.stringify({
-    customerId: data.customerId ?? null,
-    orderNo: data.orderNo ?? '',
-    orderId: data.id ?? null
+    customerId: data.id ?? null,
+    customerName: data.shortName || data.name || ''
   })
   const codeId = await BarcodeRegistryApi.create({
     codeType: 'SHIP_QR',
@@ -174,14 +158,12 @@ const open = async (data: SalesOrder) => {
   shippingQrCode.value = { url, code: codeId }
   visible.value = true
 }
-
 defineExpose({ open })
 
 // ======================== 打印 ========================
 /** 在新窗口生成发货联 HTML 并触发打印对话框 */
 const handlePrint = () => {
   const d = slipData.value
-  const bName = brandName.value
   const qrImg = shippingQrCode.value
     ? `<img src="${shippingQrCode.value.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
     : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11pt;">二维码</div>`
@@ -190,7 +172,7 @@ const handlePrint = () => {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${bName ? bName + ' ' : ''}发货联 - ${d.orderNo}</title>
+  <title>${d.brandName || ''} 发货联</title>
   <style>
     @page { size: A5; margin: 12mm; }
     * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
@@ -228,15 +210,14 @@ const handlePrint = () => {
     <div class="header-main">
       <div class="header-title-wrap">
         <div class="header-title">发货联</div>
-        <div class="header-brand">${bName || '-'}</div>
+        <div class="header-brand">${d.brandName || '-'}</div>
       </div>
     </div>
     <div class="header-qr">${qrImg}</div>
   </div>
   <table>
     <tbody>
-      <tr><td class="lbl">订单号</td><td class="val">${d.orderNo || '-'}</td></tr>
-      <tr><td class="lbl">客户名称</td><td class="val">${d.customerName}</td></tr>
+      <tr><td class="lbl">客户名称</td><td class="val">${d.customerName || '-'}</td></tr>
       <tr><td class="lbl">物流</td><td class="val">${d.logisticsName || '-'}</td></tr>
       <tr><td class="lbl">收货人</td><td class="val">${d.receiver || '-'}</td></tr>
       <tr><td class="lbl">电话</td><td class="val">${d.mobile || '-'}</td></tr>
