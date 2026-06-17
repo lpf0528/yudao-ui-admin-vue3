@@ -16,11 +16,11 @@ export interface ProductBatch {
           spec?: string; // 规格
           status?: number; // 状态: 1:整匹、0:零裁、-1:余料
           productName?: string; // 产品名称
-          productPrice?: number; // 产品价格
           versionName?: string; // 版本名称
           supplierName?: string; // 供应商名称
           warehouseName?: string; // 仓库名称
           unitValue?: string; // 单位（来自产品版本）
+          onePrice?: number; // 一级类销售价（来自产品版本规格）
           barcode?: string; // 条码
           createTime?: string; // 创建时间
   }

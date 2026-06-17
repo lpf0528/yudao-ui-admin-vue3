@@ -54,11 +54,10 @@
       <el-table-column label="批号" align="center" prop="batchNo" />
       <el-table-column label="入库日期" align="center" prop="inboundDate" />
       <el-table-column label="产品" align="center" prop="productName" />
-      <el-table-column label="规格" align="center" prop="specValue" />
+      <el-table-column label="规格" align="center" prop="spec" />
       <el-table-column label="版本" align="center" prop="versionName" />
       <el-table-column label="进货价" align="center" prop="inboundPrice" />
-      <el-table-column label="单价" align="center" prop="productPrice" />
-      <el-table-column label="单位" align="center" prop="unitValue" />
+      <el-table-column label="单价" align="center" prop="onePrice" />
       <el-table-column label="剩余数量" align="center" prop="quantity" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
       <el-table-column label="供应商" align="center" prop="supplierName" />
@@ -85,19 +84,14 @@ import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductSimpleVO } from '@/api/zc/product'
 import { WarehouseApi, WarehouseSimpleVO } from '@/api/zc/warehouse'
 import { SupplierApi, SupplierSimpleVO } from '@/api/zc/supplier'
-import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
+import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import type { ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
-/** 列表行补充后端返回的展示字段 */
-interface ProductBatchRow extends ProductBatch {
-  productName?: string   // 产品名称
-  specValue?: string     // 规格
-  versionName?: string   // 版本
-  warehouseName?: string // 仓库名称
-  supplierName?: string  // 供应商名称
-  productPrice?: number  // 产品售价（回填到单价）
-  unitValue?: string     // 单位
-}
+/**
+ * 列表行类型：ProductBatch 已包含后端所有响应字段（spec、productName、versionName 等），
+ * 此处直接复用，无需额外扩展。
+ */
+type ProductBatchRow = ProductBatch
 
 defineOptions({ name: 'ProductBatchSelectDialog' })
 
@@ -190,23 +184,24 @@ const handleSelect = async (row: ProductBatchRow) => {
   currentMaterial.value.productName = row.productName
   currentMaterial.value.batchId = row.id
   currentMaterial.value.batchNo = row.batchNo
-  currentMaterial.value.specValue = row.specValue
+  currentMaterial.value.specValue = row.spec
   currentMaterial.value.unitValue = row.unitValue
-  // 先用 productPrice 初始化，若无则清空
-  currentMaterial.value.price = row.productPrice ?? undefined
+  // 用一级类销售价初始化单价，若无则清空
+  currentMaterial.value.price = row.onePrice ?? undefined
 
-  // 已选客户且批次关联了产品时，查询该客户的授权价
-  if (currentCustomerId.value && row.productId) {
+  // 已选客户且批次关联了产品与规格时，查询该客户的版本规格授权价
+  if (currentCustomerId.value && row.productId && row.spec) {
     try {
-      const priceInfo = await CustomerProductPriceApi.getByCustomerAndProduct(
-        currentCustomerId.value,
-        row.productId
-      )
+      const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
+        productId: row.productId,
+        customerId: currentCustomerId.value,
+        spec: row.spec
+      })
       if (priceInfo?.authorizedPrice != null) {
         currentMaterial.value.price = priceInfo.authorizedPrice
       }
     } catch {
-      // 查询失败不影响已回填的其他字段，单价保持 productPrice 或空
+      // 查询失败不影响已回填的其他字段，单价保持 onePrice 或空
     }
   }
 

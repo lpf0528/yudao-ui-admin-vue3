@@ -535,7 +535,6 @@ import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtai
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
-import { CustomerProductPriceApi } from '@/api/zc/customerproductprice'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
 import SalesOrderProcessingPrintDialog from './SalesOrderProcessingPrintDialog.vue'
@@ -637,16 +636,8 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
           pleatsDistance: undefined,
           skirtHeight: undefined,
           note: undefined,
-          materials: await Promise.all(
-            tmpl.elements.map(async (elem) => {
-              // 默认使用模板单价，若客户有配置授权价则优先使用授权价
-              let price = elem.onePrice ?? undefined
-              if (elem.productId && customerId) {
-                try {
-                  const authPrice = await CustomerProductPriceApi.getByCustomerAndProduct(customerId, elem.productId)
-                  if (authPrice?.authorizedPrice != null) price = authPrice.authorizedPrice
-                } catch (_) {}
-              }
+          materials: tmpl.elements.map((elem) => {
+              const price = elem.onePrice ?? undefined
               return {
                 elementId: elem.elementId,
                 productId: elem.productId ?? undefined,
@@ -660,7 +651,6 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
                 note: undefined
               }
             })
-          )
         }))
       )
     }
