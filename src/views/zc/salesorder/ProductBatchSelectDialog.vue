@@ -124,6 +124,7 @@ import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import type { ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
 type ProductBatchRow = ProductBatch
+type MaterialWithSpec = ZCSalesOrderMaterial & { spec?: string }
 
 defineOptions({ name: 'ProductBatchSelectDialog' })
 
@@ -242,7 +243,7 @@ const handleSelect = async (row: ProductBatchRow) => {
   currentMaterial.value.productName = row.productName
   currentMaterial.value.batchId = row.id
   currentMaterial.value.batchNo = row.batchNo
-  currentMaterial.value.specValue = row.spec
+  ;(currentMaterial.value as MaterialWithSpec).spec = row.spec
   currentMaterial.value.unitValue = row.unitValue
   currentMaterial.value.price = row.onePrice ?? undefined
 

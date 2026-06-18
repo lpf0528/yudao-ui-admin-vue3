@@ -262,7 +262,7 @@ const materialPages = computed<MaterialPageItem[]>(() => {
     const structure = curtain?.structures?.[0]
     const material = structure?.materials?.[0]
     const productName = material?.productName || '-'
-    const version = material?.specValue ? ` ${material.specValue}` : ''
+    const version = material?.spec ? ` ${material.spec}` : ''
     pages.push({
       pageKey: `curtain-${curtainIdx}`,
       curtainIdx,

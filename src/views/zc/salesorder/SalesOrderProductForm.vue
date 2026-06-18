@@ -5,7 +5,7 @@
   通过 open(type, id?) 方法打开，成功后 emit('success') 通知父组件刷新列表
 -->
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh" :close-on-click-modal="false">
     <!-- 顶部操作栏（与成品单一致） -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
       <el-button type="primary" @click="handleSave" :loading="formLoading">
@@ -171,7 +171,7 @@
           <el-col :span="3">
             <el-select
               v-if="!batch.batchId && batch.specConfs && batch.specConfs.length > 0"
-              v-model="batch.specValue"
+              v-model="batch.spec"
               placeholder="规格"
               size="small"
               class="!w-full"
@@ -186,7 +186,7 @@
             </el-select>
             <el-input
               v-else
-              v-model="batch.specValue"
+              v-model="batch.spec"
               placeholder="规格"
               size="small"
               class="!w-full"
@@ -323,7 +323,7 @@ interface BatchRow {
   structureRowId?: number  // 结构行 ID（更新时回传，新增行为 undefined）
   productId?: number       // 产品 ID
   productName?: string     // 货号名称（展示用）
-  specValue?: string       // 产品规格
+  spec?: string       // 产品规格
   specConfs?: ProductVersionSpecSimpleVO[]  // 当前版本的可选规格列表，仅选产品时用于渲染下拉
   batchId?: number         // 批次 ID
   batchNo?: string         // 批次号（展示用）
@@ -401,9 +401,9 @@ const handleSelectCustomerFromSearch = async (customer: any) => {
   if (!batchs.length) return
   await Promise.all(
     batchs.map(async (batch) => {
-      if (!batch.productId || !batch.specValue) return
+      if (!batch.productId || !batch.spec) return
       try {
-        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId: customer.id, spec: batch.specValue })
+        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId: customer.id, spec: batch.spec })
         if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
       } catch {}
     })
@@ -434,9 +434,9 @@ const handleCustomerChange = async (customerId: number) => {
   if (!batchs.length) return
   await Promise.all(
     batchs.map(async (batch) => {
-      if (!batch.productId || !batch.specValue) return
+      if (!batch.productId || !batch.spec) return
       try {
-        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId, spec: batch.specValue })
+        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({ productId: batch.productId!, customerId, spec: batch.spec })
         if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
       } catch {
         // 查询失败保持原单价
@@ -460,12 +460,12 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
   const newBatchs = await Promise.all(
     rows.map(async (row) => {
       let price = row.onePrice ?? undefined
-      if (customerId && row.productId && row.specValue) {
+      if (customerId && row.productId && row.spec) {
         try {
           const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
             productId: row.productId,
             customerId,
-            spec: row.specValue
+            spec: row.spec
           })
           if (priceInfo?.authorizedPrice != null) price = priceInfo.authorizedPrice
         } catch {
@@ -474,11 +474,11 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
       }
       // 仅选产品（无批次）时携带规格列表；若只有一个规格则自动选中
       const specConfs = row.batchId ? undefined : (row.specConfs ?? undefined)
-      const autoSpecValue = !row.batchId && specConfs?.length === 1 ? specConfs[0].spec : row.specValue
+      const autoSpec = !row.batchId && specConfs?.length === 1 ? specConfs[0].spec : row.spec
       return {
         productId: row.productId,
         productName: row.productName,
-        specValue: autoSpecValue,
+        spec: autoSpec,
         specConfs,
         batchId: row.batchId,   // 仅选产品时为 undefined
         batchNo: row.batchNo,
@@ -533,7 +533,7 @@ const mapCurtainsToBatchRows = (curtains: SalesOrderDetailCurtain[]): BatchRow[]
       id: m.id,                // 用料明细行 ID，更新时必须回传
       productId: m.productId,
       productName: m.productName,
-      specValue: m.specValue,
+      spec: m.spec,
       batchId: m.batchId,
       batchNo: m.batchNo,
       price: m.price,
@@ -569,6 +569,8 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
+  await nextTick()
+  syncSavedSnapshot()
 }
 defineExpose({ open })
 
@@ -576,6 +578,64 @@ const resetForm = () => {
   formData.value = getInitFormData()
   selectedCustomerBalance.value = null
   formRef.value?.resetFields()
+}
+
+/** 组装面料单提交/脏检查用的 payload（与 fabric 接口字段对齐） */
+const buildSubmitPayload = () => {
+  const form = formData.value
+  const batchTotal = form.batchs.reduce((sum, b) => sum + (b.amount ?? 0), 0)
+  return {
+    id: form.id,
+    customerId: form.customerId,
+    mobile: form.mobile,
+    brandId: form.brandId,
+    orderDate: form.orderDate,
+    deliveryDate: form.deliveryDate,
+    logisticId: form.logisticId,
+    receiver: form.receiver,
+    deliveryAddress: form.deliveryAddress,
+    freight: form.freight,
+    discountAmount: form.discountAmount,
+    totalAmount: round2(batchTotal + (form.freight ?? 0)),
+    amount: form.amount,
+    note: form.note,
+    curtains: form.batchs.map((b) => ({
+      id: b.curtainRowId,
+      amount: b.amount,
+      note: b.note,
+      structures: [{
+        id: b.structureRowId,
+        materials: [{
+          id: b.id,
+          productId: b.productId,
+          batchId: b.batchId,
+          spec: b.spec,
+          price: b.price,
+          quantity: b.quantity,
+          amount: b.amount,
+          note: b.note
+        }]
+      }]
+    }))
+  }
+}
+
+/** 上次保存/加载时的表单快照，用于检测是否有未保存修改 */
+const savedFormSnapshot = ref('')
+
+const syncSavedSnapshot = () => {
+  savedFormSnapshot.value = JSON.stringify(buildSubmitPayload())
+}
+
+const isFormDirty = () => savedFormSnapshot.value !== JSON.stringify(buildSubmitPayload())
+
+/** 非保存类操作前校验：有未保存修改则提醒用户先保存 */
+const ensureSavedBeforeAction = (): boolean => {
+  if (isFormDirty()) {
+    message.warning('订单信息已修改，请先保存')
+    return false
+  }
+  return true
 }
 
 // ======================== 提交 ========================
@@ -589,41 +649,10 @@ const submitForm = async () => {
   }
   formLoading.value = true
   try {
-    // 每条面料独立为一个 curtain，各自放在 structures[0].materials[0]
-    // 更新时需携带三层 id（curtainRowId/structureRowId/id），后端据此做 UPDATE/INSERT/DELETE merge
-    const curtains = formData.value.batchs.map((b) => ({
-      id: b.curtainRowId,
-      amount: b.amount,
-      note: b.note,
-      structures: [{
-        id: b.structureRowId,
-        materials: [{
-          id: b.id,
-          productId: b.productId,
-          batchId: b.batchId,
-          price: b.price,
-          quantity: b.quantity,
-          amount: b.amount,
-          note: b.note,
-        }]
-      }]
-    }))
-    // 新增 / 更新均使用面单专用接口，字段结构一致（更新时额外携带 id）
-    const fabricPayload = {
-      id: formData.value.id,
-      customerId: formData.value.customerId,
-      mobile: formData.value.mobile,
-      brandId: formData.value.brandId,
-      orderDate: formData.value.orderDate,
-      deliveryDate: formData.value.deliveryDate,
-      logisticId: formData.value.logisticId,
-      receiver: formData.value.receiver,
-      deliveryAddress: formData.value.deliveryAddress,
-      amount: formData.value.amount,
-      curtains,
-    }
+    const fabricPayload = buildSubmitPayload()
     if (formType.value === 'create') {
-      const newId = await SalesOrderApi.createSalesOrderFabric(fabricPayload)
+      const { id: _omit, ...createPayload } = fabricPayload
+      const newId = await SalesOrderApi.createSalesOrderFabric(createPayload)
       message.success(t('common.createSuccess'))
       // 创建成功后立即拉取详情，回填后端生成的字段（订单号、三层 ID 等），并切换为编辑模式
       const detail = await SalesOrderApi.getSalesOrderDetail(newId)
@@ -638,6 +667,8 @@ const submitForm = async () => {
       message.success(t('common.updateSuccess'))
     }
     emit('success')
+    await nextTick()
+    syncSavedSnapshot()
   } finally {
     formLoading.value = false
   }
@@ -645,6 +676,7 @@ const submitForm = async () => {
 
 // ======================== 确认 / 取消确认 / 加急 ========================
 const handleConfirm = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     await SalesOrderApi.confirmSalesOrder(formData.value.id!)
@@ -657,6 +689,7 @@ const handleConfirm = async () => {
 }
 
 const handleCancelConfirm = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     await SalesOrderApi.cancelConfirmSalesOrder(formData.value.id!)
@@ -669,6 +702,7 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
@@ -682,16 +716,19 @@ const handleExpedite = async () => {
 // ======================== 打印 ========================
 /** 打开面料单销售单打印预览弹窗 */
 const handlePrint = () => {
+  if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开面料加工单打印预览弹窗 */
 const handlePrintProcessing = () => {
+  if (!ensureSavedBeforeAction()) return
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览弹窗 */
 const handlePrintShipping = () => {
+  if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
 </script>

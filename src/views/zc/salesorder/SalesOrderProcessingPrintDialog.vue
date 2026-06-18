@@ -107,7 +107,7 @@
                 <tr v-for="(material, mIdx) in (structure as any).materials?.filter((m: any) => m.elementIsPrint !== false)" :key="mIdx">
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.productName || '-' }}</td>
-                  <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.specValue || '-' }}</td>
+                  <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.spec || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ material.quantity ?? '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.note || '' }}</td>
                 </tr>
@@ -379,7 +379,7 @@ const handlePrint = async () => {
                 <tr>
                   <td style="${tdS}">${getElementName(m.elementId) || m.elementName || '-'}</td>
                   <td style="${tdS}">${m.productName || '-'}</td>
-                  <td style="${tdS}">${m.specValue || '-'}</td>
+                  <td style="${tdS}">${m.spec || '-'}</td>
                   <td style="${tdS}text-align:right;">${m.quantity ?? '-'}</td>
                   <td style="${tdS}">${m.note || ''}</td>
                 </tr>`

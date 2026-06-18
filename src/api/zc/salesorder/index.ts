@@ -17,6 +17,7 @@ export interface ZCSalesOrderMaterial {
   elementId?: number        // 组件类型 ID
   productId?: number        // 货号（产品 ID）
   batchId?: number          // 批次 ID
+  spec?: string             // 规格（创建/更新/详情统一字段）
   price?: number            // 单价
   quantity?: number         // 用料数量
   unitValue?: string        // 计量单位（展示值）
@@ -28,7 +29,6 @@ export interface ZCSalesOrderMaterial {
   elementName?: string      // 组件类型名称
   productName?: string      // 货号名称
   batchNo?: string          // 批次号
-  specValue?: string        // 产品规格（批次选择后回填，仅前端展示）
 }
 
 /** 窗帘行信息 */
@@ -115,6 +115,77 @@ export interface ZcSalesOrderDetailRespVO extends SalesOrder {
   curtains: SalesOrderDetailCurtain[]
 }
 
+/** 整单创建/更新 - 用料明细提交 VO */
+export interface ZcSalesOrderMaterialSubmitVO {
+  id?: number
+  elementId?: number
+  productId?: number
+  batchId?: number
+  spec?: string
+  price?: number
+  quantity?: number
+  unitValue?: string
+  discountRate?: number
+  amount?: number
+  note?: string
+}
+
+/** 整单创建/更新 - 结构行提交 VO */
+export interface ZcSalesOrderStructureSubmitVO {
+  id?: number
+  structureId?: number
+  height?: number
+  width?: number
+  leftCorner?: string
+  rightCorner?: string
+  pasteDirection?: string
+  installProcessId?: number
+  openMethod?: string
+  processType?: string
+  isShaping?: boolean
+  pleatsNum?: number
+  pleatsDistance?: number
+  skirtHeight?: number
+  note?: string
+  materials?: ZcSalesOrderMaterialSubmitVO[]
+}
+
+/** 整单创建/更新 - 窗帘行提交 VO */
+export interface ZcSalesOrderCurtainSubmitVO {
+  id?: number
+  curtainId?: number
+  room?: string
+  pleatRatioValue?: string | number
+  pleatsDistance?: number
+  discountRate?: number
+  amount?: number
+  image1?: string
+  image2?: string
+  mountings?: string[]
+  note?: string
+  structures?: ZcSalesOrderStructureSubmitVO[]
+}
+
+/** 整单创建/更新 Request VO（对应 POST /create、PUT /update） */
+export interface ZcSalesOrderSubmitReqVO {
+  id?: number
+  customerId?: number
+  mobile?: string
+  brandId?: number
+  orderDate?: string | Dayjs
+  logisticId?: number
+  receiver?: string
+  deliveryAddress?: string
+  freight?: number
+  types?: string
+  discountAmount?: number
+  totalAmount?: number
+  amount?: number
+  deliveryDate?: string | Dayjs
+  note?: string
+  curtains?: ZcSalesOrderCurtainSubmitVO[]
+}
+
 // 销售订单 API
 export const SalesOrderApi = {
   // 查询销售订单分页
@@ -138,8 +209,8 @@ export const SalesOrderApi = {
     return await request.get({ url: `/zc/sales-order/detail`, params: { id } })
   },
 
-  // 新增销售订单
-  createSalesOrder: async (data: SalesOrder) => {
+  // 整单新增销售订单（含窗帘行→结构行→用料明细）
+  createSalesOrder: async (data: ZcSalesOrderSubmitReqVO) => {
     return await request.post({ url: `/zc/sales-order/create`, data })
   },
 
@@ -155,8 +226,8 @@ export const SalesOrderApi = {
     return await request.put({ url: `/zc/sales-order/fabric/update`, data })
   },
 
-  // 修改销售订单
-  updateSalesOrder: async (data: SalesOrder) => {
+  // 整单更新销售订单（含窗帘行→结构行→用料明细，已确认订单禁止修改）
+  updateSalesOrder: async (data: ZcSalesOrderSubmitReqVO) => {
     return await request.put({ url: `/zc/sales-order/update`, data })
   },
 

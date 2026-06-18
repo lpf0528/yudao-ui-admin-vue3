@@ -1,5 +1,5 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh" :close-on-click-modal="false">
     <!-- 顶部操作栏 -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
       <el-button type="primary" @click="handleSave" :loading="formLoading">
@@ -416,7 +416,7 @@
                   </el-col>
                   <el-col :span="2">
                     <!-- 规格：批次选定后自动回填，只读 -->
-                    <el-input v-model="material.specValue" placeholder="规格" size="small" class="!w-full" readonly :disabled="isConfirmed" />
+                    <el-input v-model="material.spec" placeholder="规格" size="small" class="!w-full" readonly :disabled="isConfirmed" />
                   </el-col>
                   <el-col :span="2">
                     <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
@@ -526,7 +526,7 @@ import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
-import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO, ZcSalesOrderSubmitReqVO } from '@/api/zc/salesorder'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -535,6 +535,7 @@ import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtai
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
+import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import ProductBatchSelectDialog from './ProductBatchSelectDialog.vue'
 import SalesOrderPrintDialog from './SalesOrderPrintDialog.vue'
 import SalesOrderProcessingPrintDialog from './SalesOrderProcessingPrintDialog.vue'
@@ -565,34 +566,6 @@ const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
 /** 打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
   customerSearchDialogRef.value?.open()
-}
-
-/** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
-const handleSelectCustomerFromSearch = (customer: any) => {
-  formData.value.customerId = customer.id
-  formData.value.mobile = customer.mobile
-  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
-  formData.value.logisticId = customer.logisticId
-  formData.value.receiver = customer.contactName
-  formData.value.deliveryAddress = customer.deliveryAddress
-  selectedCustomerBalance.value = customer.balance
-  if (formData.value.curtains.length === 0) addCurtain()
-}
-
-const handleCustomerChange = (customerId: number) => {
-  const customer = props.customersList.find((item) => item.id === customerId)
-  if (!customer) {
-    selectedCustomerBalance.value = null
-    return
-  }
-  formData.value.mobile = customer.mobile
-  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
-  formData.value.logisticId = customer.logisticId
-  formData.value.receiver = customer.contactName
-  formData.value.deliveryAddress = customer.deliveryAddress
-  selectedCustomerBalance.value = customer.balance
-  // 新建订单选完客户后自动带出第一个窗帘行
-  if (formData.value.curtains.length === 0) addCurtain()
 }
 
 const curtainList = ref<CurtainSimpleVO[]>([])
@@ -643,6 +616,7 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
                 productId: elem.productId ?? undefined,
                 productName: elem.productName ?? undefined,
                 batchId: undefined,
+                spec: undefined,
                 price,
                 quantity: undefined,
                 unitValue: undefined,
@@ -670,7 +644,8 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formLoading = ref(false)
 const formType = ref('')
-type StructureWithMaterials = SalesOrderStructure & { materials: ZCSalesOrderMaterial[] }
+type MaterialWithSpec = ZCSalesOrderMaterial & { spec?: string }
+type StructureWithMaterials = SalesOrderStructure & { materials: MaterialWithSpec[] }
 type CurtainWithStructures = SalesOrderCurtain & { structures: StructureWithMaterials[]; templateLoading?: boolean }
 
 const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } => ({
@@ -697,6 +672,107 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
 })
 
 const formData = ref(getInitFormData())
+
+/** 切换客户后，更新已有用料中已选产品+规格的授权价 */
+const updateMaterialAuthorizedPrices = async (customerId: number) => {
+  console.log('[SalesOrderForm 授权价] updateMaterialAuthorizedPrices 开始', { customerId })
+  const materials: MaterialWithSpec[] = []
+  const skippedMaterials: Array<{ productId?: number; spec?: string; productName?: string; reason: string }> = []
+  formData.value.curtains.forEach((curtain, cIdx) => {
+    ;(curtain.structures ?? []).forEach((structure, sIdx) => {
+      ;(structure.materials ?? []).forEach((material, mIdx) => {
+        if (material.productId && material.spec) {
+          materials.push(material)
+        } else {
+          skippedMaterials.push({
+            productId: material.productId,
+            spec: material.spec,
+            productName: material.productName,
+            reason: `curtain#${cIdx + 1}/structure#${sIdx + 1}/material#${mIdx + 1} 缺少 productId 或 spec`
+          })
+        }
+      })
+    })
+  })
+  console.log('[SalesOrderForm 授权价] 用料扫描结果', {
+    curtainCount: formData.value.curtains.length,
+    eligibleCount: materials.length,
+    skippedMaterials
+  })
+  if (!materials.length) {
+    console.warn('[SalesOrderForm 授权价] 无符合条件的用料，跳过授权价查询')
+    return
+  }
+  await Promise.all(
+    materials.map(async (material, index) => {
+      const params = {
+        productId: material.productId!,
+        customerId,
+        spec: material.spec!
+      }
+      console.log(`[SalesOrderForm 授权价] 查询 #${index + 1}`, params, '原单价:', material.price)
+      try {
+        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec(params)
+        console.log(`[SalesOrderForm 授权价] 查询 #${index + 1} 成功`, priceInfo)
+        if (priceInfo?.authorizedPrice != null) {
+          const oldPrice = material.price
+          material.price = priceInfo.authorizedPrice
+          console.log(`[SalesOrderForm 授权价] 查询 #${index + 1} 已更新单价`, { oldPrice, newPrice: material.price })
+        } else {
+          console.warn(`[SalesOrderForm 授权价] 查询 #${index + 1} 无 authorizedPrice，保持原单价`, material.price)
+        }
+      } catch (error) {
+        console.error(`[SalesOrderForm 授权价] 查询 #${index + 1} 失败`, params, error)
+      }
+    })
+  )
+  console.log('[SalesOrderForm 授权价] updateMaterialAuthorizedPrices 完成')
+}
+
+/** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
+const handleSelectCustomerFromSearch = async (customer: any) => {
+  console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
+  formData.value.customerId = customer.id
+  formData.value.mobile = customer.mobile
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
+  formData.value.logisticId = customer.logisticId
+  formData.value.receiver = customer.contactName
+  formData.value.deliveryAddress = customer.deliveryAddress
+  selectedCustomerBalance.value = customer.balance
+  if (formData.value.curtains.length === 0) addCurtain()
+  await updateMaterialAuthorizedPrices(customer.id)
+}
+
+/**
+ * 选择客户后：
+ * 1. 回填手机、品牌、物流、收货人、送货地址、账户余额
+ * 2. 并发查询已有用料中各产品+规格的授权价，有则覆盖单价
+ */
+const handleCustomerChange = async (customerId: number) => {
+  console.log('[SalesOrderForm 授权价] handleCustomerChange 触发', {
+    customerId,
+    customerIdType: typeof customerId,
+    formCustomerId: formData.value.customerId
+  })
+  const customer = props.customersList.find((item) => item.id === customerId)
+  if (!customer) {
+    console.warn('[SalesOrderForm 授权价] handleCustomerChange 未找到客户，提前返回', {
+      customerId,
+      customersListIds: props.customersList.map((item) => item.id)
+    })
+    selectedCustomerBalance.value = null
+    return
+  }
+  formData.value.mobile = customer.mobile
+  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
+  formData.value.logisticId = customer.logisticId
+  formData.value.receiver = customer.contactName
+  formData.value.deliveryAddress = customer.deliveryAddress
+  selectedCustomerBalance.value = customer.balance
+  // 新建订单选完客户后自动带出第一个窗帘行
+  if (formData.value.curtains.length === 0) addCurtain()
+  await updateMaterialAuthorizedPrices(customerId)
+}
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
@@ -786,9 +862,110 @@ const transformDetailCurtains = (
       note: s.note,
       structureName: s.structureName,
       installProcessName: s.installProcessName,
-      materials: (s.materials ?? []).map((m) => ({ ...m }))
+      materials: (s.materials ?? []).map((m) => ({
+        ...m,
+        spec: (m as MaterialWithSpec).spec
+      }))
     }))
   }))
+}
+
+/** 将表单用料行转为接口提交结构（剔除 status/productName 等仅展示字段） */
+const mapSubmitMaterial = (material: MaterialWithSpec) => ({
+  id: material.id,
+  elementId: material.elementId,
+  productId: material.productId,
+  batchId: material.batchId,
+  spec: material.spec,
+  price: material.price,
+  quantity: material.quantity,
+  unitValue: material.unitValue,
+  discountRate: material.discountRate,
+  amount: material.amount,
+  note: material.note
+})
+
+/** 将表单结构行转为接口提交结构（含尺寸、工艺等全部业务字段） */
+const mapSubmitStructure = (structure: StructureWithMaterials) => ({
+  id: structure.id,
+  structureId: structure.structureId,
+  height: structure.height,
+  width: structure.width,
+  leftCorner: structure.leftCorner,
+  rightCorner: structure.rightCorner,
+  pasteDirection: structure.pasteDirection,
+  installProcessId: structure.installProcessId,
+  openMethod: structure.openMethod,
+  processType: structure.processType,
+  isShaping: structure.isShaping,
+  pleatsNum: structure.pleatsNum,
+  pleatsDistance: structure.pleatsDistance,
+  skirtHeight: structure.skirtHeight,
+  note: structure.note,
+  materials: (structure.materials ?? []).map(mapSubmitMaterial)
+})
+
+/** 将表单窗帘行转为接口提交结构 */
+const mapSubmitCurtain = (curtain: CurtainWithStructures) => ({
+  id: curtain.id,
+  curtainId: curtain.curtainId,
+  room: curtain.room,
+  pleatRatioValue: curtain.pleatRatioValue,
+  pleatsDistance: curtain.pleatsDistance,
+  discountRate: curtain.discountRate,
+  amount: curtain.amount,
+  image1: curtain.image1,
+  image2: curtain.image2,
+  mountings: curtain.mountings,
+  note: curtain.note,
+  structures: (curtain.structures ?? []).map(mapSubmitStructure)
+})
+
+/**
+ * 组装整单创建/更新请求体，字段与 POST /create、PUT /update 对齐
+ * totalAmount = 所有窗帘金额之和 + 运费；amount 由 watch 自动计算（totalAmount - 优惠）
+ */
+const buildSubmitPayload = (): ZcSalesOrderSubmitReqVO => {
+  const form = formData.value
+  const curtainAmountSum = form.curtains.reduce((sum, c) => sum + (c.amount ?? 0), 0)
+  return {
+    id: form.id,
+    customerId: form.customerId,
+    mobile: form.mobile,
+    brandId: form.brandId,
+    orderDate: form.orderDate,
+    logisticId: form.logisticId,
+    receiver: form.receiver,
+    deliveryAddress: form.deliveryAddress,
+    freight: form.freight,
+    types: form.types,
+    discountAmount: form.discountAmount,
+    totalAmount: round2(curtainAmountSum + (form.freight ?? 0)),
+    amount: form.amount,
+    deliveryDate: form.deliveryDate,
+    note: form.note,
+    curtains: form.curtains.map(mapSubmitCurtain)
+  }
+}
+
+/** 上次保存/加载时的表单快照，用于检测是否有未保存修改 */
+const savedFormSnapshot = ref('')
+
+/** 将当前表单同步为“已保存”基准（加载完成或保存成功后调用） */
+const syncSavedSnapshot = () => {
+  savedFormSnapshot.value = JSON.stringify(buildSubmitPayload())
+}
+
+/** 表单相对上次保存基准是否有变更 */
+const isFormDirty = () => savedFormSnapshot.value !== JSON.stringify(buildSubmitPayload())
+
+/** 非保存类操作前校验：有未保存修改则提醒用户先保存 */
+const ensureSavedBeforeAction = (): boolean => {
+  if (isFormDirty()) {
+    message.warning('订单信息已修改，请先保存')
+    return false
+  }
+  return true
 }
 
 /** 挂载时一次性加载不常变动的基础配置数据 */
@@ -834,6 +1011,8 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
+  await nextTick()
+  syncSavedSnapshot()
 }
 
 const addCurtain = () => {
@@ -891,6 +1070,7 @@ const addMaterial = (structure: StructureWithMaterials) => {
     elementId: undefined,
     productId: undefined,
     batchId: undefined,
+    spec: undefined,
     price: undefined,
     quantity: undefined,
     unitValue: undefined,
@@ -954,22 +1134,26 @@ const handleSave = async () => {
 
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
 const handlePrintOrder = () => {
+  if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
+  if (!ensureSavedBeforeAction()) return
   console.log('[加工单] 打印数据：', JSON.parse(JSON.stringify(formData.value)))
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开水洗标打印预览，每个结构生成 6 张相同标签 */
 const handlePrintWashLabel = () => {
+  if (!ensureSavedBeforeAction()) return
   washLabelDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览 */
 const handlePrintShipping = () => {
+  if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
 
@@ -979,6 +1163,7 @@ const handlePrintShipping = () => {
  */
 const handlePrintOrder2 = async () => {
   if (!formData.value.id) return
+  if (!ensureSavedBeforeAction()) return
   pdfLoading.value = true
   try {
     const blob = await SalesOrderApi.exportSalesOrderPdf(formData.value.id)
@@ -1024,9 +1209,12 @@ const reloadForm = async (id: number) => {
   } finally {
     formLoading.value = false
   }
+  await nextTick()
+  syncSavedSnapshot()
 }
 
 const handleConfirm = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     // 调用专用确认接口，后端负责状态流转（unconfirmed → confirmed）并扣减客户余额
@@ -1040,6 +1228,7 @@ const handleConfirm = async () => {
 }
 
 const handleCancelConfirm = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     // 调用取消确认接口，后端负责状态回退（confirmed → unconfirmed）并退回客户余额
@@ -1053,6 +1242,7 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     // 调用专用加急接口，后端负责标记 is_expedited=true
@@ -1080,18 +1270,19 @@ const submitForm = async () => {
   }
   formLoading.value = true
   try {
-    const data = formData.value as unknown as SalesOrder
-    console.log('[销售订单] 提交表单数据：', JSON.parse(JSON.stringify(formData.value)))
+    const payload = buildSubmitPayload()
+    console.log('[销售订单] 提交表单数据：', JSON.parse(JSON.stringify(payload)))
     if (formType.value === 'create') {
       // 新增成功后拿到后端返回的 ID，切换为编辑模式并重载表单
-      const newId = await SalesOrderApi.createSalesOrder(data) as unknown as number
+      const { id: _omit, ...createPayload } = payload
+      const newId = await SalesOrderApi.createSalesOrder(createPayload) as unknown as number
       message.success(t('common.createSuccess'))
       formType.value = 'update'
       dialogTitle.value = t('action.update')
       emit('success')
       await reloadForm(newId)
     } else {
-      await SalesOrderApi.updateSalesOrder(data)
+      await SalesOrderApi.updateSalesOrder(payload)
       message.success(t('common.updateSuccess'))
       emit('success')
       await reloadForm(formData.value.id!)
