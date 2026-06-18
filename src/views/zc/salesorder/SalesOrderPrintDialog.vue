@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">销售单预览</span>
         <div class="flex items-center gap-16px mr-24px">
-          <!-- 隐藏价格开关：启用后单价和金额全部显示为 *** -->
+          <!-- 隐藏价格开关：启用后单价、金额、余额等敏感信息不展示 -->
           <el-checkbox v-model="hidePrices" border size="small" style="color: #DC2626;">隐藏价格</el-checkbox>
           <el-tooltip content="打印 / 选择打印机 / 另存为PDF" placement="top">
             <el-button type="primary" @click="handlePrint">
@@ -96,7 +96,7 @@
               &nbsp;|&nbsp;<span style="font-weight: 400;">配件：</span>{{ Array.isArray(curtain.mountings) ? curtain.mountings.join('、') : curtain.mountings }}
             </template>
             <span style="float: right; color: #DC2626; font-size: 14px;">
-              数量：{{ curtain.quantity ?? '-' }}　金额：{{ formatMoney(curtain.amount) }}
+              金额：{{ formatMoney(curtain.amount) }}
             </span>
           </div>
 
@@ -172,7 +172,7 @@
         <!-- 金额汇总 -->
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
           <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center; flex-wrap: wrap;">
-            <div v-if="balanceLog"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
+            <div v-if="balanceLog && !hidePrices"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
             <div v-if="formData?.freight">
               <b>运费：</b>{{ formatMoney(formData.freight) }}
             </div>
@@ -184,7 +184,7 @@
             <div style="font-size: 16px; font-weight: bold;">
               合计：<span style="color: #DC2626;">{{ formatMoney(formData?.amount ?? 0) }}</span>
             </div>
-            <div v-if="balanceLog"><b>账户余额：</b>{{ formatBalance(balanceLog.balanceAfter) }}</div>
+            <div v-if="balanceLog && !hidePrices"><b>账户余额：</b>{{ formatBalance(balanceLog.balanceAfter) }}</div>
           </div>
         </div>
 
@@ -244,7 +244,7 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 隐藏价格模式：开启后单价和金额全部显示为 *** */
+/** 隐藏价格模式：开启后单价和金额显示为 ***，余额行不展示 */
 const hidePrices = ref(false)
 /** 品牌详情（底部展示电话、地址） */
 const brandDetail = ref<Brand | null>(null)
@@ -296,7 +296,7 @@ const formatMoney = (val?: number | null) => {
   return `¥${val}`
 }
 
-/** 余额展示（不受隐藏价格开关影响） */
+/** 余额展示：隐藏价格模式下不展示余额行 */
 const formatBalance = (val?: number | null) => {
   if (val == null) return '-'
   return `¥${val}`
@@ -447,7 +447,7 @@ const handlePrint = () => {
           &nbsp;|&nbsp;<span style="font-weight:400;">房间：</span>${curtain.room || '-'}
           ${curtain.pleatRatioValue != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">褶倍：</span>${curtain.pleatRatioValue}` : ''}
           ${mountingsStr ? `&nbsp;|&nbsp;<span style="font-weight:400;">配件：</span>${mountingsStr}` : ''}
-          <span style="float:right;color:#DC2626;font-size:14px;">数量：${curtain.quantity ?? '-'}　金额：${formatMoney(curtain.amount)}</span>
+          <span style="float:right;color:#DC2626;font-size:14px;">金额：${formatMoney(curtain.amount)}</span>
         </div>
         ${noteRow}
         ${structuresHtml}
@@ -455,12 +455,14 @@ const handlePrint = () => {
   }).join('')
 
   // ---- 金额汇总 ----
-  const balanceBeforeHtml = balanceLog.value
-    ? `<div><b>上期余额：</b>${formatBalance(balanceLog.value.balanceBefore)}</div>`
-    : ''
-  const balanceAfterHtml = balanceLog.value
-    ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
-    : ''
+  const balanceBeforeHtml =
+    balanceLog.value && !hidePrices.value
+      ? `<div><b>上期余额：</b>${formatBalance(balanceLog.value.balanceBefore)}</div>`
+      : ''
+  const balanceAfterHtml =
+    balanceLog.value && !hidePrices.value
+      ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
+      : ''
   const summaryHtml = `
     <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
       <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;flex-wrap:wrap;">

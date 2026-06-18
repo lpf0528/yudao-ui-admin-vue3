@@ -201,9 +201,6 @@
               <el-form-item label="褶距" class="curtain-field curtain-field-metric form-field-compact">
                 <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
               </el-form-item>
-              <el-form-item label="数量" class="curtain-field curtain-field-metric form-field-compact">
-                <el-input-number v-model="curtain.quantity" placeholder="数量" :min="1" :precision="0" :controls="false" class="!w-full" :disabled="isConfirmed" />
-              </el-form-item>
               <el-form-item label="金额" class="curtain-field curtain-field-metric form-field-compact">
                 <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
                 <el-input-number v-model="curtain.amount" placeholder="金额" :controls="false" class="!w-full" disabled />
@@ -836,7 +833,6 @@ const transformDetailCurtains = (
     image2: c.image2,
     mountings: parseMountings(c.mountings),
     note: c.note,
-    quantity: c.quantity ?? 1,
     curtainName: c.curtainName,
     templateLoading: false,
     structures: (c.structures ?? []).map((s) => ({
@@ -915,7 +911,6 @@ const mapSubmitCurtain = (curtain: CurtainWithStructures) => ({
   image2: curtain.image2,
   mountings: curtain.mountings,
   note: curtain.note,
-  quantity: curtain.quantity,
   structures: (curtain.structures ?? []).map(mapSubmitStructure)
 })
 
@@ -1041,7 +1036,6 @@ const addCurtain = () => {
     image2: undefined,
     mountings: undefined,
     note: undefined,
-    quantity: 1,
     structures: [],
     templateLoading: false
   })
@@ -1099,16 +1093,59 @@ const cloneCurtain = (curtain: CurtainWithStructures): CurtainWithStructures => 
   image2: curtain.image2,
   mountings: curtain.mountings ? [...curtain.mountings] : undefined,
   note: curtain.note,
-  quantity: curtain.quantity,
   structures: (curtain.structures ?? []).map(cloneStructure),
   templateLoading: false
 })
+
+/** 四舍五入保留两位小数 */
+const round2 = (val: number) => Math.round(val * 100) / 100
+
+/**
+ * 重新计算用料小计、窗帘金额、订单金额及舍入差额：
+ * 1. 用料小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1），保留两位小数
+ * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率，保留两位小数
+ * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，再四舍五入到整数
+ * 4. rounding = 四舍五入差额（舍去为负，入位为正）
+ */
+const recalculateOrderAmounts = (form: typeof formData.value = formData.value) => {
+  let orderTotal = 0
+  form.curtains.forEach((curtain) => {
+    let curtainTotal = 0
+    curtain.structures.forEach((structure) => {
+      structure.materials.forEach((material) => {
+        // 单价或用料有值时才计算，避免全空时显示 0
+        material.amount =
+          material.price != null || material.quantity != null
+            ? round2((material.price ?? 0) * (material.quantity ?? 0) * (material.discountRate ?? 1))
+            : undefined
+        curtainTotal += material.amount ?? 0
+      })
+    })
+    // 窗帘金额 = 所有用料小计之和 × 窗帘折扣率
+    curtain.amount =
+      curtainTotal > 0 ? round2(curtainTotal * (curtain.discountRate ?? 1)) : undefined
+    orderTotal += curtain.amount ?? 0
+  })
+  const rawAmount = round2(orderTotal + (form.freight ?? 0) - (form.discountAmount ?? 0))
+  const roundedAmount = Math.round(rawAmount)
+  // rounding：舍去小数记负，进位记正；无差额时为 0
+  form.rounding = round2(roundedAmount - rawAmount)
+  form.amount = roundedAmount as any
+}
+
+watch(
+  () => formData.value,
+  (form) => recalculateOrderAmounts(form),
+  { deep: true }
+)
 
 /** 复制窗帘并插入到当前行下方 */
 const copyCurtain = (index: number) => {
   const source = formData.value.curtains[index]
   if (!source) return
   formData.value.curtains.splice(index + 1, 0, cloneCurtain(source))
+  // splice 插入新行后 deep watch 不一定立即触发，显式重算订单金额
+  recalculateOrderAmounts()
   message.success('复制成功')
 }
 
@@ -1159,48 +1196,6 @@ const removeMaterial = (structure: StructureWithMaterials, index: number) => {
   }
   structure.materials.splice(index, 1)
 }
-
-/** 四舍五入保留两位小数 */
-const round2 = (val: number) => Math.round(val * 100) / 100
-
-/**
- * 监听整个表单变化，自动计算：
- * 1. 用料小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1），保留两位小数
- * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率 × 窗帘数量，保留两位小数
- * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，再四舍五入到整数
- * 4. rounding = 四舍五入差额（舍去为负，入位为正）
- */
-watch(
-  () => formData.value,
-  (form) => {
-    let orderTotal = 0
-    form.curtains.forEach((curtain) => {
-      let curtainTotal = 0
-      curtain.structures.forEach((structure) => {
-        structure.materials.forEach((material) => {
-          // 单价或用料有值时才计算，避免全空时显示 0
-          material.amount =
-            material.price != null || material.quantity != null
-              ? round2((material.price ?? 0) * (material.quantity ?? 0) * (material.discountRate ?? 1))
-              : undefined
-          curtainTotal += material.amount ?? 0
-        })
-      })
-      // 窗帘金额 = 所有用料小计之和 × 窗帘折扣率 × 窗帘数量
-      curtain.amount =
-        curtainTotal > 0
-          ? round2(curtainTotal * (curtain.discountRate ?? 1) * (curtain.quantity ?? 1))
-          : undefined
-      orderTotal += curtain.amount ?? 0
-    })
-    const rawAmount = round2(orderTotal + (form.freight ?? 0) - (form.discountAmount ?? 0))
-    const roundedAmount = Math.round(rawAmount)
-    // rounding：舍去小数记负，进位记正；无差额时为 0
-    form.rounding = round2(roundedAmount - rawAmount)
-    form.amount = roundedAmount as any
-  },
-  { deep: true }
-)
 
 defineExpose({ open })
 
