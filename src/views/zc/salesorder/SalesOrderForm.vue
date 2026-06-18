@@ -178,6 +178,9 @@
               <el-form-item label="褶距" class="curtain-field curtain-field-metric form-field-compact">
                 <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
               </el-form-item>
+              <el-form-item label="数量" class="curtain-field curtain-field-metric form-field-compact">
+                <el-input-number v-model="curtain.quantity" placeholder="数量" :min="1" :precision="0" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
               <el-form-item label="金额" class="curtain-field curtain-field-metric form-field-compact">
                 <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
                 <el-input-number v-model="curtain.amount" placeholder="金额" :controls="false" class="!w-full" disabled />
@@ -809,6 +812,7 @@ const transformDetailCurtains = (
     image2: c.image2,
     mountings: parseMountings(c.mountings),
     note: c.note,
+    quantity: c.quantity ?? 1,
     curtainName: c.curtainName,
     templateLoading: false,
     structures: (c.structures ?? []).map((s) => ({
@@ -887,6 +891,7 @@ const mapSubmitCurtain = (curtain: CurtainWithStructures) => ({
   image2: curtain.image2,
   mountings: curtain.mountings,
   note: curtain.note,
+  quantity: curtain.quantity,
   structures: (curtain.structures ?? []).map(mapSubmitStructure)
 })
 
@@ -1001,6 +1006,7 @@ const addCurtain = () => {
     image2: undefined,
     mountings: undefined,
     note: undefined,
+    quantity: 1,
     structures: [],
     templateLoading: false
   })
@@ -1058,6 +1064,7 @@ const cloneCurtain = (curtain: CurtainWithStructures): CurtainWithStructures => 
   image2: curtain.image2,
   mountings: curtain.mountings ? [...curtain.mountings] : undefined,
   note: curtain.note,
+  quantity: curtain.quantity,
   structures: (curtain.structures ?? []).map(cloneStructure),
   templateLoading: false
 })
@@ -1124,7 +1131,7 @@ const round2 = (val: number) => Math.round(val * 100) / 100
 /**
  * 监听整个表单变化，自动计算：
  * 1. 用料小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1），保留两位小数
- * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率，保留两位小数
+ * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率 × 窗帘数量，保留两位小数
  * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，保留两位小数
  */
 watch(
@@ -1143,8 +1150,11 @@ watch(
           curtainTotal += material.amount ?? 0
         })
       })
-      // 窗帘金额 = 所有用料小计之和 × 窗帘折扣率
-      curtain.amount = curtainTotal > 0 ? round2(curtainTotal * (curtain.discountRate ?? 1)) : undefined
+      // 窗帘金额 = 所有用料小计之和 × 窗帘折扣率 × 窗帘数量
+      curtain.amount =
+        curtainTotal > 0
+          ? round2(curtainTotal * (curtain.discountRate ?? 1) * (curtain.quantity ?? 1))
+          : undefined
       orderTotal += curtain.amount ?? 0
     })
     // 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额

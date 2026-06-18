@@ -46,6 +46,7 @@ export interface SalesOrderCurtain {
   /** 配件，前端用数组；后端可能返回 JSON 字符串，需手动 parse */
   mountings?: string[]
   note?: string
+  quantity?: number         // 窗帘数量
   /** 仅展示用 */
   curtainName?: string
 }
@@ -163,6 +164,7 @@ export interface ZcSalesOrderCurtainSubmitVO {
   image2?: string
   mountings?: string[]
   note?: string
+  quantity?: number         // 窗帘数量
   structures?: ZcSalesOrderStructureSubmitVO[]
 }
 
