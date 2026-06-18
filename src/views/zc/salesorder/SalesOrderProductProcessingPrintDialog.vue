@@ -163,7 +163,7 @@ const open = async (data: FormDataType) => {
   const codeId = await BarcodeRegistryApi.create({
     codeType: 'ORDER_QR',
     targetRoute: '/pages-curtain/order/fabric-detail/index',
-    codeContent: JSON.stringify({ id: data.id })
+    codeContent: JSON.stringify({ orderId: data.id })
   })
   const url = await QRCode.toDataURL(codeId, { width: 120, margin: 1 })
   orderQrCode.value = { url, code: codeId }
