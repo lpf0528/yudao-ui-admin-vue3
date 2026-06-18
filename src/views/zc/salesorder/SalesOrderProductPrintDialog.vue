@@ -34,59 +34,45 @@
         "
       >
         <!-- 标题区：居中显示 -->
-        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 20px;">
+        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 8px;">
           {{ brandName ? brandName + ' ' : '' }}面料单销售单
         </div>
 
-        <!-- 订单头信息（无外边框，两列布局） -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
-          <tbody>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; width: 50%; vertical-align: top;">
-                <b>客户：</b>{{ customerName }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; width: 50%; vertical-align: top;">
-                <b>订单号：</b>{{ formData?.orderNo || '-' }}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; vertical-align: top;">
-                <b>物流：</b>{{ logisticName }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; vertical-align: top;">
-                <b>创建人：</b>{{ (formData as any)?.creatorName || '-' }}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; vertical-align: top;">
-                <b>交付日期：</b>{{ formData?.deliveryDate || '-' }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; vertical-align: top;"></td>
-            </tr>
-            <tr>
-              <td colspan="2" style="padding: 4px 0; vertical-align: top;">
-                <b>送货地址：</b>{{ formData?.deliveryAddress || '-' }}
-              </td>
-            </tr>
-            <tr v-if="formData?.note">
-              <td colspan="2" style="padding: 4px 0; vertical-align: top;">
-                <b>备注：</b>{{ formData.note }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- 订单头信息：流式排列，无固定列宽（与成品销售单一致） -->
+        <div style="line-height: 1.4; margin-bottom: 2px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span>
+              <b>客户：</b>{{ customerName }}
+              <b>电话：</b>{{ formData?.mobile || '-' }}
+              <b>地址：</b>{{ formData?.deliveryAddress || '-' }}
+            </span>
+            <span style="flex-shrink: 0; margin-left: 12px;"><b>下单日期：</b>{{ formData?.orderDate || '-' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span>
+              <b>物流：</b>{{ logisticName }}
+              <b>交付日期：</b>{{ formData?.deliveryDate || '-' }}
+            </span>
+            <span><b>订单号：</b>{{ formData?.orderNo || '-' }}</span>
+          </div>
+          <div>
+            <b>备注：</b>{{ formData?.note || '-' }}
+          </div>
+        </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 12px 0 16px;"></div>
+        <div style="border-top: 1px solid #ccc; margin: 6px 0 8px;"></div>
 
         <!-- 面料批次明细表格 -->
         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <thead>
             <tr style="background: #F3F4F6;">
               <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">货号</th>
+              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">规格</th>
               <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
               <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
+              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
+              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center; font-weight: 600;">单位</th>
               <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">金额</th>
               <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
             </tr>
@@ -94,10 +80,12 @@
           <tbody>
             <tr v-for="(batch, idx) in formData?.batchs" :key="idx">
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.productName || '-' }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.spec || '-' }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.batchNo || '-' }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMoney(batch.price) }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ hidePrices ? '***' : (batch.price ?? '-') }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ hidePrices ? '***' : (batch.amount ?? '-') }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center;">{{ formatUnit(batch.unitValue) }}</td>
+              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(batch.amount) }}</td>
               <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
@@ -105,25 +93,34 @@
 
         <!-- 金额汇总 -->
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
-          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center;">
+          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center; flex-wrap: wrap;">
+            <div v-if="balanceLog && !hidePrices"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
             <div v-if="formData?.freight">
-              <b>运费：</b>{{ hidePrices ? '***' : `¥${formData.freight}` }}
+              <b>运费：</b>{{ formatMoney(formData.freight) }}
             </div>
+            <div><b>本单总金额：</b>{{ formatTotalAmount(formData?.totalAmount) }}</div>
             <div v-if="formData?.discountAmount">
               <b>优惠金额：</b>
               <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
             </div>
             <div style="font-size: 16px; font-weight: bold;">
-              合计：<span style="color: #DC2626;">{{ hidePrices ? '***' : `¥${formData?.amount ?? 0}` }}</span>
+              合计：<span style="color: #DC2626;">{{ formatMoney(formData?.amount ?? 0) }}</span>
             </div>
+            <div v-if="balanceLog && !hidePrices"><b>账户余额：</b>{{ formatBalance(balanceLog.balanceAfter) }}</div>
           </div>
         </div>
 
-        <!-- 签名区域 -->
-        <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 13px; color: #555;">
-          <div>制单人：________________</div>
-          <div>确认人：________________</div>
-          <div>客户签字：________________</div>
+        <!-- 底部：左侧品牌联系信息，右侧签字栏（与成品销售单一致） -->
+        <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 13px; color: #555;">
+          <div style="flex: 1; line-height: 1.8;">
+            <div><b>电话：</b>{{ brandDetail?.mobile || '-' }}</div>
+            <div><b>地址：</b>{{ brandDetail?.address || '-' }}</div>
+          </div>
+          <div style="flex-shrink: 0; line-height: 2.2; min-width: 180px;">
+            <div>制单人：{{ (formData as any)?.creatorName || '________________' }}</div>
+            <div>客户签字：________________</div>
+            <div>打印时间：{{ printTime }}</div>
+          </div>
         </div>
 
         <!-- 底部提示语 -->
@@ -136,9 +133,13 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerSimpleVO } from '@/api/zc/customer'
-import type { BrandSimpleVO } from '@/api/zc/brand'
+import type { CustomerSimpleVO, ZcCustomerBalanceLogRespVO } from '@/api/zc/customer'
+import { CustomerApi } from '@/api/zc/customer'
+import type { BrandSimpleVO, Brand } from '@/api/zc/brand'
+import { BrandApi } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
+import { formatDate } from '@/utils/formatTime'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 
 /** 面料单打印预览弹窗 */
 defineOptions({ name: 'SalesOrderProductPrintDialog' })
@@ -146,7 +147,9 @@ defineOptions({ name: 'SalesOrderProductPrintDialog' })
 // ======================== 类型定义 ========================
 interface BatchRow {
   productName?: string
+  spec?: string
   batchNo?: string
+  unitValue?: string
   quantity?: number
   price?: number
   amount?: number
@@ -159,12 +162,16 @@ interface FormDataType {
   customerId?: number
   brandId?: number
   logisticId?: number
+  mobile?: string
+  orderDate?: string
   deliveryDate?: string
   deliveryAddress?: string
   freight?: number
   discountAmount?: number
+  totalAmount?: number
   amount?: any
   note?: string
+  creatorName?: string
   batchs: BatchRow[]
 }
 
@@ -178,8 +185,14 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 隐藏价格模式：开启后单价和金额全部显示为 *** */
+/** 隐藏价格模式：开启后单价和金额显示为 ***，余额行不展示 */
 const hidePrices = ref(false)
+/** 品牌详情（底部展示电话、地址） */
+const brandDetail = ref<Brand | null>(null)
+/** 打印时间（预览展示，实际打印时刷新） */
+const printTime = ref('')
+/** 订单确认扣减的最新客户余额流水 */
+const balanceLog = ref<ZcCustomerBalanceLogRespVO | null>(null)
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -201,11 +214,64 @@ const logisticName = computed(() => {
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
 })
 
+/** 金额展示：隐藏价格模式下返回 ***，否则前缀 ¥ */
+const formatMoney = (val?: number | null) => {
+  if (hidePrices.value) return '***'
+  if (val == null) return '-'
+  return `¥${val}`
+}
+
+/** 余额展示：隐藏价格模式下不展示余额行 */
+const formatBalance = (val?: number | null) => {
+  if (val == null) return '-'
+  return `¥${val}`
+}
+
+/** 本单总金额展示：对 totalAmount 四舍五入到整数 */
+const formatTotalAmount = (val?: number | null) => {
+  if (hidePrices.value) return '***'
+  if (val == null) return '-'
+  return `¥${Math.round(val)}`
+}
+
+/** 计量单位展示：字典标签优先，无值时显示 - */
+const formatUnit = (unitValue?: string) => {
+  if (!unitValue) return '-'
+  return getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, unitValue) || unitValue
+}
+
 // ======================== 对外方法 ========================
+/** 根据品牌 ID 加载详情，用于底部联系信息展示 */
+const loadBrandDetail = async (brandId?: number) => {
+  brandDetail.value = null
+  if (!brandId) return
+  try {
+    brandDetail.value = await BrandApi.getBrand(brandId)
+  } catch {
+    brandDetail.value = null
+  }
+}
+
+/** 根据客户 ID、订单 ID 加载订单确认扣减的最新余额流水 */
+const loadBalanceLog = async (customerId?: number, refId?: number) => {
+  balanceLog.value = null
+  if (!customerId || !refId) return
+  try {
+    balanceLog.value = await CustomerApi.getLatestOrderConfirmBalanceLog({ customerId, refId })
+  } catch {
+    balanceLog.value = null
+  }
+}
+
 /** 打开预览弹窗，传入当前表单数据 */
-const open = (data: FormDataType) => {
+const open = async (data: FormDataType) => {
   formData.value = data
+  printTime.value = formatDate(new Date())
   visible.value = true
+  await Promise.all([
+    loadBrandDetail(data.brandId),
+    loadBalanceLog(data.customerId, data.id)
+  ])
 }
 
 defineExpose({ open })
@@ -218,6 +284,7 @@ defineExpose({ open })
 const handlePrint = () => {
   if (!formData.value) return
 
+  printTime.value = formatDate(new Date())
   const fd = formData.value
   const cName = customerName.value
   const bName = brandName.value
@@ -225,19 +292,38 @@ const handlePrint = () => {
 
   const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
   const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
-  const infoTd = 'padding:4px 12px 4px 0;vertical-align:top;'
-  /** 价格掩码辅助：隐藏价格模式下返回 *** */
-  const mp = (val: any, prefix = '') => hidePrices.value ? '***' : `${prefix}${val ?? '-'}`
 
   const batchRowsHtml = (fd.batchs || []).map((b) => `
     <tr>
       <td style="${tdS}">${b.productName || '-'}</td>
+      <td style="${tdS}">${b.spec || '-'}</td>
       <td style="${tdS}">${b.batchNo || '-'}</td>
+      <td style="${tdS}text-align:right;">${formatMoney(b.price)}</td>
       <td style="${tdS}text-align:right;">${b.quantity ?? '-'}</td>
-      <td style="${tdS}text-align:right;">${mp(b.price)}</td>
-      <td style="${tdS}text-align:right;font-weight:600;">${mp(b.amount)}</td>
+      <td style="${tdS}text-align:center;">${formatUnit(b.unitValue)}</td>
+      <td style="${tdS}text-align:right;font-weight:600;">${formatMoney(b.amount)}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
+
+  const balanceBeforeHtml =
+    balanceLog.value && !hidePrices.value
+      ? `<div><b>上期余额：</b>${formatBalance(balanceLog.value.balanceBefore)}</div>`
+      : ''
+  const balanceAfterHtml =
+    balanceLog.value && !hidePrices.value
+      ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
+      : ''
+  const summaryHtml = `
+    <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
+      <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;flex-wrap:wrap;">
+        ${balanceBeforeHtml}
+        ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
+        <div><b>本单总金额：</b>${formatTotalAmount(fd.totalAmount)}</div>
+        ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
+        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
+        ${balanceAfterHtml}
+      </div>
+    </div>`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -252,54 +338,47 @@ const handlePrint = () => {
   </style>
 </head>
 <body>
-  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:20px;">
-    ${bName ? bName + '&nbsp;' : ''}面料单
+  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:8px;">
+    ${bName ? bName + '&nbsp;' : ''}面料单销售单
   </div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
-    <tbody>
-      <tr>
-        <td style="${infoTd}width:50%;"><b>客户：</b>${cName}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;width:50%;"><b>订单号：</b>${fd.orderNo || '-'}</td>
-      </tr>
-      <tr>
-        <td style="${infoTd}"><b>物流：</b>${lName}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;"><b>创建人：</b>${(fd as any).creatorName || '-'}</td>
-      </tr>
-      <tr>
-        <td style="${infoTd}"><b>交付日期：</b>${fd.deliveryDate || '-'}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;"></td>
-      </tr>
-      <tr>
-        <td colspan="2" style="padding:4px 0;vertical-align:top;"><b>送货地址：</b>${fd.deliveryAddress || '-'}</td>
-      </tr>
-      ${fd.note ? `<tr><td colspan="2" style="padding:4px 0;vertical-align:top;"><b>备注：</b>${fd.note}</td></tr>` : ''}
-    </tbody>
-  </table>
-  <div style="border-top:1px solid #ccc;margin:12px 0 16px;"></div>
+  <div style="line-height:1.4;margin-bottom:2px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span><b>客户：</b>${cName} <b>电话：</b>${fd.mobile || '-'} <b>地址：</b>${fd.deliveryAddress || '-'}</span>
+      <span style="flex-shrink:0;margin-left:12px;"><b>下单日期：</b>${fd.orderDate || '-'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span><b>物流：</b>${lName} <b>交付日期：</b>${fd.deliveryDate || '-'}</span>
+      <span><b>订单号：</b>${fd.orderNo || '-'}</span>
+    </div>
+    <div><b>备注：</b>${fd.note || '-'}</div>
+  </div>
+  <div style="border-top:1px solid #ccc;margin:6px 0 8px;"></div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;">
     <thead>
       <tr style="background:#F3F4F6;">
         <th style="${thS}text-align:left;">货号</th>
+        <th style="${thS}text-align:left;">规格</th>
         <th style="${thS}text-align:left;">批次</th>
-        <th style="${thS}text-align:right;">用料</th>
         <th style="${thS}text-align:right;">单价</th>
+        <th style="${thS}text-align:right;">用料</th>
+        <th style="${thS}text-align:center;">单位</th>
         <th style="${thS}text-align:right;">金额</th>
         <th style="${thS}text-align:left;">备注</th>
       </tr>
     </thead>
     <tbody>${batchRowsHtml}</tbody>
   </table>
-  <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
-    <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;">
-      ${fd.freight ? `<div><b>运费：</b>${mp(fd.freight, '¥')}</div>` : ''}
-      ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
-      <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${mp(fd.amount ?? 0, '¥')}</span></div>
+  ${summaryHtml}
+  <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;font-size:13px;color:#555;">
+    <div style="flex:1;line-height:1.8;">
+      <div><b>电话：</b>${brandDetail.value?.mobile || '-'}</div>
+      <div><b>地址：</b>${brandDetail.value?.address || '-'}</div>
     </div>
-  </div>
-  <div style="margin-top:40px;display:flex;justify-content:space-between;font-size:13px;color:#555;">
-    <div>制单人：________________</div>
-    <div>确认人：________________</div>
-    <div>客户签字：________________</div>
+    <div style="flex-shrink:0;line-height:2.2;min-width:180px;">
+      <div>制单人：${fd.creatorName || '________________'}</div>
+      <div>客户签字：________________</div>
+      <div>打印时间：${printTime.value}</div>
+    </div>
   </div>
   <div style="margin-top:20px;font-size:12px;color:#555;border-top:1px solid #ddd;padding-top:10px;">
     尊敬的客户：面料单确认后，布料一经裁剪后一概不予退换。

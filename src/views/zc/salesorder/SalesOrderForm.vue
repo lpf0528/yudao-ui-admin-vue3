@@ -135,7 +135,14 @@
         </el-form-item>
         <!-- 优惠金额：列宽略收窄 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
-          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+          <el-input-number
+            v-model="formData.discountAmount"
+            placeholder="请输入优惠金额"
+            :min="0"
+            :max="orderTotalBeforeDiscount"
+            :controls="false"
+            class="!w-full"
+          />
         </el-form-item>
         <!-- 金额：四舍五入后的订单金额，只读 -->
         <el-form-item label="金额" prop="amount" style="flex: 1.5; min-width: 0">
@@ -734,6 +741,15 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
 
 const formData = ref(getInitFormData())
 
+/** 优惠前订单金额 = 窗帘明细合计 + 运费（与 totalAmount 一致） */
+const getOrderTotalBeforeDiscount = (form = formData.value) => {
+  const lineSum = form.curtains.reduce((sum, c) => sum + (c.amount ?? 0), 0)
+  return Math.round((lineSum + (form.freight ?? 0)) * 100) / 100
+}
+
+/** 供优惠金额输入框 max 限制及校验使用 */
+const orderTotalBeforeDiscount = computed(() => getOrderTotalBeforeDiscount(formData.value))
+
 /** 切换客户后，更新已有用料中已选产品+规格的授权价 */
 const updateMaterialAuthorizedPrices = async (customerId: number) => {
   console.log('[SalesOrderForm 授权价] updateMaterialAuthorizedPrices 开始', { customerId })
@@ -816,7 +832,21 @@ const formRules = {
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '状态不能为空', trigger: 'blur' }],
-  isExpedited: [{ required: true, message: '是否加急不能为空', trigger: 'blur' }]
+  isExpedited: [{ required: true, message: '是否加急不能为空', trigger: 'blur' }],
+  discountAmount: [{
+    validator: (_rule: unknown, value: number | undefined, callback: (err?: Error) => void) => {
+      if (value == null || value === '') {
+        callback()
+        return
+      }
+      if (value > getOrderTotalBeforeDiscount()) {
+        callback(new Error('优惠金额不能大于订单金额'))
+        return
+      }
+      callback()
+    },
+    trigger: ['blur', 'change']
+  }],
 }
 
 const formRef = ref()
@@ -1171,6 +1201,8 @@ const recalculateOrderAmounts = (form: typeof formData.value = formData.value) =
   // rounding：舍去小数记负，进位记正；无差额时为 0
   form.rounding = round2(roundedAmount - rawAmount)
   form.amount = roundedAmount as any
+  // 明细或运费变化后，重新校验优惠金额是否仍合法
+  nextTick(() => formRef.value?.validateField('discountAmount').catch(() => {}))
 }
 
 watch(

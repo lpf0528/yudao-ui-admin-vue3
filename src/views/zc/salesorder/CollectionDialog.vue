@@ -184,6 +184,11 @@
           </el-table-column>
           <el-table-column label="订单金额" prop="amount" width="110" align="right" />
           <el-table-column label="已收金额" prop="amountReceived" width="110" align="right" />
+          <el-table-column label="剩余金额" width="110" align="right">
+            <template #default="{ row }">
+              {{ getOrderRemainingAmount(row).toFixed(2) }}
+            </template>
+          </el-table-column>
         </el-table>
       </template>
     </el-form>
@@ -389,6 +394,10 @@ const formatDate = (val: string | number | undefined) => {
   if (!val) return ''
   return dayjs(val).format('YYYY-MM-DD')
 }
+
+/** 订单剩余应收金额 = 订单金额 - 已收金额（与分摊逻辑一致，最小为 0） */
+const getOrderRemainingAmount = (order: SalesOrder) =>
+  Math.round(Math.max(0, (order.amount ?? 0) - (order.amountReceived ?? 0)) * 100) / 100
 
 // ======================== 弹窗控制 ========================
 /**

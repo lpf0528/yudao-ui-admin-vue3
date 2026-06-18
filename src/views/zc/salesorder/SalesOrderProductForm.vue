@@ -1,7 +1,7 @@
 <!--
   面料单 新增/修改弹窗
   表单顶部（操作栏 + 基础信息三行）与成品单（SalesOrderForm.vue）保持一致
-  底部为面料批次列表（货号 / 批次 / 匹数 / 数量 / 单位 / 单价 / 金额 / 备注）
+  底部为面料批次列表（货号 / 规格 / 批次 / 单价 / 用料 / 单位 / 金额 / 备注）
   通过 open(type, id?) 方法打开，成功后 emit('success') 通知父组件刷新列表
 -->
 <template>
@@ -116,7 +116,14 @@
         </el-form-item>
         <!-- 优惠金额 2 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
+          <el-input-number
+            v-model="formData.discountAmount"
+            placeholder="请输入优惠金额"
+            :min="0"
+            :max="orderTotalBeforeDiscount"
+            :controls="false"
+            class="!w-full"
+          />
         </el-form-item>
         <!-- 金额 2 -->
         <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
@@ -156,10 +163,11 @@
           <el-col :span="5">货号</el-col>
           <el-col :span="3">规格</el-col>
           <el-col :span="4">批次</el-col>
-          <el-col :span="3">用料</el-col>
-          <el-col :span="3">单价</el-col>
-          <el-col :span="3">金额</el-col>
-          <el-col :span="2">备注</el-col>
+          <el-col :span="2">单价</el-col>
+          <el-col :span="2">用料</el-col>
+          <el-col :span="2">单位</el-col>
+          <el-col :span="2">金额</el-col>
+          <el-col :span="3">备注</el-col>
         </el-row>
         <!-- 批次数据行 -->
         <el-row
@@ -192,6 +200,7 @@
               size="small"
               class="!w-full"
               clearable
+              @change="(spec: string) => handleBatchSpecChange(batch, spec)"
             >
               <el-option
                 v-for="sc in batch.specConfs"
@@ -219,16 +228,7 @@
               readonly
             />
           </el-col>
-          <el-col :span="3">
-            <el-input-number
-              v-model="batch.quantity"
-              placeholder="用料"
-              size="small"
-              :controls="false"
-              class="!w-full"
-            />
-          </el-col>
-          <el-col :span="3">
+          <el-col :span="2">
             <el-input-number
               v-model="batch.price"
               placeholder="单价"
@@ -237,8 +237,22 @@
               class="!w-full"
             />
           </el-col>
+          <el-col :span="2">
+            <el-input-number
+              v-model="batch.quantity"
+              placeholder="用料"
+              size="small"
+              :controls="false"
+              class="!w-full"
+            />
+          </el-col>
+          <!-- 单位由批次回填，只读展示 -->
+          <el-col :span="2" class="flex items-center justify-center">
+            <dict-tag v-if="batch.unitValue" :type="DICT_TYPE.ZC_PRODUCT_UNIT" :value="batch.unitValue" />
+            <span v-else class="text-xs text-gray-400">-</span>
+          </el-col>
           <!-- 金额由数量 × 单价自动计算，禁止手动编辑 -->
-          <el-col :span="3">
+          <el-col :span="2">
             <el-input-number
               v-model="batch.amount"
               placeholder="金额"
@@ -248,7 +262,7 @@
               disabled
             />
           </el-col>
-          <el-col :span="2">
+          <el-col :span="3">
             <el-input v-model="batch.note" placeholder="备注" size="small" />
           </el-col>
         </el-row>
@@ -301,6 +315,7 @@ import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
+import { DICT_TYPE } from '@/utils/dict'
 import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
 import SalesOrderProductPrintDialog from './SalesOrderProductPrintDialog.vue'
 import SalesOrderProductProcessingPrintDialog from './SalesOrderProductProcessingPrintDialog.vue'
@@ -347,6 +362,7 @@ interface BatchRow {
   specConfs?: ProductVersionSpecSimpleVO[]  // 当前版本的可选规格列表，仅选产品时用于渲染下拉
   batchId?: number         // 批次 ID
   batchNo?: string         // 批次号（展示用）
+  unitValue?: string       // 计量单位（由批次回填，只读展示）
   price?: number           // 单价
   quantity?: number        // 数量
   amount?: number          // 金额（数量 × 单价，自动计算）
@@ -380,6 +396,7 @@ const getInitFormData = () => ({
   types: SalesOrderType.FABRIC,
   discountAmount: undefined as number | undefined,
   amount: undefined as any,
+  rounding: undefined as number | undefined,
   deliveryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 6); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })() as string | undefined,
   payStatus: undefined as string | undefined,
   status: undefined as string | undefined,
@@ -390,12 +407,35 @@ const getInitFormData = () => ({
 
 const formData = ref(getInitFormData())
 
+/** 优惠前订单金额 = 面料明细合计 + 运费（与 totalAmount 一致） */
+const getOrderTotalBeforeDiscount = (form = formData.value) => {
+  const lineSum = form.batchs.reduce((sum, b) => sum + (b.amount ?? 0), 0)
+  return Math.round((lineSum + (form.freight ?? 0)) * 100) / 100
+}
+
+/** 供优惠金额输入框 max 限制及校验使用 */
+const orderTotalBeforeDiscount = computed(() => getOrderTotalBeforeDiscount(formData.value))
+
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
   logisticId: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
+  discountAmount: [{
+    validator: (_rule: unknown, value: number | undefined, callback: (err?: Error) => void) => {
+      if (value == null || value === '') {
+        callback()
+        return
+      }
+      if (value > getOrderTotalBeforeDiscount()) {
+        callback(new Error('优惠金额不能大于订单金额'))
+        return
+      }
+      callback()
+    },
+    trigger: ['blur', 'change']
+  }],
 }
 
 const formRef = ref()
@@ -446,6 +486,33 @@ const syncCustomerDisplay = async (customerId: number) => {
   }
 }
 
+/** 查询单条面料行的客户版本规格授权价，成功时覆盖单价 */
+const fetchBatchAuthorizedPrice = async (
+  batch: BatchRow,
+  customerId: number,
+  spec?: string
+): Promise<void> => {
+  const targetSpec = spec ?? batch.spec
+  if (!batch.productId || !targetSpec) return
+  try {
+    const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
+      productId: batch.productId,
+      customerId,
+      spec: targetSpec
+    })
+    if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
+  } catch {
+    // 无授权价配置时保持原单价
+  }
+}
+
+/** 批量刷新面料列表授权价（选择客户后调用） */
+const updateBatchAuthorizedPrices = async (customerId: number) => {
+  const batchs = formData.value.batchs
+  if (!batchs.length) return
+  await Promise.all(batchs.map((batch) => fetchBatchAuthorizedPrice(batch, customerId)))
+}
+
 /** 将客户信息回填到表单，并更新已选面料授权价 */
 const applyCustomerToForm = async (customer: Customer) => {
   formData.value.customerId = customer.id
@@ -455,21 +522,7 @@ const applyCustomerToForm = async (customer: Customer) => {
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
   selectedCustomerBalance.value = customer.balance
-  const batchs = formData.value.batchs
-  if (!batchs.length) return
-  await Promise.all(
-    batchs.map(async (batch) => {
-      if (!batch.productId || !batch.spec) return
-      try {
-        const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
-          productId: batch.productId!,
-          customerId: customer.id,
-          spec: batch.spec
-        })
-        if (priceInfo?.authorizedPrice != null) batch.price = priceInfo.authorizedPrice
-      } catch {}
-    })
-  )
+  await updateBatchAuthorizedPrices(customer.id)
 }
 
 /** 客户搜索弹窗选中回调：直接使用接口返回的完整数据填充表单 */
@@ -493,60 +546,67 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
   const customerId = formData.value.customerId
   const newBatchs = await Promise.all(
     rows.map(async (row) => {
-      let price = row.onePrice ?? undefined
-      if (customerId && row.productId && row.spec) {
-        try {
-          const priceInfo = await CustomerVersionSpcPriceApi.getByProductAndCustomerAndSpec({
-            productId: row.productId,
-            customerId,
-            spec: row.spec
-          })
-          if (priceInfo?.authorizedPrice != null) price = priceInfo.authorizedPrice
-        } catch {
-          // 查询失败保持默认单价
-        }
-      }
       // 仅选产品（无批次）时携带规格列表；若只有一个规格则自动选中
       const specConfs = row.batchId ? undefined : (row.specConfs ?? undefined)
-      const autoSpec = !row.batchId && specConfs?.length === 1 ? specConfs[0].spec : row.spec
-      return {
+      const spec = !row.batchId && specConfs?.length === 1 ? specConfs[0].spec : row.spec
+      const batch: BatchRow = {
         productId: row.productId,
         productName: row.productName,
-        spec: autoSpec,
+        spec,
         specConfs,
         batchId: row.batchId,   // 仅选产品时为 undefined
         batchNo: row.batchNo,
-        price,
+        unitValue: row.unitValue,
+        price: row.onePrice ?? undefined,
         quantity: undefined,
         amount: undefined,
         note: undefined,
-      } as BatchRow
+      }
+      // 有客户且规格已确定时，查询授权价覆盖默认单价
+      if (customerId) await fetchBatchAuthorizedPrice(batch, customerId, spec)
+      return batch
     })
   )
   formData.value.batchs.push(...newBatchs)
+}
+
+/** 仅选产品时手动切换规格：重新查询授权价 */
+const handleBatchSpecChange = async (batch: BatchRow, spec: string) => {
+  const customerId = formData.value.customerId
+  if (!customerId) return
+  await fetchBatchAuthorizedPrice(batch, customerId, spec)
 }
 
 // ======================== 金额自动计算 ========================
 const round2 = (val: number) => Math.round(val * 100) / 100
 
 /**
- * 监听整个表单变化，自动计算：
+ * 重新计算批次行金额、订单金额及舍入差额：
  * 1. 批次行金额 = 数量 × 单价，保留两位小数
- * 2. 订单金额 = 所有批次行金额之和 + 运费 - 优惠金额，保留两位小数
+ * 2. 订单金额 = 所有批次行金额之和 + 运费 - 优惠金额，再四舍五入到整数
+ * 3. rounding = 四舍五入差额（舍去为负，入位为正）
  */
+const recalculateOrderAmounts = (form: typeof formData.value = formData.value) => {
+  let batchTotal = 0
+  form.batchs.forEach((batch) => {
+    batch.amount =
+      batch.quantity != null || batch.price != null
+        ? round2((batch.quantity ?? 0) * (batch.price ?? 0))
+        : undefined
+    batchTotal += batch.amount ?? 0
+  })
+  const rawAmount = round2(batchTotal + (form.freight ?? 0) - (form.discountAmount ?? 0))
+  const roundedAmount = Math.round(rawAmount)
+  // rounding：舍去小数记负，进位记正；无差额时为 0
+  form.rounding = round2(roundedAmount - rawAmount)
+  form.amount = roundedAmount as any
+  // 明细或运费变化后，重新校验优惠金额是否仍合法
+  nextTick(() => formRef.value?.validateField('discountAmount').catch(() => {}))
+}
+
 watch(
   () => formData.value,
-  (form) => {
-    let batchTotal = 0
-    form.batchs.forEach((batch) => {
-      batch.amount =
-        batch.quantity != null || batch.price != null
-          ? round2((batch.quantity ?? 0) * (batch.price ?? 0))
-          : undefined
-      batchTotal += batch.amount ?? 0
-    })
-    form.amount = round2(batchTotal + (form.freight ?? 0) - (form.discountAmount ?? 0)) as any
-  },
+  (form) => recalculateOrderAmounts(form),
   { deep: true }
 )
 
@@ -570,6 +630,7 @@ const mapCurtainsToBatchRows = (curtains: SalesOrderDetailCurtain[]): BatchRow[]
       spec: m.spec,
       batchId: m.batchId,
       batchNo: m.batchNo,
+      unitValue: m.unitValue,
       price: m.price,
       quantity: m.quantity,
       amount: m.amount,
@@ -633,6 +694,7 @@ const buildSubmitPayload = () => {
     discountAmount: form.discountAmount,
     totalAmount: round2(batchTotal + (form.freight ?? 0)),
     amount: form.amount,
+    rounding: form.rounding,
     note: form.note,
     curtains: form.batchs.map((b) => ({
       id: b.curtainRowId,
@@ -645,6 +707,7 @@ const buildSubmitPayload = () => {
           productId: b.productId,
           batchId: b.batchId,
           spec: b.spec,
+          unitValue: b.unitValue,
           price: b.price,
           quantity: b.quantity,
           amount: b.amount,
@@ -680,6 +743,11 @@ const submitForm = async () => {
   await formRef.value.validate()
   if (!formData.value.batchs || formData.value.batchs.length === 0) {
     message.warning('请至少添加一条面料数据')
+    return
+  }
+  const emptySpecIndex = formData.value.batchs.findIndex((b) => !b.spec?.trim())
+  if (emptySpecIndex !== -1) {
+    message.warning(`第 ${emptySpecIndex + 1} 行面料规格不能为空`)
     return
   }
   formLoading.value = true

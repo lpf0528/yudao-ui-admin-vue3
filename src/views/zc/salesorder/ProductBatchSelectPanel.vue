@@ -193,7 +193,7 @@ export interface BatchConfirmItem {
   batchId?: number      // 批次 ID；仅选产品时为 undefined
   productId?: number
   productName?: string
-  specValue?: string    // 产品规格
+  spec?: string         // 产品规格（与批次 API 字段名一致）
   batchNo?: string
   unitValue?: string
   onePrice?: number     // 产品一级销售价，用于回填单价
@@ -337,7 +337,7 @@ const rowToItem = (r: BatchRow): BatchConfirmItem => ({
   batchId: r.id,
   productId: r.productId,
   productName: r.productName,
-  specValue: r.spec,        // API 返回字段名为 spec，映射到父组件的 specValue
+  spec: r.spec,
   batchNo: r.batchNo,
   unitValue: r.unitValue,
   onePrice: r.onePrice,
