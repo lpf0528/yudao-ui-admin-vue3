@@ -76,12 +76,19 @@
               <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap;">第{{ cIdx + 1 }}-{{ sIdx + 1 }}套</span>
             </div>
 
-            <!-- 结构信息 - 4列表格 -->
+            <!-- 结构信息 - 3列表格 -->
             <table style="width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #F9FAFB; color: #374151; margin-bottom: 4px; font-size: 14px;">
               <tbody>
-                <tr v-for="(row, rowIdx) in chunkAttrs(structure, 4)" :key="rowIdx">
-                  <td v-for="(cell, cellIdx) in row" :key="cellIdx" :colspan="cell?.colspan || 1" style="border: 1px solid #4B5563; padding: 4px 6px; width: 25%; vertical-align: middle;">
-                    <template v-if="cell">
+                <tr v-for="(row, rowIdx) in chunkAttrs(structure, 3)" :key="rowIdx">
+                  <td v-for="(cell, cellIdx) in row" :key="cellIdx" :colspan="cell.colspan || 1" style="border: 1px solid #4B5563; padding: 4px 6px; width: 33.33%; vertical-align: middle;">
+                    <template v-if="cell.labeledValues?.length">
+                      <template v-for="(part, pi) in cell.labeledValues" :key="pi">
+                        <span v-if="pi > 0"> | </span>
+                        <span style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ part.label }}：</span>
+                        <span style="font-size: 14px; font-weight: bold">{{ part.value }}</span>
+                      </template>
+                    </template>
+                    <template v-else>
                       <span v-if="!cell.noLabel" style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ cell.label }}：</span><span :style="cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold'">{{ cell.value }}</span>
                     </template>
                   </td>
@@ -202,52 +209,66 @@ const getElementName = (id?: number): string => {
   return props.elementList.find((item) => item.id === id)?.name || ''
 }
 
-type StructureAttr = { label: string; value: string; colspan?: number; smallValue?: boolean; rowBreakBefore?: boolean; noLabel?: boolean }
+type StructureAttr = {
+  label: string
+  value: string
+  colspan?: number
+  smallValue?: boolean
+  noLabel?: boolean
+  /** 同一单元格内多组 label/value，label 小号灰色、value 加粗 */
+  labeledValues?: { label: string; value: string }[]
+}
 
-/** 将结构的属性字段收集为 label/value 列表，供模板 3 列网格和打印 3 列表格共用 */
+/** 将结构的属性字段按固定顺序收集，无值的字段跳过 */
 const getStructureAttrs = (structure: any): StructureAttr[] => {
   const attrs: StructureAttr[] = []
   if (structure.width != null && structure.height != null) {
-    // 宽高都存在时放在同一单元格展示，兼顾信息完整与版面紧凑
     attrs.push({ label: '宽*高', value: `${structure.width}m*${structure.height}m` })
   } else if (structure.width != null) {
     attrs.push({ label: '宽', value: `${structure.width}m` })
   } else if (structure.height != null) {
     attrs.push({ label: '高', value: `${structure.height}m` })
   }
-  if (structure.pasteDirection) attrs.push({ label: '粘贴方向', value: getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) || structure.pasteDirection, colspan: 2 })
   const shapingPart = structure.isShaping === true ? '定型' : ''
   const openMethodPart = structure.openMethod ? (getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod) || structure.openMethod) : ''
   const shapingOpenValue = [shapingPart, openMethodPart].filter(Boolean).join(' ')
   if (shapingOpenValue) attrs.push({ label: '', value: shapingOpenValue, noLabel: true, smallValue: true })
-  if (structure.pleatsNum != null) attrs.push({ label: '褶数', value: String(structure.pleatsNum) })
-  if (structure.pleatsDistance != null) attrs.push({ label: '褶距', value: String(structure.pleatsDistance) })
-  if (structure.skirtHeight != null) attrs.push({ label: '裙摆', value: String(structure.skirtHeight) })
-  // 加工和安装工艺强制另起最后一行，并排展示
-  if (structure.processType) attrs.push({ label: '加工方式', value: String(getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType) || structure.processType).slice(0, 2), smallValue: true, rowBreakBefore: true })
-  if (structure.installProcessName) attrs.push({ label: '安装工艺', value: structure.installProcessName, colspan: 3, smallValue: true })
+  if (structure.pasteDirection) {
+    attrs.push({
+      label: '粘贴方向',
+      value: getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) || structure.pasteDirection,
+      smallValue: true
+    })
+  }
+  const pleatsSkirtLabeledValues: { label: string; value: string }[] = []
+  if (structure.pleatsNum != null) pleatsSkirtLabeledValues.push({ label: '褶数', value: String(structure.pleatsNum) })
+  if (structure.pleatsDistance != null) pleatsSkirtLabeledValues.push({ label: '褶距', value: String(structure.pleatsDistance) })
+  if (structure.skirtHeight != null) pleatsSkirtLabeledValues.push({ label: '裙摆', value: String(structure.skirtHeight) })
+  if (pleatsSkirtLabeledValues.length) {
+    attrs.push({ label: '', value: '', labeledValues: pleatsSkirtLabeledValues, colspan: 2 })
+  }
+  if (structure.processType) {
+    attrs.push({
+      label: '加工方式',
+      value: String(getDictLabel(DICT_TYPE.ZC_PROCESS_TYPE, structure.processType) || structure.processType).slice(0, 2),
+      smallValue: true
+    })
+  }
+  if (structure.installProcessName) {
+    attrs.push({ label: '安装工艺', value: structure.installProcessName, colspan: 2, smallValue: true })
+  }
   return attrs
 }
 
-/** 将 attrs 数组按 cols 列分组（支持 colspan/rowBreakBefore），不足补 null，供模板表格行渲染 */
+/** 按顺序将 attrs 从左到右、从上到下填入 cols 列网格，自动换行，不补空单元格 */
 const chunkAttrs = (structure: any, cols: number) => {
   const attrs = getStructureAttrs(structure)
-  const rows: (StructureAttr | null)[][] = []
-  let currentRow: (StructureAttr | null)[] = []
+  const rows: StructureAttr[][] = []
+  let currentRow: StructureAttr[] = []
   let used = 0
   for (const attr of attrs) {
     const span = attr.colspan || 1
-    // rowBreakBefore：强制将当前行补全后换行
-    if (attr.rowBreakBefore && currentRow.length > 0) {
-      const remaining = cols - used
-      for (let i = 0; i < remaining; i++) currentRow.push(null)
-      rows.push(currentRow)
-      currentRow = []
-      used = 0
-    }
-    if (used + span > cols) {
-      const remaining = cols - used
-      for (let i = 0; i < remaining; i++) currentRow.push(null)
+    if (used > 0 && used + span > cols) {
       rows.push(currentRow)
       currentRow = []
       used = 0
@@ -260,11 +281,7 @@ const chunkAttrs = (structure: any, cols: number) => {
       used = 0
     }
   }
-  if (currentRow.length > 0) {
-    const remaining = cols - used
-    for (let i = 0; i < remaining; i++) currentRow.push(null)
-    rows.push(currentRow)
-  }
+  if (currentRow.length > 0) rows.push(currentRow)
   return rows
 }
 
@@ -347,15 +364,28 @@ const handlePrint = async () => {
         </div>
       `
 
-      // 结构属性转为 4 列表格，使用 chunkAttrs 正确处理 colspan/rowBreakBefore
-      const attrRows = chunkAttrs(structure, 4)
-      const sC = 'border:1px solid #4B5563;padding:4px 5px;width:25%;vertical-align:middle;'
+      // 结构属性按顺序填入 3 列表格
+      const attrRows = chunkAttrs(structure, 3)
+      const sC = 'border:1px solid #4B5563;padding:4px 5px;width:33.33%;vertical-align:middle;'
       const lS = 'font-size:8pt;color:#6B7280;white-space:nowrap;'
       const vS = 'font-size:14pt;'
 
+      const renderAttrCell = (cell: StructureAttr) => {
+        if (cell.labeledValues?.length) {
+          const parts = cell.labeledValues
+            .map(
+              (part, pi) =>
+                `${pi > 0 ? '|' : ''}<span style="${lS}">${part.label}：</span><span style="font-size:11pt;font-weight:bold;">${part.value}</span>`
+            )
+            .join('')
+          return parts
+        }
+        return `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:bold;' : vS + 'font-weight:bold;'}">${cell.value}</span>`
+      }
+
       const structureHtml = `
         <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;margin-bottom:3px;font-size:12pt;">
-          ${attrRows.map((row) => `<tr>${row.map((cell) => `<td colspan="${cell?.colspan || 1}" style="${sC}">${cell ? `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:bold;' : vS + 'font-weight:bold;'}">${cell.value}</span>` : ''}</td>`).join('')}</tr>`).join('')}
+          ${attrRows.map((row) => `<tr>${row.map((cell) => `<td colspan="${cell.colspan || 1}" style="${sC}">${renderAttrCell(cell)}</td>`).join('')}</tr>`).join('')}
         </table>
       `
 
