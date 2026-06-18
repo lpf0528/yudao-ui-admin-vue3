@@ -34,50 +34,34 @@
         "
       >
         <!-- 标题区：居中显示 -->
-        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 20px;">
+        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 8px;">
           {{ brandName ? brandName + ' ' : '' }}成品销售单
         </div>
 
-        <!-- 订单头信息（无外边框，两列布局） -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
-          <tbody>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; width: 50%; vertical-align: top;">
-                <b>客户：</b>{{ customerName }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; width: 50%; vertical-align: top;">
-                <b>订单号：</b>{{ formData?.orderNo || '-' }}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; vertical-align: top;">
-                <b>物流：</b>{{ logisticName }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; vertical-align: top;">
-                <b>创建人：</b>{{ (formData as any)?.creatorName || '-' }}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 12px 4px 0; vertical-align: top;">
-                <b>交付日期：</b>{{ formData?.deliveryDate || '-' }}
-              </td>
-              <td style="padding: 4px 0 4px 12px; vertical-align: top;"></td>
-            </tr>
-            <tr>
-              <td colspan="2" style="padding: 4px 0; vertical-align: top;">
-                <b>送货地址：</b>{{ formData?.deliveryAddress || '-' }}
-              </td>
-            </tr>
-            <tr v-if="formData?.note">
-              <td colspan="2" style="padding: 4px 0; vertical-align: top;">
-                <b>备注：</b>{{ formData.note }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- 订单头信息：流式排列，无固定列宽 -->
+        <div style="line-height: 1.4; margin-bottom: 2px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span>
+              <b>客户：</b>{{ customerName }}
+              <b>电话：</b>{{ formData?.mobile || '-' }}
+              <b>地址：</b>{{ formData?.deliveryAddress || '-' }}
+            </span>
+            <span style="flex-shrink: 0; margin-left: 12px;"><b>下单日期：</b>{{ formData?.orderDate || '-' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span>
+              <b>物流：</b>{{ logisticName }}
+              <b>交付日期：</b>{{ formData?.deliveryDate || '-' }}
+            </span>
+            <span><b>订单号：</b>{{ formData?.orderNo || '-' }}</span>
+          </div>
+          <div>
+            <b>备注：</b>{{ formData?.note || '-' }}
+          </div>
+        </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 12px 0 16px;"></div>
+        <div style="border-top: 1px solid #ccc; margin: 6px 0 8px;"></div>
 
         <!-- 窗帘明细列表 -->
         <div
@@ -108,14 +92,11 @@
             <template v-if="curtain.pleatsDistance">
               &nbsp;|&nbsp;<span style="font-weight: 400;">褶距：</span>{{ curtain.pleatsDistance }}
             </template>
-            <template v-if="curtain.discountRate != null">
-              &nbsp;|&nbsp;<span style="font-weight: 400;">折扣率：</span>{{ curtain.discountRate }}
-            </template>
             <template v-if="curtain.mountings?.length">
               &nbsp;|&nbsp;<span style="font-weight: 400;">配件：</span>{{ Array.isArray(curtain.mountings) ? curtain.mountings.join('、') : curtain.mountings }}
             </template>
             <span style="float: right; color: #DC2626; font-size: 14px;">
-              金额：{{ hidePrices ? '***' : `¥${curtain.amount ?? '-'}` }}
+              数量：{{ curtain.quantity ?? '-' }}　金额：{{ formatMoney(curtain.amount) }}
             </span>
           </div>
 
@@ -133,8 +114,8 @@
             <!-- 结构描述行 -->
             <div style="background: #F9FAFB; border: 1px solid #D1D5DB; padding: 5px 10px; font-size: 12px; color: #374151;">
               <b>结构 #{{ sIdx + 1 }}：</b>{{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
-              <template v-if="structure.height != null">　高：{{ structure.height }}</template>
               <template v-if="structure.width != null">　宽：{{ structure.width }}</template>
+              <template v-if="structure.height != null">　高：{{ structure.height }}</template>
               <template v-if="structure.leftCorner">　左转角：{{ structure.leftCorner }}</template>
               <template v-if="structure.rightCorner">　右转角：{{ structure.rightCorner }}</template>
               <template v-if="structure.pasteDirection">　粘贴方向：{{ getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) }}</template>
@@ -161,7 +142,6 @@
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">折扣率</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">小计</th>
                   <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
                 </tr>
@@ -171,10 +151,9 @@
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.productName || '-' }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.batchNo || '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ hidePrices ? '***' : (material.price ?? '-') }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.quantity ?? '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ material.discountRate ?? '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ hidePrices ? '***' : (material.amount ?? '-') }}</td>
+                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMoney(material.price) }}</td>
+                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMaterialQuantity(material) }}</td>
+                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(material.amount) }}</td>
                   <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.note || '' }}</td>
                 </tr>
               </tbody>
@@ -194,23 +173,29 @@
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
           <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center;">
             <div v-if="formData?.freight">
-              <b>运费：</b>{{ hidePrices ? '***' : `¥${formData.freight}` }}
+              <b>运费：</b>{{ formatMoney(formData.freight) }}
             </div>
             <div v-if="formData?.discountAmount">
               <b>优惠金额：</b>
               <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
             </div>
             <div style="font-size: 16px; font-weight: bold;">
-              合计：<span style="color: #DC2626;">{{ hidePrices ? '***' : `¥${formData?.amount ?? 0}` }}</span>
+              合计：<span style="color: #DC2626;">{{ formatMoney(formData?.amount ?? 0) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- 签名区域 -->
-        <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 13px; color: #555;">
-          <div>制单人：________________</div>
-          <div>确认人：________________</div>
-          <div>客户签字：________________</div>
+        <!-- 底部：左侧品牌联系信息，右侧签字栏 -->
+        <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 13px; color: #555;">
+          <div style="flex: 1; line-height: 1.8;">
+            <div><b>电话：</b>{{ brandDetail?.mobile || '-' }}</div>
+            <div><b>地址：</b>{{ brandDetail?.address || '-' }}</div>
+          </div>
+          <div style="flex-shrink: 0; line-height: 2.2; min-width: 180px;">
+            <div>制单人：{{ (formData as any)?.creatorName || '________________' }}</div>
+            <div>客户签字：________________</div>
+            <div>打印时间：{{ printTime }}</div>
+          </div>
         </div>
 
         <!-- 底部提示语 -->
@@ -224,13 +209,15 @@
 
 <script setup lang="ts">
 import type { CustomerSimpleVO } from '@/api/zc/customer'
-import type { BrandSimpleVO } from '@/api/zc/brand'
+import type { BrandSimpleVO, Brand } from '@/api/zc/brand'
+import { BrandApi } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
 import type { CurtainSimpleVO } from '@/api/zc/curtain'
 import type { CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import type { CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import type { SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 import { DICT_TYPE, getDictLabel } from '@/utils/dict'
+import { formatDate } from '@/utils/formatTime'
 
 /** 销售单打印预览弹窗 */
 defineOptions({ name: 'SalesOrderPrintDialog' })
@@ -255,6 +242,10 @@ const visible = ref(false)
 const formData = ref<FormDataType | null>(null)
 /** 隐藏价格模式：开启后单价和金额全部显示为 *** */
 const hidePrices = ref(false)
+/** 品牌详情（底部展示电话、地址） */
+const brandDetail = ref<Brand | null>(null)
+/** 打印时间（预览展示，实际打印时刷新） */
+const printTime = ref('')
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -292,11 +283,40 @@ const getElementName = (id?: number): string => {
   return props.elementList.find((item) => item.id === id)?.name || ''
 }
 
+/** 金额展示：隐藏价格模式下返回 ***，否则前缀 ¥ */
+const formatMoney = (val?: number | null) => {
+  if (hidePrices.value) return '***'
+  if (val == null) return '-'
+  return `¥${val}`
+}
+
+/** 用料数量展示：数值后接计量单位 */
+const formatMaterialQuantity = (material: { quantity?: number; unitValue?: string }) => {
+  if (material.quantity == null) return '-'
+  const unit = material.unitValue
+    ? getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, material.unitValue) || material.unitValue
+    : ''
+  return `${material.quantity}${unit}`
+}
+
 // ======================== 对外方法 ========================
+/** 根据品牌 ID 加载详情，用于底部联系信息展示 */
+const loadBrandDetail = async (brandId?: number) => {
+  brandDetail.value = null
+  if (!brandId) return
+  try {
+    brandDetail.value = await BrandApi.getBrand(brandId)
+  } catch {
+    brandDetail.value = null
+  }
+}
+
 /** 打开预览弹窗，传入当前表单数据 */
 const open = async (data: FormDataType) => {
   formData.value = data
+  printTime.value = formatDate(new Date())
   visible.value = true
+  await loadBrandDetail(data.brandId)
 }
 
 defineExpose({ open })
@@ -309,6 +329,7 @@ defineExpose({ open })
 const handlePrint = () => {
   if (!formData.value) return
 
+  printTime.value = formatDate(new Date())
   const fd = formData.value
   const cName = customerName.value
   const bName = brandName.value
@@ -316,9 +337,8 @@ const handlePrint = () => {
 
   const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
   const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
-  const infoTd = 'padding:4px 12px 4px 0;vertical-align:top;'
   /** 价格掩码辅助：隐藏价格模式下返回 *** */
-  const mp = (val: any, prefix = '') => hidePrices.value ? '***' : `${prefix}${val ?? '-'}`
+  const mp = (val: any) => formatMoney(val)
 
   // ---- 构建窗帘明细 HTML ----
   const curtainsHtml = (fd.curtains || []).map((curtain, idx) => {
@@ -330,8 +350,8 @@ const handlePrint = () => {
     const structuresHtml = ((curtain as any).structures || []).map((structure: any, sIdx: number) => {
       const strName = getStructureName(structure.structureId) || structure.structureName || '-'
       const attrs = [
-        structure.height != null ? `高：${structure.height}` : '',
         structure.width != null ? `宽：${structure.width}` : '',
+        structure.height != null ? `高：${structure.height}` : '',
         structure.leftCorner ? `左转角：${structure.leftCorner}` : '',
         structure.rightCorner ? `右转角：${structure.rightCorner}` : '',
         structure.pasteDirection ? `粘贴方向：${getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection)}` : '',
@@ -354,7 +374,6 @@ const handlePrint = () => {
                 <th style="${thS}text-align:left;">批次</th>
                 <th style="${thS}text-align:right;">单价</th>
                 <th style="${thS}text-align:right;">用料</th>
-                <th style="${thS}text-align:right;">折扣率</th>
                 <th style="${thS}text-align:right;">小计</th>
                 <th style="${thS}text-align:left;">备注</th>
               </tr>
@@ -366,8 +385,7 @@ const handlePrint = () => {
                   <td style="${tdS}">${m.productName || '-'}</td>
                   <td style="${tdS}">${m.batchNo || '-'}</td>
                   <td style="${tdS}text-align:right;">${mp(m.price)}</td>
-                  <td style="${tdS}text-align:right;">${m.quantity ?? '-'}</td>
-                  <td style="${tdS}text-align:right;">${m.discountRate ?? '-'}</td>
+                  <td style="${tdS}text-align:right;">${formatMaterialQuantity(m)}</td>
                   <td style="${tdS}text-align:right;font-weight:600;">${mp(m.amount)}</td>
                   <td style="${tdS}">${m.note || ''}</td>
                 </tr>`).join('')}
@@ -395,9 +413,8 @@ const handlePrint = () => {
           &nbsp;|&nbsp;<span style="font-weight:400;">款式：</span>${ctnName}
           &nbsp;|&nbsp;<span style="font-weight:400;">房间：</span>${curtain.room || '-'}
           ${curtain.pleatRatioValue != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">褶倍：</span>${curtain.pleatRatioValue}` : ''}
-          ${curtain.discountRate != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">折扣率：</span>${curtain.discountRate}` : ''}
           ${mountingsStr ? `&nbsp;|&nbsp;<span style="font-weight:400;">配件：</span>${mountingsStr}` : ''}
-          <span style="float:right;color:#DC2626;font-size:14px;">金额：${mp(curtain.amount, '¥')}</span>
+          <span style="float:right;color:#DC2626;font-size:14px;">数量：${curtain.quantity ?? '-'}　金额：${formatMoney(curtain.amount)}</span>
         </div>
         ${noteRow}
         ${structuresHtml}
@@ -408,9 +425,9 @@ const handlePrint = () => {
   const summaryHtml = `
     <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
       <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;">
-        ${fd.freight ? `<div><b>运费：</b>${mp(fd.freight, '¥')}</div>` : ''}
+        ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
         ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
-        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${mp(fd.amount ?? 0, '¥')}</span></div>
+        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
       </div>
     </div>`
 
@@ -429,41 +446,38 @@ const handlePrint = () => {
 </head>
 <body>
   <!-- 标题居中 -->
-  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:20px;">
+  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:8px;">
     ${bName ? bName + '&nbsp;' : ''}销售单
   </div>
 
-  <!-- 订单头信息（无外边框） -->
-  <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
-    <tbody>
-      <tr>
-        <td style="${infoTd}width:50%;"><b>客户：</b>${cName}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;width:50%;"><b>订单号：</b>${fd.orderNo || '-'}</td>
-      </tr>
-      <tr>
-        <td style="${infoTd}"><b>物流：</b>${lName}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;"><b>创建人：</b>${(fd as any).creatorName || '-'}</td>
-      </tr>
-      <tr>
-        <td style="${infoTd}"><b>交付日期：</b>${fd.deliveryDate || '-'}</td>
-        <td style="padding:4px 0 4px 12px;vertical-align:top;"></td>
-      </tr>
-      <tr>
-        <td colspan="2" style="padding:4px 0;vertical-align:top;"><b>送货地址：</b>${fd.deliveryAddress || '-'}</td>
-      </tr>
-      ${fd.note ? `<tr><td colspan="2" style="padding:4px 0;vertical-align:top;"><b>备注：</b>${fd.note}</td></tr>` : ''}
-    </tbody>
-  </table>
+  <!-- 订单头信息：流式排列，无固定列宽 -->
+  <div style="line-height:1.4;margin-bottom:2px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span><b>客户：</b>${cName} <b>电话：</b>${fd.mobile || '-'} <b>地址：</b>${fd.deliveryAddress || '-'}</span>
+      <span style="flex-shrink:0;margin-left:12px;"><b>下单日期：</b>${fd.orderDate || '-'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span><b>物流：</b>${lName} <b>交付日期：</b>${fd.deliveryDate || '-'}</span>
+      <span><b>订单号：</b>${fd.orderNo || '-'}</span>
+    </div>
+    <div><b>备注：</b>${fd.note || '-'}</div>
+  </div>
 
-  <div style="border-top:1px solid #ccc;margin:12px 0 16px;"></div>
+  <div style="border-top:1px solid #ccc;margin:6px 0 8px;"></div>
 
   ${curtainsHtml}
   ${summaryHtml}
 
-  <div style="margin-top:40px;display:flex;justify-content:space-between;font-size:13px;color:#555;">
-    <div>制单人：________________</div>
-    <div>确认人：________________</div>
-    <div>客户签字：________________</div>
+  <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;font-size:13px;color:#555;">
+    <div style="flex:1;line-height:1.8;">
+      <div><b>电话：</b>${brandDetail.value?.mobile || '-'}</div>
+      <div><b>地址：</b>${brandDetail.value?.address || '-'}</div>
+    </div>
+    <div style="flex-shrink:0;line-height:2.2;min-width:180px;">
+      <div>制单人：${(fd as any).creatorName || '________________'}</div>
+      <div>客户签字：________________</div>
+      <div>打印时间：${printTime.value}</div>
+    </div>
   </div>
 
   <div style="margin-top:20px;font-size:12px;color:#555;border-top:1px solid #ddd;padding-top:10px;">

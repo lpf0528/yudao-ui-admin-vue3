@@ -17,20 +17,43 @@
       <el-button v-if="formData.id && !formData.isExpedited" type="warning" @click="handleExpedite" :loading="formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
-      <!-- 销售单按钮：订单已保存时显示，点击弹出打印预览 -->
-      <el-button v-if="formData.id" type="info" @click="handlePrintOrder">
+      <!-- 销售单按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <el-button
+        v-if="formData.id"
+        type="info"
+        :class="{ 'print-btn-locked': !isConfirmed }"
+        @click="handlePrintOrder"
+      >
         <Icon icon="ep:printer" class="mr-4px" />销售单
       </el-button>
-      <!-- 加工单按钮：订单已保存时显示，点击弹出加工单打印预览 -->
-      <el-button v-if="formData.id" type="info" plain @click="handlePrintProcessing">
+      <!-- 加工单按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <el-button
+        v-if="formData.id"
+        type="info"
+        plain
+        :class="{ 'print-btn-locked': !isConfirmed }"
+        @click="handlePrintProcessing"
+      >
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
-      <!-- 水洗码按钮：订单已保存时显示，每个结构生成 6 张水洗标 -->
-      <el-button v-if="formData.id" type="warning" plain @click="handlePrintWashLabel">
+      <!-- 水洗码按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <el-button
+        v-if="formData.id"
+        type="warning"
+        plain
+        :class="{ 'print-btn-locked': !isConfirmed }"
+        @click="handlePrintWashLabel"
+      >
         <Icon icon="ep:ticket" class="mr-4px" />水洗码
       </el-button>
-      <!-- 发货联按钮：订单已保存时显示，打印发货联（品牌+收货信息） -->
-      <el-button v-if="formData.id" type="success" plain @click="handlePrintShipping">
+      <!-- 发货联按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <el-button
+        v-if="formData.id"
+        type="success"
+        plain
+        :class="{ 'print-btn-locked': !isConfirmed }"
+        @click="handlePrintShipping"
+      >
         <Icon icon="ep:van" class="mr-4px" />发货联
       </el-button>
       <!-- 销售单2：请求后端 PDF 接口，在弹窗内预览并打印 -->
@@ -944,6 +967,16 @@ const ensureSavedBeforeAction = (): boolean => {
   return true
 }
 
+/** 打印类操作前置校验：已保存且订单已确认 */
+const ensureConfirmedBeforePrint = (): boolean => {
+  if (!ensureSavedBeforeAction()) return false
+  if (formData.value.status !== ZcSalesOrderStatus.CONFIRMED) {
+    message.warning('请先确认订单')
+    return false
+  }
+  return true
+}
+
 /** 挂载时一次性加载不常变动的基础配置数据 */
 onMounted(async () => {
   ;[
@@ -1179,26 +1212,26 @@ const handleSave = async () => {
 
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
 const handlePrintOrder = () => {
-  if (!ensureSavedBeforeAction()) return
+  if (!ensureConfirmedBeforePrint()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
-  if (!ensureSavedBeforeAction()) return
+  if (!ensureConfirmedBeforePrint()) return
   console.log('[加工单] 打印数据：', JSON.parse(JSON.stringify(formData.value)))
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开水洗标打印预览，每个结构生成 6 张相同标签 */
 const handlePrintWashLabel = () => {
-  if (!ensureSavedBeforeAction()) return
+  if (!ensureConfirmedBeforePrint()) return
   washLabelDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览 */
 const handlePrintShipping = () => {
-  if (!ensureSavedBeforeAction()) return
+  if (!ensureConfirmedBeforePrint()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
 
@@ -1517,5 +1550,10 @@ const resetForm = () => {
 .structure-form-row :deep(.structure-field .el-input-number),
 .structure-form-row :deep(.structure-field .el-select) {
   width: 100% !important;
+}
+/* 未确认订单时打印按钮置灰，仍可点击以弹出提示 */
+.print-btn-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 </style>
