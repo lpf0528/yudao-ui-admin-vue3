@@ -241,13 +241,13 @@
                 </el-form-item>
               </el-col>
               <el-col :span="3">
-                <el-form-item label="高">
-                  <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3">
                 <el-form-item label="宽">
                   <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                </el-form-item>
+              </el-col>
+               <el-col :span="3">
+                <el-form-item label="高">
+                  <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" :disabled="isConfirmed" />
                 </el-form-item>
               </el-col>
               <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">

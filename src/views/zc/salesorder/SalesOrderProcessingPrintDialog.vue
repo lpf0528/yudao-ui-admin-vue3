@@ -28,8 +28,8 @@
             :key="sIdx"
             style="
               background: white;
-              width: 600px;
-              height: 720px;
+              width: 100mm;
+              height: 120mm;
               margin: 0 auto 20px;
               padding: 3px 14px 12px;
               box-shadow: 0 2px 12px rgba(0,0,0,0.2);
@@ -51,7 +51,7 @@
                 <div style="padding: 2px 0; font-size: 13px;">房间：</div>
                 <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
               </div>
-              <div style="width: 123px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+              <div style="width: 123px; flex-shrink: 0; padding-left: 10px; text-align: center;">
                 <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
                   <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="108" height="108" style="display: block; margin: 0 auto;" />
                 </template>
@@ -65,21 +65,20 @@
             <!-- 分隔线 -->
             <div style="border-top: 1px solid #ccc; margin: 3px 0 5px;"></div>
 
-            <!-- 窗帘信息 - 单行展示套数、房间、备注 -->
-            <div style="border: 3px solid #1D4ED8; background: #EFF6FF; padding: 4px 8px; margin-bottom: 4px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap;">第{{ cIdx + 1 }}-{{ sIdx + 1 }}套/共{{ formData!.curtains.length }}套</span>
-              <span style="font-size: 12px; white-space: nowrap;"><span style="font-size: 10px; color: #6B7280;">房间：</span>{{ curtain.room || '-' }}</span>
+            <!-- 结构信息横条：左结构名，中房间，右套数 -->
+            <div style="border: 3px solid #1D4ED8; background: #EFF6FF; padding: 4px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap; font-weight: bold;">
+                {{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
+              </span>
+              <span style="font-size: 12px; white-space: nowrap; flex: 1; text-align: center;">
+                <span style="font-size: 10px; color: #6B7280;">房间：</span>{{ curtain.room || '-' }}
+              </span>
+              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap;">第{{ cIdx + 1 }}-{{ sIdx + 1 }}套</span>
             </div>
 
             <!-- 结构信息 - 4列表格 -->
             <table style="width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #F9FAFB; color: #374151; margin-bottom: 4px; font-size: 14px;">
               <tbody>
-                <tr>
-                  <td colspan="4" style="border: 1px solid #4B5563; padding: 3px 8px;">
-                    结构 #{{ sIdx + 1 }}：{{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
-                    <span v-if="(structure as any).note" style="color: #6B7280; font-size: 12px; margin-left: 8px;">{{ (structure as any).note }}</span>
-                  </td>
-                </tr>
                 <tr v-for="(row, rowIdx) in chunkAttrs(structure, 4)" :key="rowIdx">
                   <td v-for="(cell, cellIdx) in row" :key="cellIdx" :colspan="cell?.colspan || 1" style="border: 1px solid #4B5563; padding: 4px 6px; width: 25%; vertical-align: middle;">
                     <template v-if="cell">
@@ -209,17 +208,18 @@ type StructureAttr = { label: string; value: string; colspan?: number; smallValu
 const getStructureAttrs = (structure: any): StructureAttr[] => {
   const attrs: StructureAttr[] = []
   if (structure.width != null && structure.height != null) {
-    attrs.push({ label: '', value: `${structure.width}*${structure.height}`, noLabel: true })
+    // 宽高都存在时放在同一单元格展示，兼顾信息完整与版面紧凑
+    attrs.push({ label: '宽*高', value: `${structure.width}m*${structure.height}m` })
   } else if (structure.width != null) {
-    attrs.push({ label: '宽', value: `${structure.width}` })
+    attrs.push({ label: '宽', value: `${structure.width}m` })
   } else if (structure.height != null) {
-    attrs.push({ label: '高', value: `${structure.height}` })
+    attrs.push({ label: '高', value: `${structure.height}m` })
   }
   if (structure.pasteDirection) attrs.push({ label: '粘贴方向', value: getDictLabel(DICT_TYPE.ZC_PASTE_DIRECTION, structure.pasteDirection) || structure.pasteDirection, colspan: 2 })
   const shapingPart = structure.isShaping === true ? '定型' : ''
   const openMethodPart = structure.openMethod ? (getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod) || structure.openMethod) : ''
   const shapingOpenValue = [shapingPart, openMethodPart].filter(Boolean).join(' ')
-  if (shapingOpenValue) attrs.push({ label: '', value: shapingOpenValue, noLabel: true })
+  if (shapingOpenValue) attrs.push({ label: '', value: shapingOpenValue, noLabel: true, smallValue: true })
   if (structure.pleatsNum != null) attrs.push({ label: '褶数', value: String(structure.pleatsNum) })
   if (structure.pleatsDistance != null) attrs.push({ label: '褶距', value: String(structure.pleatsDistance) })
   if (structure.skirtHeight != null) attrs.push({ label: '裙摆', value: String(structure.skirtHeight) })
@@ -325,7 +325,7 @@ const handlePrint = async () => {
           <div style="padding:1px 0;font-size:11pt;">房间：</div>
           ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
         </div>
-        <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;">${qrImg}</div>
+        <div style="width:117px;flex-shrink:0;padding-left:9px;text-align:center;">${qrImg}</div>
       </div>
       <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     `
@@ -338,14 +338,14 @@ const handlePrint = async () => {
     for (const [sIdx, structure] of ((curtain as any).structures || []).entries()) {
       // 窗帘标题行（依赖 sIdx，必须在内层循环里构建）
       const lC = 'font-size:8pt;color:#6B7280;white-space:nowrap;'
+      const strName = getStructureName(structure.structureId) || structure.structureName || '-'
       const curtainHeaderHtml = `
-        <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:3px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;">第${cIdx + 1}-${sIdx + 1}套/共${fd.curtains.length}套</span>
-          <span style="font-size:10pt;white-space:nowrap;"><span style="${lC}">房间：</span>${curtain.room || '-'}</span>
-          ${curtain.note ? `<span style="font-size:10pt;"><span style="${lC}">备注：</span>${curtain.note}</span>` : ''}
+        <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;font-weight:bold;">${strName}</span>
+          <span style="font-size:10pt;white-space:nowrap;flex:1;text-align:center;"><span style="${lC}">房间：</span>${curtain.room || '-'}</span>
+          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;">第${cIdx + 1}-${sIdx + 1}套</span>
         </div>
       `
-      const strName = getStructureName(structure.structureId) || structure.structureName || '-'
 
       // 结构属性转为 4 列表格，使用 chunkAttrs 正确处理 colspan/rowBreakBefore
       const attrRows = chunkAttrs(structure, 4)
@@ -355,7 +355,6 @@ const handlePrint = async () => {
 
       const structureHtml = `
         <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;margin-bottom:3px;font-size:12pt;">
-          <tr><td colspan="4" style="border:1px solid #4B5563;padding:3px 8px;">结构 #${sIdx + 1}：${strName}${structure.note ? `<span style="color:#6B7280;font-size:10pt;margin-left:8px;">${structure.note}</span>` : ''}</td></tr>
           ${attrRows.map((row) => `<tr>${row.map((cell) => `<td colspan="${cell?.colspan || 1}" style="${sC}">${cell ? `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:bold;' : vS + 'font-weight:bold;'}">${cell.value}</span>` : ''}</td>`).join('')}</tr>`).join('')}
         </table>
       `
