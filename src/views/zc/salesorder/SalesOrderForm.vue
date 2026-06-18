@@ -1366,11 +1366,23 @@ const resetForm = () => {
 .curtain-form-row :deep(.curtain-field.el-form-item) {
   width: auto;
 }
+/* 款式下拉：加宽输入区域，便于展示较长款式名称 */
 .curtain-form-row :deep(.curtain-field-style) {
-  width: 150px;
+  width: auto;
+}
+.curtain-form-row :deep(.curtain-field-style .el-form-item__content) {
+  width: 130px;
+  flex: none;
+}
+.curtain-form-row :deep(.curtain-field-style .el-select) {
+  width: 100% !important;
 }
 .curtain-form-row :deep(.curtain-field-room) {
-  width: 140px;
+  width: auto;
+}
+.curtain-form-row :deep(.curtain-field-room .el-form-item__content) {
+  width: 65px;
+  flex: none;
 }
 /* 褶倍、褶距、金额：仅固定输入区域宽度，三者一致 */
 .curtain-form-row :deep(.curtain-field-metric .el-form-item__content) {
@@ -1385,9 +1397,16 @@ const resetForm = () => {
 .curtain-form-row :deep(.curtain-field-metric .el-select) {
   width: 100% !important;
 }
-/* 配件、备注同一行：固定较窄宽度 */
+/* 配件多选：加宽以便展示多个已选标签 */
 .curtain-form-row-secondary :deep(.curtain-field-mountings) {
-  width: 400px;
+  width: auto;
+}
+.curtain-form-row-secondary :deep(.curtain-field-mountings .el-form-item__content) {
+  width: 350px;
+  flex: none;
+}
+.curtain-form-row-secondary :deep(.curtain-field-mountings .el-select) {
+  width: 100% !important;
 }
 .curtain-form-row-secondary :deep(.curtain-field-note) {
   width: 300px;
@@ -1446,7 +1465,7 @@ const resetForm = () => {
 }
 /* 仅固定输入区域宽度，标签保持自然宽度，避免 label 与输入框间距被拉大 */
 .structure-form-row :deep(.structure-field-name .el-form-item__content) {
-  width: 170px;
+  width: 100px;
   flex: none;
 }
 .structure-form-row :deep(.structure-field-num .el-form-item__content) {
@@ -1462,7 +1481,7 @@ const resetForm = () => {
   flex: none;
 }
 .structure-form-row :deep(.structure-field-paste .el-form-item__content) {
-  width: 170px;
+  width: 100px;
   flex: none;
 }
 .structure-form-row :deep(.structure-field-process .el-form-item__content) {
