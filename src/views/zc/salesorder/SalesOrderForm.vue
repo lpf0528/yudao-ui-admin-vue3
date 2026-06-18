@@ -99,7 +99,7 @@
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
           <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
         </el-form-item>
-        <!-- 金额：自动计算，只读，列宽略收窄 -->
+        <!-- 金额：四舍五入后的订单金额，只读 -->
         <el-form-item label="金额" prop="amount" style="flex: 1.5; min-width: 0">
           <el-input v-model="formData.amount" disabled class="w-full" />
         </el-form-item>
@@ -634,6 +634,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
   types: SalesOrderType.CURTAIN,
   discountAmount: undefined,
   totalAmount: undefined,
+  rounding: undefined,
   deliveryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 6); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })() as any,
   payStatus: undefined,
   status: undefined,
@@ -897,7 +898,7 @@ const mapSubmitCurtain = (curtain: CurtainWithStructures) => ({
 
 /**
  * 组装整单创建/更新请求体，字段与 POST /create、PUT /update 对齐
- * totalAmount = 所有窗帘金额之和 + 运费；amount 由 watch 自动计算（totalAmount - 优惠）
+ * totalAmount = 所有窗帘金额之和 + 运费；amount = 四舍五入后的订单金额（含优惠、rounding）
  */
 const buildSubmitPayload = (): ZcSalesOrderSubmitReqVO => {
   const form = formData.value
@@ -916,6 +917,7 @@ const buildSubmitPayload = (): ZcSalesOrderSubmitReqVO => {
     discountAmount: form.discountAmount,
     totalAmount: round2(curtainAmountSum + (form.freight ?? 0)),
     amount: form.amount,
+    rounding: form.rounding,
     deliveryDate: form.deliveryDate,
     note: form.note,
     curtains: form.curtains.map(mapSubmitCurtain)
@@ -1132,7 +1134,8 @@ const round2 = (val: number) => Math.round(val * 100) / 100
  * 监听整个表单变化，自动计算：
  * 1. 用料小计 = 单价 × 用料 × 折扣率（折扣率无值时默认 1），保留两位小数
  * 2. 窗帘金额 = 所有结构中用料小计之和 × 窗帘折扣率 × 窗帘数量，保留两位小数
- * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，保留两位小数
+ * 3. 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额，再四舍五入到整数
+ * 4. rounding = 四舍五入差额（舍去为负，入位为正）
  */
 watch(
   () => formData.value,
@@ -1157,8 +1160,11 @@ watch(
           : undefined
       orderTotal += curtain.amount ?? 0
     })
-    // 订单金额 = 所有窗帘金额之和 + 运费 - 优惠金额
-    form.amount = round2(orderTotal + (form.freight ?? 0) - (form.discountAmount ?? 0)) as any
+    const rawAmount = round2(orderTotal + (form.freight ?? 0) - (form.discountAmount ?? 0))
+    const roundedAmount = Math.round(rawAmount)
+    // rounding：舍去小数记负，进位记正；无差额时为 0
+    form.rounding = round2(roundedAmount - rawAmount)
+    form.amount = roundedAmount as any
   },
   { deep: true }
 )

@@ -90,7 +90,8 @@ export interface SalesOrder {
   types?: string                       // 订单类型
   discountAmount?: number              // 优惠金额
   totalAmount?: number                 // 总金额
-  amount?: number                      // 实际应收金额（总金额 - 优惠）
+  amount?: number                      // 实际应收金额（四舍五入后的订单金额）
+  rounding?: number                    // 四舍五入差额（舍去为负，入位为正）
   amountReceived?: number              // 已收金额
   deliveryDate?: string | Dayjs        // 交付日期
   payStatus?: string                   // 结算状态
@@ -183,6 +184,7 @@ export interface ZcSalesOrderSubmitReqVO {
   discountAmount?: number
   totalAmount?: number
   amount?: number
+  rounding?: number                    // 四舍五入差额（舍去为负，入位为正）
   deliveryDate?: string | Dayjs
   note?: string
   curtains?: ZcSalesOrderCurtainSubmitVO[]
