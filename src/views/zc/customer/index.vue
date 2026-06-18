@@ -7,6 +7,8 @@
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
+    
+      @submit.prevent
     >
       <el-form-item label="简称" prop="shortName">
         <el-input
@@ -125,7 +127,7 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="220px">
         <template #default="scope">
           <el-button link type="primary" @click="handlePrintShipping(scope.row)">
             打印发货联

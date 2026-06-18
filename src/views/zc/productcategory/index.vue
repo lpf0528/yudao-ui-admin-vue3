@@ -7,6 +7,8 @@
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
+    
+      @submit.prevent
     >
       <el-form-item label="类别名称" prop="value">
         <el-input

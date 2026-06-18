@@ -47,7 +47,9 @@
 
       <!-- ========== 右侧：批次列表 ========== -->
       <div class="flex flex-col flex-1 min-w-0 px-12px pt-10px">
-        <el-form :model="queryParams" :inline="true" class="mb-8px" size="small">
+        <el-form :model="queryParams" :inline="true" class="mb-8px" size="small"
+      @submit.prevent
+    >
           <el-form-item label="批号">
             <el-input
               v-model="queryParams.batchNo"

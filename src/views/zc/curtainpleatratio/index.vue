@@ -7,13 +7,13 @@
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
+      @submit.prevent="handleQuery"
     >
       <el-form-item label="褶倍" prop="value">
         <el-input
           v-model="queryParams.value"
           placeholder="请输入褶倍"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
@@ -54,7 +54,6 @@
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="褶倍" align="center" prop="value" />
-      <el-table-column label="排序" align="center" prop="rank" />
 <!--      <el-table-column label="创建者" align="center" prop="creator" />-->
       <el-table-column
         label="创建时间"

@@ -7,6 +7,8 @@
       ref="queryFormRef"
       :inline="true"
       label-width="68px"
+    
+      @submit.prevent
     >
       <el-form-item label="编码" prop="code">
         <el-input

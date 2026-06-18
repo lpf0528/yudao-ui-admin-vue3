@@ -5,7 +5,9 @@
 <template>
   <ContentWrap>
     <!-- 搜索区域 -->
-    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px">
+    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px"
+      @submit.prevent
+    >
       <el-form-item label="用户名称" prop="username">
         <el-input
           v-model="queryParams.username"

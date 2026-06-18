@@ -2,7 +2,9 @@
   <Dialog v-model="dialogVisible" width="900px">
     <template #title>选择商品</template>
     <!-- 筛选栏 -->
-    <el-form :model="queryParams" ref="queryFormRef" :inline="true" class="-mb-15px mb-16px">
+    <el-form :model="queryParams" ref="queryFormRef" :inline="true" class="-mb-15px mb-16px"
+      @submit.prevent
+    >
       <el-form-item label="名称" prop="name">
         <el-input
           v-model="queryParams.name"
