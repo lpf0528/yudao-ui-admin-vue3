@@ -57,13 +57,26 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await BillMethodsApi.getBillMethods(id)
+      const data = await BillMethodsApi.getBillMethods(id)
+      // 仅回填可编辑字段，group 由后端维护，前端不传
+      formData.value = {
+        id: data.id,
+        name: data.name,
+        cardNo: data.cardNo,
+        note: data.note
+      }
     } finally {
       formLoading.value = false
     }
   }
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
+
+/** 构建提交数据，不含 group 字段 */
+const buildSubmitPayload = (): BillMethods => {
+  const { id, name, cardNo, note } = formData.value
+  return { id, name, cardNo, note } as BillMethods
+}
 
 /** 提交表单 */
 const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
@@ -73,7 +86,7 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as BillMethods
+    const data = buildSubmitPayload()
     if (formType.value === 'create') {
       await BillMethodsApi.createBillMethods(data)
       message.success(t('common.createSuccess'))

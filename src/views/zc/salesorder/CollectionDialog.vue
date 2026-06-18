@@ -1,7 +1,7 @@
 <!--
   销售订单 - 新增收款弹窗
   功能：选择客户后，自动加载该客户未结清/部分结清且已确认的订单，填写收款信息后提交
-  使用方：views/zc/salesorder/index.vue
+  使用方：views/zc/salesorder/index.vue、views/zc/salesorder/SalesOrderForm.vue
 -->
 <template>
   <Dialog title="新增收款" v-model="dialogVisible" width="70%">
@@ -16,7 +16,11 @@
       <el-row :gutter="16">
         <el-col :span="6">
           <el-form-item label="选择客户" prop="customerId">
-            <div class="flex items-center w-full gap-4px">
+            <!-- 订单表单入口：锁定当前订单客户，禁止搜索切换 -->
+            <div v-if="customerLocked" class="flex items-center w-full gap-4px">
+              <el-input v-model="customerInput" disabled class="flex-1" />
+            </div>
+            <div v-else class="flex items-center w-full gap-4px">
               <el-input
                 v-model="customerInput"
                 placeholder="输入客户名称后回车搜索"
@@ -33,6 +37,24 @@
                 @click="handleOpenCustomerSearch"
               />
             </div>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账户余额">
+            <span
+              class="text-sm font-medium leading-32px"
+              :class="
+                customerBalance == null
+                  ? 'text-gray-700'
+                  : customerBalance < 0
+                    ? 'text-red-500'
+                    : customerBalance > 0
+                      ? 'text-green-500'
+                      : 'text-gray-700'
+              "
+            >
+              {{ customerBalance != null ? customerBalance.toFixed(2) : '-' }}
+            </span>
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -172,8 +194,12 @@
     </template>
   </Dialog>
 
-  <!-- 客户搜索弹窗：分页查询客户，选中后回填并加载订单 -->
-  <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
+  <!-- 客户搜索弹窗：列表页入口使用，订单表单入口已锁定客户时不渲染 -->
+  <CustomerSearchDialog
+    v-if="!customerLocked"
+    ref="customerSearchDialogRef"
+    @select="handleSelectCustomerFromSearch"
+  />
 </template>
 
 <script setup lang="ts">
@@ -183,7 +209,7 @@ import { DICT_TYPE } from '@/utils/dict'
 import { ZcBillsApi, ZcBillsSaveReqVO } from '@/api/zc/finance/collection'
 import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
 import { BillMethodsApi, BillMethods } from '@/api/zc/bill_methods'
-import type { Customer } from '@/api/zc/customer'
+import { CustomerApi, type Customer } from '@/api/zc/customer'
 import { UploadImg } from '@/components/UploadFile'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
 
@@ -219,8 +245,12 @@ const formRules = {
 }
 
 // ======================== 客户选择 ========================
+/** 是否锁定客户（订单表单入口传入 customerId 时为 true，禁用搜索） */
+const customerLocked = ref(false)
 /** 客户输入框展示文本：搜索前为用户输入，选中后为「简称/联系人」 */
 const customerInput = ref('')
+/** 当前选中客户的账户余额，选择客户或 getCustomer 后同步 */
+const customerBalance = ref<number | null>(null)
 
 const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
 
@@ -234,10 +264,16 @@ const handleClearCustomer = () => {
   handleCustomerChange(undefined)
 }
 
-/** 搜索弹窗选中客户：回填展示文本与 customerId，并加载可分摊订单 */
-const handleSelectCustomerFromSearch = async (customer: Customer) => {
+/** 回填客户展示信息及账户余额 */
+const applyCustomerInfo = (customer: Customer) => {
   customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
   formData.customerId = customer.id
+  customerBalance.value = customer.balance ?? null
+}
+
+/** 搜索弹窗选中客户：回填展示文本与 customerId，并加载可分摊订单 */
+const handleSelectCustomerFromSearch = async (customer: Customer) => {
+  applyCustomerInfo(customer)
   await handleCustomerChange(customer.id)
 }
 
@@ -313,7 +349,10 @@ const handleCustomerChange = async (customerId: number | undefined) => {
   selectedOrders.value = []
   Object.keys(allocMap).forEach((k) => delete allocMap[Number(k)])
   formData.orderItems = []
-  if (!customerId) return
+  if (!customerId) {
+    customerBalance.value = null
+    return
+  }
 
   ordersLoading.value = true
   try {
@@ -352,10 +391,14 @@ const formatDate = (val: string | number | undefined) => {
 }
 
 // ======================== 弹窗控制 ========================
-/** 打开弹窗，由父组件调用 */
-const open = async () => {
+/**
+ * 打开弹窗，由父组件调用
+ * @param customerId 可选，传入时锁定该客户（通过 getCustomer 加载信息，禁用客户搜索）
+ */
+const open = async (customerId?: number) => {
   dialogVisible.value = true
   formLoading.value = true
+  customerLocked.value = !!customerId
   try {
     Object.assign(formData, {
       billDate: dayjs().format('YYYY-MM-DD'),
@@ -370,10 +413,17 @@ const open = async () => {
     attachment1.value = ''
     attachment2.value = ''
     customerInput.value = ''
+    customerBalance.value = null
     orderList.value = []
     Object.keys(allocMap).forEach((k) => delete allocMap[Number(k)])
     formRef.value?.resetFields()
     await loadBillMethods()
+    // 订单表单入口：直接拉取当前订单客户详情，无需搜索
+    if (customerId) {
+      const customer = await CustomerApi.getCustomer(customerId)
+      applyCustomerInfo(customer)
+      await handleCustomerChange(customer.id)
+    }
   } finally {
     formLoading.value = false
   }

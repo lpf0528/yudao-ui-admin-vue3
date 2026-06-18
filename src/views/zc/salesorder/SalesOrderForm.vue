@@ -13,6 +13,15 @@
       <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
+      <!-- 新增收款：已确认订单且已关联客户时显示，锁定当前客户进行收款 -->
+      <el-button
+        v-if="formData.id && formData.customerId && isConfirmed"
+        type="warning"
+        plain
+        @click="handleOpenCollection"
+      >
+        <Icon icon="ep:wallet" class="mr-4px" />新增收款
+      </el-button>
       <!-- 加急按钮：订单已保存且未加急时显示 -->
       <el-button v-if="formData.id && !formData.isExpedited" type="warning" @click="handleExpedite" :loading="formLoading">
         <Icon icon="ep:timer" class="mr-4px" />加急
@@ -134,7 +143,18 @@
         </el-form-item>
         <!-- 账户余额 -->
         <el-form-item label="账户余额" style="flex: 2; min-width: 0">
-          <span class="text-sm font-medium" :class="(selectedCustomerBalance ?? 0) < 0 ? 'text-red-500' : 'text-gray-700'">
+          <span
+            class="text-sm font-medium"
+            :class="
+              selectedCustomerBalance == null
+                ? 'text-gray-700'
+                : selectedCustomerBalance < 0
+                  ? 'text-red-500'
+                  : selectedCustomerBalance > 0
+                    ? 'text-green-500'
+                    : 'text-gray-700'
+            "
+          >
             {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
           </span>
         </el-form-item>
@@ -451,6 +471,8 @@
     </div>
     <!-- 客户搜索弹窗 -->
     <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
+    <!-- 新增收款弹窗：锁定当前订单客户 -->
+    <CollectionDialog ref="collectionDialogRef" @success="handleCollectionSuccess" />
     <!-- 批次选择弹窗 -->
     <ProductBatchSelectDialog ref="batchSelectRef" />
     <!-- 销售单打印预览弹窗 -->
@@ -523,6 +545,7 @@
 import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
+import CollectionDialog from './CollectionDialog.vue'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO, ZcSalesOrderSubmitReqVO } from '@/api/zc/salesorder'
 import { CustomerApi, type Customer, type CustomerSimpleVO } from '@/api/zc/customer'
@@ -800,6 +823,8 @@ const formRef = ref()
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProcessingPrintDialog>>()
+/** 新增收款弹窗 */
+const collectionDialogRef = ref<InstanceType<typeof CollectionDialog>>()
 const washLabelDialogRef = ref<InstanceType<typeof SalesOrderWashLabelDialog>>()
 const shippingDialogRef = ref<InstanceType<typeof SalesOrderShippingDialog>>()
 /** 销售单2 PDF 预览 dialog 状态 */
@@ -1218,6 +1243,23 @@ const emit = defineEmits(['success'])
 
 const handleSave = async () => {
   await submitForm()
+}
+
+/** 打开新增收款弹窗，使用当前订单客户（禁用客户搜索） */
+const handleOpenCollection = () => {
+  if (!formData.value.customerId) {
+    message.warning('请先选择客户')
+    return
+  }
+  collectionDialogRef.value?.open(formData.value.customerId)
+}
+
+/** 收款成功后刷新订单数据并通知列表页 */
+const handleCollectionSuccess = async () => {
+  if (formData.value.id) {
+    await reloadForm(formData.value.id)
+  }
+  emit('success')
 }
 
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */

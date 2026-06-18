@@ -12,11 +12,12 @@ export interface BillMethodsSimpleVO {
 
 /** 收款方式信息 */
 export interface BillMethods {
-          id: number; // 主键
-          name?: string; // 名称
-          cardNo: string; // 卡号
-          note: string; // 备注
-  }
+  id: number // 主键
+  name?: string // 名称
+  cardNo: string // 卡号
+  note: string // 备注
+  group?: number // 分组：0=系统配置，1=手工配置
+}
 
 // 收款方式 API
 export const BillMethodsApi = {

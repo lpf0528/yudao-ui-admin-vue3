@@ -124,7 +124,18 @@
         </el-form-item>
         <!-- 账户余额 2 -->
         <el-form-item label="账户余额" style="flex: 2; min-width: 0">
-          <span class="text-sm font-medium" :class="(selectedCustomerBalance ?? 0) < 0 ? 'text-red-500' : 'text-gray-700'">
+          <span
+            class="text-sm font-medium"
+            :class="
+              selectedCustomerBalance == null
+                ? 'text-gray-700'
+                : selectedCustomerBalance < 0
+                  ? 'text-red-500'
+                  : selectedCustomerBalance > 0
+                    ? 'text-green-500'
+                    : 'text-gray-700'
+            "
+          >
             {{ selectedCustomerBalance != null ? selectedCustomerBalance : '-' }}
           </span>
         </el-form-item>

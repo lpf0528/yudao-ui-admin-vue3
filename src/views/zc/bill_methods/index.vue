@@ -61,11 +61,10 @@
         :stripe="true"
         :show-overflow-tooltip="true"
     >
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="卡号" align="center" prop="cardNo" />
       <el-table-column label="备注" align="center" prop="note" />
-      <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -76,6 +75,7 @@
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
+            v-if="scope.row.group !== 0"
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
