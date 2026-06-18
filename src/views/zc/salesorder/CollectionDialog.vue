@@ -16,21 +16,23 @@
       <el-row :gutter="16">
         <el-col :span="6">
           <el-form-item label="选择客户" prop="customerId">
-            <el-select
-              v-model="formData.customerId"
-              placeholder="请选择客户"
-              clearable
-              filterable
-              class="!w-full"
-              @change="handleCustomerChange"
-            >
-              <el-option
-                v-for="item in customersList"
-                :key="item.id"
-                :label="`${item.shortName}/${item.contactName}`"
-                :value="item.id"
+            <div class="flex items-center w-full gap-4px">
+              <el-input
+                v-model="customerInput"
+                placeholder="输入客户名称后回车搜索"
+                clearable
+                class="flex-1"
+                @keyup.enter="handleOpenCustomerSearch"
+                @clear="handleClearCustomer"
               />
-            </el-select>
+              <el-button
+                :icon="SearchIcon"
+                circle
+                size="small"
+                title="搜索客户"
+                @click="handleOpenCustomerSearch"
+              />
+            </div>
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -169,21 +171,23 @@
       <el-button type="primary" :loading="submitLoading" @click="submitForm">确认</el-button>
     </template>
   </Dialog>
+
+  <!-- 客户搜索弹窗：分页查询客户，选中后回填并加载订单 -->
+  <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
 </template>
 
 <script setup lang="ts">
+import { Search as SearchIcon } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { DICT_TYPE } from '@/utils/dict'
 import { ZcBillsApi, ZcBillsSaveReqVO } from '@/api/zc/finance/collection'
 import { SalesOrderApi, SalesOrder } from '@/api/zc/salesorder'
 import { BillMethodsApi, BillMethods } from '@/api/zc/bill_methods'
-import type { CustomerSimpleVO } from '@/api/zc/customer'
+import type { Customer } from '@/api/zc/customer'
 import { UploadImg } from '@/components/UploadFile'
+import CustomerSearchDialog from './CustomerSearchDialog.vue'
 
 // ======================== Props / Emits ========================
-defineProps<{
-  customersList: CustomerSimpleVO[]
-}>()
 const emit = defineEmits(['success'])
 
 // ======================== 弹窗状态 ========================
@@ -212,6 +216,29 @@ const formRules = {
   billDate: [{ required: true, message: '请选择收款日期', trigger: 'change' }],
   actualAmount: [{ required: true, message: '请输入实收金额', trigger: 'blur' }],
   billMethodId: [{ required: true, message: '请选择收支方式', trigger: 'change' }]
+}
+
+// ======================== 客户选择 ========================
+/** 客户输入框展示文本：搜索前为用户输入，选中后为「简称/联系人」 */
+const customerInput = ref('')
+
+const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
+
+/** 回车打开客户搜索弹窗，并将当前输入作为初始搜索词 */
+const handleOpenCustomerSearch = () => {
+  customerSearchDialogRef.value?.open(customerInput.value)
+}
+
+/** 清空输入时同步清除已选客户及订单列表 */
+const handleClearCustomer = () => {
+  handleCustomerChange(undefined)
+}
+
+/** 搜索弹窗选中客户：回填展示文本与 customerId，并加载可分摊订单 */
+const handleSelectCustomerFromSearch = async (customer: Customer) => {
+  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+  formData.customerId = customer.id
+  await handleCustomerChange(customer.id)
 }
 
 // ======================== 订单列表 ========================
@@ -342,6 +369,7 @@ const open = async () => {
     })
     attachment1.value = ''
     attachment2.value = ''
+    customerInput.value = ''
     orderList.value = []
     Object.keys(allocMap).forEach((k) => delete allocMap[Number(k)])
     formRef.value?.resetFields()

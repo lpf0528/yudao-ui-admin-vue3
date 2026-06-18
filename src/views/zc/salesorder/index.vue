@@ -19,20 +19,15 @@
       </el-form-item>
       <el-form-item label="客户" prop="customerId">
         <div class="flex items-center gap-4px">
-          <el-select
-            v-model="queryParams.customerId"
-            placeholder="请选择客户"
+          <el-input
+            v-model="customerInput"
+            placeholder="输入客户名称后回车搜索"
             clearable
             class="!w-200px"
-          >
-            <el-option
-              v-for="item in customersList"
-              :key="item.id"
-              :label="`${item.shortName}/${item.contactName}`"
-              :value="item.id"
-            />
-          </el-select>
-          <el-button :icon="SearchIcon" circle size="small" @click="customerSearchDialogRef?.open()" title="搜索客户" />
+            @keyup.enter="handleOpenCustomerSearch"
+            @clear="handleClearCustomerFilter"
+          />
+          <el-button :icon="SearchIcon" circle size="small" @click="handleOpenCustomerSearch" title="搜索客户" />
         </div>
       </el-form-item>
       <el-form-item label="下单日期" prop="orderDate">
@@ -283,15 +278,15 @@
   </ContentWrap>
 
   <!-- 成品单表单弹窗 -->
-  <SalesOrderForm ref="formRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
+  <SalesOrderForm ref="formRef" :brandsList="brandsList" :logisticsList="logisticsList" :installProcessList="installProcessList" @success="getList" />
 
   <!-- 面料单表单弹窗 -->
-  <SalesOrderProductForm ref="productFormRef" :customersList="customersList" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" @open-sales-order-form="formRef?.open('create')" />
+  <SalesOrderProductForm ref="productFormRef" :brandsList="brandsList" :logisticsList="logisticsList" @success="getList" @open-sales-order-form="formRef?.open('create')" />
 
   <!-- 收款弹窗 -->
-  <CollectionDialog ref="collectionDialogRef" :customersList="customersList" @success="getList" />
+  <CollectionDialog ref="collectionDialogRef" @success="getList" />
   <!-- 客户搜索弹窗（列表页筛选用） -->
-  <CustomerSearchDialog ref="customerSearchDialogRef" @select="(c) => (queryParams.customerId = c.id)" />
+  <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
 
   <!-- 工序记录弹窗 -->
   <el-dialog v-model="processRecordVisible" title="工序记录" width="600px" destroy-on-close>
@@ -343,7 +338,7 @@ import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { SalesOrderApi, SalesOrderProductApi, SalesOrderType, SalesOrder, OrderProcessRecordApi, ZcOrderProcessRecordRespVO } from '@/api/zc/salesorder'
-import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import type { Customer } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainInstallProcessApi, CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
@@ -361,7 +356,8 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<SalesOrder[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
-const customersList = ref<CustomerSimpleVO[]>([]) // 客户列表
+/** 列表筛选：客户输入框展示文本，实际筛选仍用 queryParams.customerId */
+const customerInput = ref('')
 const brandsList = ref<BrandSimpleVO[]>([]) // 品牌列表
 const logisticsList = ref<LogisticsSimpleVO[]>([]) // 物流列表
 const installProcessList = ref<CurtainInstallProcessSimpleVO[]>([]) // 安装工艺列表
@@ -415,7 +411,27 @@ const handleQuery = () => {
 /** 重置按钮操作 */
 const resetQuery = () => {
   queryFormRef.value.resetFields()
+  customerInput.value = ''
   handleQuery()
+}
+
+/** 客户搜索弹窗（列表页筛选用） */
+const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
+
+/** 回车或点击搜索图标：打开客户搜索弹窗 */
+const handleOpenCustomerSearch = () => {
+  customerSearchDialogRef.value?.open(customerInput.value)
+}
+
+/** 搜索弹窗选中客户：回填展示文本并设置筛选 ID */
+const handleSelectCustomerFromSearch = (customer: Customer) => {
+  queryParams.customerId = customer.id
+  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+}
+
+/** 清空客户输入时同步清除筛选条件 */
+const handleClearCustomerFilter = () => {
+  queryParams.customerId = undefined
 }
 
 /** 添加/修改成品单 */
@@ -444,9 +460,6 @@ const collectionDialogRef = ref()
 const openCollectionDialog = () => {
   collectionDialogRef.value.open()
 }
-
-/** 客户搜索弹窗（列表页用） */
-const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
 
 /** 删除按钮操作：面料单走 SalesOrderProductApi，其余走 SalesOrderApi */
 const handleDelete = async (id: number, types: string) => {
@@ -504,8 +517,7 @@ const openProcessRecordDialog = async (orderId: number) => {
 
 /** 初始化 **/
 onMounted(async () => {
-  ;[customersList.value, brandsList.value, logisticsList.value, installProcessList.value] = await Promise.all([
-    CustomerApi.getCustomerSimpleList(),
+  ;[brandsList.value, logisticsList.value, installProcessList.value] = await Promise.all([
     BrandApi.getBrandSimpleList(),
     LogisticsApi.getLogisticsSimpleList(),
     CurtainInstallProcessApi.getCurtainInstallProcessSimpleList(),

@@ -72,9 +72,15 @@
         <!-- 客户：展示简称/联系人，稍宽 -->
         <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
           <div class="flex items-center w-full gap-4px">
-            <el-select v-model="formData.customerId" clearable filterable placeholder="请选择客户" class="flex-1" :disabled="isConfirmed" @change="handleCustomerChange">
-              <el-option v-for="item in props.customersList" :key="item.id" :label="`${item.shortName}/${item.contactName}`" :value="item.id" />
-            </el-select>
+            <el-input
+              v-model="customerInput"
+              placeholder="输入客户名称后回车搜索"
+              clearable
+              class="flex-1"
+              :disabled="isConfirmed"
+              @keyup.enter="handleOpenCustomerSearch"
+              @clear="handleClearCustomer"
+            />
             <el-button :icon="SearchIcon" circle size="small" :disabled="isConfirmed" @click="handleOpenCustomerSearch" title="搜索客户" />
           </div>
         </el-form-item>
@@ -450,7 +456,7 @@
     <!-- 销售单打印预览弹窗 -->
     <SalesOrderPrintDialog
       ref="printDialogRef"
-      :customers-list="props.customersList"
+      :customers-list="customersListForPrint"
       :brands-list="props.brandsList"
       :logistics-list="props.logisticsList"
       :curtain-list="curtainList"
@@ -460,7 +466,7 @@
     <!-- 加工单打印预览弹窗 -->
     <SalesOrderProcessingPrintDialog
       ref="processingPrintDialogRef"
-      :customers-list="props.customersList"
+      :customers-list="customersListForPrint"
       :brands-list="props.brandsList"
       :logistics-list="props.logisticsList"
       :curtain-list="curtainList"
@@ -470,7 +476,7 @@
     <!-- 水洗标打印预览弹窗 -->
     <SalesOrderWashLabelDialog
       ref="washLabelDialogRef"
-      :customers-list="props.customersList"
+      :customers-list="customersListForPrint"
       :brands-list="props.brandsList"
       :curtain-list="curtainList"
       :curtain-structure-list="curtainStructureList"
@@ -478,7 +484,7 @@
     <!-- 发货联打印预览弹窗 -->
     <SalesOrderShippingDialog
       ref="shippingDialogRef"
-      :customers-list="props.customersList"
+      :customers-list="customersListForPrint"
       :brands-list="props.brandsList"
       :logistics-list="props.logisticsList"
     />
@@ -519,7 +525,7 @@ import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO, ZcSalesOrderSubmitReqVO } from '@/api/zc/salesorder'
-import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import { CustomerApi, type Customer, type CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
@@ -537,9 +543,14 @@ import SalesOrderShippingDialog from './SalesOrderShippingDialog.vue'
 /** 销售订单 表单 */
 defineOptions({ name: 'SalesOrderForm' })
 
-const props = defineProps<{ customersList: CustomerSimpleVO[]; brandsList: BrandSimpleVO[]; logisticsList: LogisticsSimpleVO[]; installProcessList: CurtainInstallProcessSimpleVO[] }>()
+const props = defineProps<{ brandsList: BrandSimpleVO[]; logisticsList: LogisticsSimpleVO[]; installProcessList: CurtainInstallProcessSimpleVO[] }>()
 
 const selectedCustomerBalance = ref<number | null>(null)
+/** 客户输入框展示文本：搜索前为用户输入，选中后为「简称/联系人」 */
+const customerInput = ref('')
+/** 当前选中客户信息，供打印弹窗展示客户名称 */
+const selectedCustomerInfo = ref<CustomerSimpleVO | null>(null)
+const customersListForPrint = computed(() => (selectedCustomerInfo.value ? [selectedCustomerInfo.value] : []))
 
 /** 从品牌列表中取默认品牌 ID：优先 isDefault=true 的，否则取第一个 */
 const getDefaultBrandId = () => {
@@ -555,9 +566,43 @@ const todayStr = () => {
 
 const customerSearchDialogRef = ref<InstanceType<typeof CustomerSearchDialog>>()
 
-/** 打开客户搜索弹窗 */
+/** 将客户详情转为打印弹窗所需的简要结构 */
+const toCustomerSimpleVO = (customer: Customer): CustomerSimpleVO => ({
+  id: customer.id,
+  shortName: customer.shortName ?? '',
+  name: customer.name ?? '',
+  mobile: customer.mobile,
+  brandId: customer.brandId,
+  logisticId: customer.logisticId,
+  contactName: customer.contactName ?? '',
+  deliveryAddress: customer.deliveryAddress,
+  balance: customer.balance
+})
+
+/** 回车或点击搜索图标：打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
-  customerSearchDialogRef.value?.open()
+  customerSearchDialogRef.value?.open(customerInput.value)
+}
+
+/** 清空客户输入时同步清除已选客户 */
+const handleClearCustomer = () => {
+  formData.value.customerId = undefined
+  selectedCustomerInfo.value = null
+  selectedCustomerBalance.value = null
+}
+
+/** 编辑/重载时根据 customerId 回填输入框与余额（不再依赖 simple-list） */
+const syncCustomerDisplay = async (customerId: number) => {
+  try {
+    const customer = await CustomerApi.getCustomer(customerId)
+    customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+    selectedCustomerInfo.value = toCustomerSimpleVO(customer)
+    selectedCustomerBalance.value = customer.balance
+  } catch {
+    customerInput.value = ''
+    selectedCustomerInfo.value = null
+    selectedCustomerBalance.value = null
+  }
 }
 
 const curtainList = ref<CurtainSimpleVO[]>([])
@@ -723,8 +768,10 @@ const updateMaterialAuthorizedPrices = async (customerId: number) => {
 }
 
 /** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
-const handleSelectCustomerFromSearch = async (customer: any) => {
+const handleSelectCustomerFromSearch = async (customer: Customer) => {
   console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
+  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+  selectedCustomerInfo.value = toCustomerSimpleVO(customer)
   formData.value.customerId = customer.id
   formData.value.mobile = customer.mobile
   formData.value.brandId = customer.brandId ?? getDefaultBrandId()
@@ -734,37 +781,6 @@ const handleSelectCustomerFromSearch = async (customer: any) => {
   selectedCustomerBalance.value = customer.balance
   if (formData.value.curtains.length === 0) addCurtain()
   await updateMaterialAuthorizedPrices(customer.id)
-}
-
-/**
- * 选择客户后：
- * 1. 回填手机、品牌、物流、收货人、送货地址、账户余额
- * 2. 并发查询已有用料中各产品+规格的授权价，有则覆盖单价
- */
-const handleCustomerChange = async (customerId: number) => {
-  console.log('[SalesOrderForm 授权价] handleCustomerChange 触发', {
-    customerId,
-    customerIdType: typeof customerId,
-    formCustomerId: formData.value.customerId
-  })
-  const customer = props.customersList.find((item) => item.id === customerId)
-  if (!customer) {
-    console.warn('[SalesOrderForm 授权价] handleCustomerChange 未找到客户，提前返回', {
-      customerId,
-      customersListIds: props.customersList.map((item) => item.id)
-    })
-    selectedCustomerBalance.value = null
-    return
-  }
-  formData.value.mobile = customer.mobile
-  formData.value.brandId = customer.brandId ?? getDefaultBrandId()
-  formData.value.logisticId = customer.logisticId
-  formData.value.receiver = customer.contactName
-  formData.value.deliveryAddress = customer.deliveryAddress
-  selectedCustomerBalance.value = customer.balance
-  // 新建订单选完客户后自动带出第一个窗帘行
-  if (formData.value.curtains.length === 0) addCurtain()
-  await updateMaterialAuthorizedPrices(customerId)
 }
 
 const formRules = {
@@ -1006,10 +1022,9 @@ const open = async (type: string, id?: number) => {
         ...detail,
         curtains: transformDetailCurtains(detail.curtains)
       }
-      // 同步客户余额展示
+      // 同步客户余额与输入框展示
       if (detail.customerId) {
-        const customer = props.customersList.find((item) => item.id === detail.customerId)
-        selectedCustomerBalance.value = customer?.balance ?? null
+        await syncCustomerDisplay(detail.customerId)
       }
     } finally {
       formLoading.value = false
@@ -1276,8 +1291,7 @@ const reloadForm = async (id: number) => {
       curtains: transformDetailCurtains(detail.curtains)
     }
     if (detail.customerId) {
-      const customer = props.customersList.find((item) => item.id === detail.customerId)
-      selectedCustomerBalance.value = customer?.balance ?? null
+      await syncCustomerDisplay(detail.customerId)
     }
   } finally {
     formLoading.value = false
@@ -1367,6 +1381,8 @@ const submitForm = async () => {
 
 const resetForm = () => {
   formData.value = getInitFormData()
+  customerInput.value = ''
+  selectedCustomerInfo.value = null
   selectedCustomerBalance.value = null
   formRef.value?.resetFields()
 }

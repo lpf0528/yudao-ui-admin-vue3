@@ -2,7 +2,7 @@
   客户搜索弹窗（公共组件）
   调用分页接口搜索客户，支持全称过滤和分页
   通过 open() 方法打开，选中行后 emit('select', customer) 通知调用方填充表单
-  使用方：SalesOrderForm.vue / SalesOrderProductForm.vue / index.vue
+  使用方：SalesOrderForm.vue / SalesOrderProductForm.vue / CollectionDialog.vue / index.vue
 -->
 <template>
   <el-dialog v-model="visible" title="搜索客户" width="620px" append-to-body>
@@ -81,9 +81,9 @@ const handleRowClick = (row: any) => {
   visible.value = false
 }
 
-/** 打开弹窗：重置查询条件并加载第一页 */
-const open = () => {
-  query.name = ''
+/** 打开弹窗：可选传入初始搜索关键词，预填到弹窗搜索框并立即查询 */
+const open = (keyword = '') => {
+  query.name = keyword.trim()
   query.pageNo = 1
   visible.value = true
   fetchPage()
