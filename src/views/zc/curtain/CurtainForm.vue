@@ -11,7 +11,14 @@
         <el-input v-model="formData.name" placeholder="请输入款式名称" />
       </el-form-item>
       <el-form-item label="褶倍" prop="pleatRatioValue">
-        <el-input v-model="formData.pleatRatioValue" placeholder="请输入褶倍" />
+        <el-select v-model="formData.pleatRatioValue" clearable placeholder="请选择褶倍" class="!w-full">
+          <el-option
+            v-for="item in pleatRatioList"
+            :key="item.id"
+            :label="item.value"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="褶距" prop="pleatsDistance">
         <el-input v-model="formData.pleatsDistance" placeholder="请输入褶距" />
@@ -28,6 +35,7 @@
 </template>
 <script setup lang="ts">
 import { CurtainApi, Curtain } from '@/api/zc/curtain'
+import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtainpleatratio'
 
 /** 窗帘 表单 */
 defineOptions({ name: 'CurtainForm' })
@@ -50,6 +58,8 @@ const formRules = reactive({
   name: [{ required: true, message: '款式名称不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
+/** 褶倍下拉选项，来自 /zc/curtain-pleat-ratio/simple-list */
+const pleatRatioList = ref<CurtainPleatRatioSimpleVO[]>([])
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -57,6 +67,7 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  pleatRatioList.value = await CurtainPleatRatioApi.getCurtainPleatRatioSimpleList()
   // 修改时，设置数据
   if (id) {
     formLoading.value = true

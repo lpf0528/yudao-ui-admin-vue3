@@ -81,9 +81,15 @@
       :stripe="true"
       :show-overflow-tooltip="true"
     >
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="单号" align="center" prop="billNo" />
-      <el-table-column label="付款时间" align="center" prop="billDate" />
+      <el-table-column
+        label="付款时间"
+        align="center"
+        prop="billDate"
+        :formatter="dateFormatter"
+        width="180px"
+      />
       <el-table-column label="客户" align="center" prop="customerId">
         <template #default="scope">{{ customerIdMap[scope.row.customerId] }}</template>
       </el-table-column>
@@ -108,6 +114,7 @@
 import { BillsApi, Bills } from '@/api/zc/bills'
 import { BillMethodsApi, BillMethodsSimpleVO } from '@/api/zc/bill_methods'
 import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import { dateFormatter } from '@/utils/formatTime'
 
 /** 收支账单 列表 */
 defineOptions({ name: 'ZcBills' })

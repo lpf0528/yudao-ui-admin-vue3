@@ -319,6 +319,12 @@ const saveAll = async () => {
     message.warning('存在未填写授权价格的行，请补全后再保存')
     return
   }
+  // 校验授权价列表中不存在重复的版本+规格组合
+  const versionSpecKeys = priceList.value.map((row) => buildVersionSpecKey(row.versionId, row.spec))
+  if (new Set(versionSpecKeys).size !== versionSpecKeys.length) {
+    message.warning('授权价列表中存在重复的版本规格，请删除重复项后再保存')
+    return
+  }
   saveLoading.value = true
   try {
     // 覆盖写：先删除该客户所有旧记录，再全量插入
@@ -351,10 +357,23 @@ const pickerQueryParams = reactive({
 const pickerFormRef = ref()
 const pickerVersionList = ref<ProductVersionSimpleVO[]>([])
 
-/** 已在授权价列表中的产品 ID（含未保存的新行），禁止重复添加 */
-const pickerDisabledIds = computed(() =>
-  priceList.value.filter((r) => r.productId).map((r) => r.productId as number)
+/** 生成版本+规格唯一键，授权价列表以 versionId+spec 作为业务唯一标识 */
+const buildVersionSpecKey = (versionId?: number, spec?: string) =>
+  versionId != null && spec ? `${versionId}::${spec}` : ''
+
+/** 授权价列表中已存在的版本+规格组合（含未保存的新行） */
+const priceVersionSpecKeys = computed(
+  () =>
+    new Set(
+      priceList.value
+        .map((row) => buildVersionSpecKey(row.versionId, row.spec))
+        .filter(Boolean)
+    )
 )
+
+/** 判断选择器行是否已在授权价列表中 */
+const isPickerRowDisabled = (row: { versionId?: number; spec?: string }) =>
+  priceVersionSpecKeys.value.has(buildVersionSpecKey(row.versionId, row.spec))
 
 const getPickerList = async () => {
   pickerLoading.value = true
@@ -378,7 +397,7 @@ const resetPickerQuery = () => {
 }
 
 const getPickerRowClass = ({ row }: { row: any }) =>
-  pickerDisabledIds.value.includes(row.id) ? 'row-disabled' : ''
+  isPickerRowDisabled(row) ? 'row-disabled' : ''
 
 /** 双击产品行 → 直接在右侧授权价列表追加一行（编辑状态等待填写价格） */
 const confirmPickerSelect = (row: any) => {
@@ -386,8 +405,8 @@ const confirmPickerSelect = (row: any) => {
     message.warning('请先从左上方选择客户')
     return
   }
-  if (pickerDisabledIds.value.includes(row.id)) {
-    message.warning('该商品已添加授权价，不可重复选择')
+  if (isPickerRowDisabled(row)) {
+    message.warning('该版本规格已存在授权价，不可重复选择')
     return
   }
   priceList.value.push({

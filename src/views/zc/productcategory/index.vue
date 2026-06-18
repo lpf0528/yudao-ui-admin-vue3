@@ -19,26 +19,6 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input
-          v-model="queryParams.note"
-          placeholder="请输入备注"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -232,4 +212,4 @@ const handleExport = async () => {
 onMounted(() => {
   getList()
 })
-</script>
+</script>
