@@ -171,10 +171,12 @@
 
         <!-- 金额汇总 -->
         <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
-          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center;">
+          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center; flex-wrap: wrap;">
+            <div v-if="balanceLog"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
             <div v-if="formData?.freight">
               <b>运费：</b>{{ formatMoney(formData.freight) }}
             </div>
+            <div><b>本单总金额：</b>{{ formatTotalAmount(formData?.totalAmount) }}</div>
             <div v-if="formData?.discountAmount">
               <b>优惠金额：</b>
               <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
@@ -182,6 +184,7 @@
             <div style="font-size: 16px; font-weight: bold;">
               合计：<span style="color: #DC2626;">{{ formatMoney(formData?.amount ?? 0) }}</span>
             </div>
+            <div v-if="balanceLog"><b>账户余额：</b>{{ formatBalance(balanceLog.balanceAfter) }}</div>
           </div>
         </div>
 
@@ -208,7 +211,8 @@
 </template>
 
 <script setup lang="ts">
-import type { CustomerSimpleVO } from '@/api/zc/customer'
+import type { CustomerSimpleVO, ZcCustomerBalanceLogRespVO } from '@/api/zc/customer'
+import { CustomerApi } from '@/api/zc/customer'
 import type { BrandSimpleVO, Brand } from '@/api/zc/brand'
 import { BrandApi } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -246,6 +250,8 @@ const hidePrices = ref(false)
 const brandDetail = ref<Brand | null>(null)
 /** 打印时间（预览展示，实际打印时刷新） */
 const printTime = ref('')
+/** 订单确认扣减的最新客户余额流水 */
+const balanceLog = ref<ZcCustomerBalanceLogRespVO | null>(null)
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -290,6 +296,19 @@ const formatMoney = (val?: number | null) => {
   return `¥${val}`
 }
 
+/** 余额展示（不受隐藏价格开关影响） */
+const formatBalance = (val?: number | null) => {
+  if (val == null) return '-'
+  return `¥${val}`
+}
+
+/** 本单总金额展示：对 totalAmount 四舍五入到整数 */
+const formatTotalAmount = (val?: number | null) => {
+  if (hidePrices.value) return '***'
+  if (val == null) return '-'
+  return `¥${Math.round(val)}`
+}
+
 /** 用料数量展示：数值后接计量单位 */
 const formatMaterialQuantity = (material: { quantity?: number; unitValue?: string }) => {
   if (material.quantity == null) return '-'
@@ -311,12 +330,26 @@ const loadBrandDetail = async (brandId?: number) => {
   }
 }
 
+/** 根据客户 ID、订单 ID 加载订单确认扣减的最新余额流水 */
+const loadBalanceLog = async (customerId?: number, refId?: number) => {
+  balanceLog.value = null
+  if (!customerId || !refId) return
+  try {
+    balanceLog.value = await CustomerApi.getLatestOrderConfirmBalanceLog({ customerId, refId })
+  } catch {
+    balanceLog.value = null
+  }
+}
+
 /** 打开预览弹窗，传入当前表单数据 */
 const open = async (data: FormDataType) => {
   formData.value = data
   printTime.value = formatDate(new Date())
   visible.value = true
-  await loadBrandDetail(data.brandId)
+  await Promise.all([
+    loadBrandDetail(data.brandId),
+    loadBalanceLog(data.customerId, data.id)
+  ])
 }
 
 defineExpose({ open })
@@ -422,12 +455,21 @@ const handlePrint = () => {
   }).join('')
 
   // ---- 金额汇总 ----
+  const balanceBeforeHtml = balanceLog.value
+    ? `<div><b>上期余额：</b>${formatBalance(balanceLog.value.balanceBefore)}</div>`
+    : ''
+  const balanceAfterHtml = balanceLog.value
+    ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
+    : ''
   const summaryHtml = `
     <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
-      <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;">
+      <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;flex-wrap:wrap;">
+        ${balanceBeforeHtml}
         ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
+        <div><b>本单总金额：</b>${formatTotalAmount(fd.totalAmount)}</div>
         ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
         <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
+        ${balanceAfterHtml}
       </div>
     </div>`
 

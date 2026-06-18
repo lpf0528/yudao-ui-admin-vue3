@@ -33,6 +33,22 @@ export interface Customer {
           note: string; // 备注
   }
 
+/** 客户余额流水（订单确认扣减）响应 VO */
+export interface ZcCustomerBalanceLogRespVO {
+  id: number // 主键
+  customerId: number // 客户 ID
+  customerShortName?: string // 客户简称
+  changeAmount?: number // 余额变动额
+  balanceBefore?: number // 变动前余额
+  balanceAfter?: number // 变动后余额
+  bizType?: string // 业务类型
+  refType?: string // 关联单据类型
+  refId?: number // 关联单据主键
+  refNo?: string // 关联单号快照
+  remark?: string // 备注
+  createTime?: string // 创建时间
+}
+
 // 客户资料 API
 export const CustomerApi = {
   // 查询客户资料分页
@@ -79,4 +95,12 @@ export const CustomerApi = {
   importTemplate: async () => {
     return await request.download({ url: `/zc/customer/get-import-template` })
   },
-}
+
+  /** 获得客户订单确认扣减的最新余额流水，对应后端：GET /zc/customer/balance-log/latest-order-confirm */
+  getLatestOrderConfirmBalanceLog: async (params: { customerId: number; refId: number }) => {
+    return await request.get<ZcCustomerBalanceLogRespVO>({
+      url: `/zc/customer/balance-log/latest-order-confirm`,
+      params
+    })
+  },
+}
