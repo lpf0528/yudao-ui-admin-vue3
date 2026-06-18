@@ -1,6 +1,6 @@
 <!--
   面料加工单打印预览弹窗
-  所有批次在单页以表格形式展示（货号 / 规格 / 批次 / 用料 / 备注），不显示单价和金额
+  单页 100mm × 120mm，所有批次以表格展示（货号 / 规格 / 用料 / 备注），预览与打印尺寸一致
   父组件通过 open(formData) 方法打开，支持打印（含打印机选择）及浏览器截图/另存为PDF
 -->
 <template>
@@ -18,19 +18,20 @@
       </div>
     </template>
 
-    <!-- 预览区：宽70mm × 高100mm（比例 70:100，屏幕等比放大） -->
+    <!-- 预览区：宽100mm × 高120mm，与打印页面尺寸一致 -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
       <div
         style="
           background: white;
-          width: 420px;
-          height: 600px;
+          width: 100mm;
+          height: 120mm;
           margin: 0 auto;
-          padding: 6px 14px 12px;
+          padding: 0.75mm 3mm 3mm;
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-          font-size: 15px;
+          font-size: 13pt;
+          line-height: 1.6;
           color: #1a1a1a;
-          font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+          font-family: 'SimHei', '黑体', 'Microsoft YaHei', '微软雅黑', sans-serif;
           overflow: hidden;
           box-sizing: border-box;
         "
@@ -38,30 +39,30 @@
         <!-- 抬头：左侧标题+信息，右侧二维码 -->
         <div style="display: flex; align-items: flex-start; margin-bottom: 4px;">
           <div style="flex: 1; min-width: 0;">
-            <div style="text-align: center; font-size: 21px; letter-spacing: 3px; line-height: 1.3; margin-bottom: 3px;">
+            <div style="text-align: center; font-size: 20pt; letter-spacing: 3px; line-height: 1.3; margin-bottom: 3px;">
               {{ brandName ? brandName + ' ' : '' }}加工单
             </div>
-            <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
-            <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}</div>
-            <div style="padding: 2px 0; font-size: 13px;">房间：</div>
+            <div style="padding: 1px 0; font-size: 11pt;">订单号：{{ formData?.orderNo || '-' }}</div>
+            <div style="padding: 1px 0; font-size: 11pt;">客户：{{ customerName }}</div>
+            <div style="padding: 1px 0; font-size: 11pt;">房间：</div>
           </div>
           <!-- 右侧二维码 -->
-          <div style="flex-shrink: 0; padding-left: 6px; text-align: center;">
+          <div style="width: 117px; flex-shrink: 0; padding-left: 5px; text-align: center; min-height: 120px;">
             <template v-if="orderQrCode">
               <img :src="orderQrCode.url" width="96" height="96" style="display: block; margin: 0 auto;" />
             </template>
             <div
               v-else
-              style="width: 96px; height: 96px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
+              style="width: 96px; height: 96px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 9px; margin: 0 auto;"
             >二维码</div>
           </div>
         </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 4px 0 6px;"></div>
+        <div style="border-top: 1px solid #ccc; margin: 3px 0 4px;"></div>
 
         <!-- 面料批次明细表格（不含单价和金额） -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 11pt; margin-top: 2px;">
           <thead>
             <tr style="background: #F3F4F6;">
               <th style="border: 1px solid #4B5563; padding: 3px 5px; text-align: center;">序号</th>
@@ -75,8 +76,8 @@
             <tr v-for="(batch, idx) in formData?.batchs?.filter((b) => b.elementIsPrint !== false)" :key="idx">
               <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: center;">{{ idx + 1 }}</td>
               <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.productName || '-' }}</td>
-              <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.specValue || '-' }}</td>
-              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.spec || '-' }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ formatMaterialQuantity(batch) }}</td>
               <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
@@ -85,7 +86,7 @@
         <!-- 订单备注放最后一行 -->
         <div
           v-if="formData?.note"
-          style="margin-top: 4px; padding: 3px 8px; font-size: 13px; border: 1px solid #D1D5DB; background: #FFFBEB;"
+          style="margin-top: 3px; padding: 2px 8px; font-size: 11pt; border: 1px solid #D1D5DB; background: #FFFBEB;"
         >
           <span style="color: #6B7280;">备注：</span>{{ formData.note }}
         </div>
@@ -101,6 +102,7 @@ import { BarcodeRegistryApi } from '@/api/zc/barcodeRegistry'
 import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 
 /** 面料加工单打印预览弹窗（单页表格，不含单价和金额） */
 defineOptions({ name: 'SalesOrderProductProcessingPrintDialog' })
@@ -108,8 +110,9 @@ defineOptions({ name: 'SalesOrderProductProcessingPrintDialog' })
 // ======================== 类型定义 ========================
 interface BatchRow {
   productName?: string
-  specValue?: string  // 产品规格
+  spec?: string           // 产品规格（与 SalesOrderProductForm 批次字段一致）
   batchNo?: string
+  unitValue?: string      // 计量单位
   quantity?: number
   note?: string
   elementIsPrint?: boolean  // false 时不显示、不打印
@@ -154,6 +157,15 @@ const brandName = computed(() => {
   return props.brandsList.find((item) => item.id === formData.value!.brandId)?.name || ''
 })
 
+/** 用料数量展示：数值后接计量单位，如 10米 */
+const formatMaterialQuantity = (batch: { quantity?: number; unitValue?: string }) => {
+  if (batch.quantity == null) return '-'
+  const unit = batch.unitValue
+    ? getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, batch.unitValue) || batch.unitValue
+    : ''
+  return `${batch.quantity}${unit}`
+}
+
 // ======================== 对外方法 ========================
 /** 打开预览弹窗，传入当前表单数据，并为整单注册生成二维码 */
 const open = async (data: FormDataType) => {
@@ -191,8 +203,8 @@ const handlePrint = async () => {
     <tr>
       <td style="${tdS}text-align:center;">${idx + 1}</td>
       <td style="${tdS}">${b.productName || '-'}</td>
-      <td style="${tdS}">${b.specValue || '-'}</td>
-      <td style="${tdS}text-align:right;">${b.quantity ?? '-'}</td>
+      <td style="${tdS}">${b.spec || '-'}</td>
+      <td style="${tdS}text-align:right;">${formatMaterialQuantity(b)}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
 
