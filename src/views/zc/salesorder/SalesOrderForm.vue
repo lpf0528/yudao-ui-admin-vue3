@@ -91,16 +91,16 @@
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
           <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
         </el-form-item>
-        <!-- 运费 -->
-        <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
+        <!-- 运费：列宽略收窄 -->
+        <el-form-item label="运费" prop="freight" style="flex: 1.5; min-width: 0">
           <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
         </el-form-item>
-        <!-- 优惠金额 -->
-        <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
+        <!-- 优惠金额：列宽略收窄 -->
+        <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
           <el-input-number v-model="formData.discountAmount" placeholder="请输入优惠金额" :controls="false" class="!w-full" />
         </el-form-item>
-        <!-- 金额：自动计算，只读 -->
-        <el-form-item label="金额" prop="amount" style="flex: 2; min-width: 0">
+        <!-- 金额：自动计算，只读，列宽略收窄 -->
+        <el-form-item label="金额" prop="amount" style="flex: 1.5; min-width: 0">
           <el-input v-model="formData.amount" disabled class="w-full" />
         </el-form-item>
         <!-- 账户余额 -->
@@ -122,98 +122,94 @@
       <el-card
         v-for="(curtain, idx) in formData.curtains"
         :key="idx"
-        class="mt-8px"
+        class="mt-8px curtain-card"
         shadow="never"
-        :style="{ borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: curtainColors[idx % curtainColors.length] }"
+        :style="{
+          borderLeftWidth: '4px',
+          borderLeftStyle: 'solid',
+          borderLeftColor: curtainColors[idx % curtainColors.length],
+          '--curtain-accent-color': curtainColors[idx % curtainColors.length]
+        }"
       >
         <template #header>
           <div class="flex justify-between items-center">
-            <span class="text-sm font-semibold">窗帘 #{{ idx + 1 }}</span>
-            <el-button v-if="!isConfirmed" link type="danger" @click="removeCurtain(idx)">删除</el-button>
+            <div class="flex items-center gap-8px">
+              <span class="text-sm font-semibold">窗帘 #{{ idx + 1 }}</span>
+              <el-button v-if="!isConfirmed" link class="curtain-header-btn" @click="copyCurtain(idx)">复制</el-button>
+            </div>
+            <el-button v-if="!isConfirmed" link type="danger" class="curtain-header-btn-danger" @click="removeCurtain(idx)">删除</el-button>
           </div>
         </template>
-        <el-row :gutter="16">
-          <el-col :span="3">
-            <el-form-item label="款式">
-              <el-select
-                v-model="curtain.curtainId"
-                clearable
-                placeholder="请选择款式"
-                class="w-1/1"
-                :disabled="isConfirmed"
-                @change="(val) => handleCurtainChange(curtain, val)"
-              >
-                <el-option
-                  v-for="item in curtainList"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
+        <!-- 窗帘区域：左右布局，左侧按内容宽度排列，图片紧跟基本信息后 -->
+        <div class="curtain-form-layout flex gap-12px items-stretch">
+          <div class="curtain-form-left min-w-0">
+            <!-- 基本信息行 -->
+            <div class="curtain-form-row flex flex-wrap items-start gap-x-8px gap-y-8px">
+              <el-form-item label="款式" class="curtain-field curtain-field-style">
+                <el-select
+                  v-model="curtain.curtainId"
+                  clearable
+                  placeholder="请选择款式"
+                  class="w-1/1"
+                  :disabled="isConfirmed"
+                  @change="(val) => handleCurtainChange(curtain, val)"
+                >
+                  <el-option
+                    v-for="item in curtainList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="房间" class="curtain-field curtain-field-room form-field-compact">
+                <el-input v-model="curtain.room" placeholder="请输入房间" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item label="褶倍" class="curtain-field curtain-field-metric form-field-compact">
+                <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="item in pleatRatioList"
+                    :key="item.id"
+                    :label="item.value"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="褶距" class="curtain-field curtain-field-metric form-field-compact">
+                <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item label="金额" class="curtain-field curtain-field-metric form-field-compact">
+                <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
+                <el-input-number v-model="curtain.amount" placeholder="金额" :controls="false" class="!w-full" disabled />
+              </el-form-item>
+            </div>
+            <!-- 配件、备注同一行 -->
+            <div class="curtain-form-row curtain-form-row-secondary flex flex-wrap items-start gap-x-8px gap-y-8px mt-8px">
+              <el-form-item label="配件" class="curtain-field curtain-field-mountings">
+                <el-select v-model="curtain.mountings" multiple clearable placeholder="请选择配件" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_CURTAIN_MOUNTINGS)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="备注" class="curtain-field curtain-field-note">
+                <el-input v-model="curtain.note" placeholder="请输入备注" :rows="1" :disabled="isConfirmed" />
+              </el-form-item>
+            </div>
+          </div>
+          <!-- 右侧：图片上传，高度与左侧两行对齐 -->
+          <div class="curtain-form-images flex gap-8px shrink-0">
+            <el-form-item label="图片1" class="curtain-field curtain-field-image">
+              <UploadImg v-model="curtain.image1" width="90px" height="100%" :disabled="isConfirmed" />
             </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="房间">
-              <el-input v-model="curtain.room" placeholder="请输入房间" :disabled="isConfirmed" />
+            <el-form-item label="图片2" class="curtain-field curtain-field-image">
+              <UploadImg v-model="curtain.image2" width="90px" height="100%" :disabled="isConfirmed" />
             </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="褶倍">
-              <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1" :disabled="isConfirmed">
-                <el-option
-                  v-for="item in pleatRatioList"
-                  :key="item.id"
-                  :label="item.value"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="褶距">
-              <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="3" style="display:none">
-            <el-form-item label="折扣率">
-              <el-input-number v-model="curtain.discountRate" placeholder="请输入折扣率" :controls="false" class="!w-full" :disabled="isConfirmed" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="金额">
-              <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
-              <el-input-number v-model="curtain.amount" placeholder="金额" :controls="false" class="!w-full" disabled />
-            </el-form-item>
-          </el-col>
-
-          <el-col :span="6">
-            <el-form-item label="备注">
-              <el-input v-model="curtain.note" placeholder="请输入备注" :rows="1" :disabled="isConfirmed" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="图片1">
-              <UploadImg v-model="curtain.image1" width="90px" height="90px" :disabled="isConfirmed" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="3">
-            <el-form-item label="图片2">
-              <UploadImg v-model="curtain.image2" width="90px" height="90px" :disabled="isConfirmed" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="配件">
-              <el-select v-model="curtain.mountings" multiple clearable placeholder="请选择配件" class="w-1/1" :disabled="isConfirmed">
-                <el-option
-                  v-for="dict in getStrDictOptions(DICT_TYPE.ZC_CURTAIN_MOUNTINGS)"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
 
         <el-divider content-position="left">结构列表</el-divider>
         <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板..." style="min-height: 60px">
@@ -227,116 +223,89 @@
               <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
               <el-button v-if="!isConfirmed" link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
             </div>
-            <el-row :gutter="16">
-              <el-col :span="3">
-                <el-form-item label="结构">
-                  <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1" :disabled="isConfirmed">
-                    <el-option
-                      v-for="item in curtainStructureList"
-                      :key="item.id"
-                      :label="item.name"
-                      :value="item.id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3">
-                <el-form-item label="宽">
-                  <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-               <el-col :span="3">
-                <el-form-item label="高">
-                  <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'leftCorner')">
-                <el-form-item label="左转角">
-                  <el-input v-model="structure.leftCorner" placeholder="左转角" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'rightCorner')">
-                <el-form-item label="右转角">
-                  <el-input v-model="structure.rightCorner" placeholder="右转角" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pasteDirection')">
-                <el-form-item label="粘贴方向">
-                  <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1" :disabled="isConfirmed">
-                    <el-option
-                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
-                      :key="dict.value"
-                      :label="dict.label"
-                      :value="dict.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'installProcessId')">
-                <el-form-item label="安装工艺">
-                  <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1" :disabled="isConfirmed">
-                    <el-option
-                      v-for="item in props.installProcessList"
-                      :key="item.id"
-                      :label="item.name"
-                      :value="item.id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'openMethod')">
-                <el-form-item label="打开方式">
-                  <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1" :disabled="isConfirmed">
-                    <el-option
-                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
-                      :key="dict.value"
-                      :label="dict.label"
-                      :value="dict.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'processType')">
-                <el-form-item label="加工类型">
-                  <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1" :disabled="isConfirmed">
-                    <el-option
-                      v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
-                      :key="dict.value"
-                      :label="dict.label"
-                      :value="dict.value"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'isShaping')">
-                <el-form-item label="是否定型">
-                  <el-select v-model="structure.isShaping" placeholder="是否定型" :disabled="isConfirmed" style="width: 100%">
-                    <el-option label="是" :value="true" />
-                    <el-option label="否" :value="false" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsNum')">
-                <el-form-item label="总褶数">
-                  <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'pleatsDistance')">
-                <el-form-item label="褶距">
-                  <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="3" v-if="hasAttr(structure.structureId, 'skirtHeight')">
-                <el-form-item label="裙摆高度">
-                  <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="9">
-                <el-form-item label="备注">
-                  <el-input v-model="structure.note" placeholder="备注" :disabled="isConfirmed" />
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <!-- 结构字段行：flex 按内容定宽，减少字段间距 -->
+            <div class="structure-form-row flex flex-wrap items-start gap-x-8px gap-y-8px">
+              <el-form-item label="结构" class="structure-field structure-field-name form-field-compact">
+                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="item in curtainStructureList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="宽" class="structure-field structure-field-num form-field-compact">
+                <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item label="高" class="structure-field structure-field-num form-field-compact">
+                <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'leftCorner')" label="左转角" class="structure-field structure-field-num form-field-compact">
+                <el-input v-model="structure.leftCorner" placeholder="左转角" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'rightCorner')" label="右转角" class="structure-field structure-field-num form-field-compact">
+                <el-input v-model="structure.rightCorner" placeholder="右转角" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'pasteDirection')" label="粘贴方向" class="structure-field structure-field-paste">
+                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'installProcessId')" label="安装工艺" class="structure-field structure-field-process">
+                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="item in props.installProcessList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'openMethod')" label="打开方式" class="structure-field structure-field-select form-field-compact">
+                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'processType')" label="加工类型" class="structure-field structure-field-process">
+                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1" :disabled="isConfirmed">
+                  <el-option
+                    v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'isShaping')" label="是否定型" class="structure-field structure-field-select form-field-compact">
+                <el-select v-model="structure.isShaping" placeholder="是否定型" :disabled="isConfirmed">
+                  <el-option label="是" :value="true" />
+                  <el-option label="否" :value="false" />
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'pleatsNum')" label="总褶数" class="structure-field structure-field-pleats form-field-compact">
+                <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'pleatsDistance')" label="褶距" class="structure-field structure-field-pleats form-field-compact">
+                <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item v-if="hasAttr(structure.structureId, 'skirtHeight')" label="裙摆高度" class="structure-field structure-field-pleats form-field-compact">
+                <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" :disabled="isConfirmed" />
+              </el-form-item>
+              <el-form-item label="备注" class="structure-field structure-field-note">
+                <el-input v-model="structure.note" placeholder="备注" :disabled="isConfirmed" />
+              </el-form-item>
+            </div>
 
             <div class="mt-4px pl-4px">
               <div class="flex items-center mb-2px">
@@ -1041,6 +1010,66 @@ const removeCurtain = (index: number) => {
   formData.value.curtains.splice(index, 1)
 }
 
+/** 深拷贝用料行，清除主键与裁剪状态，复制后作为新明细保存 */
+const cloneMaterial = (material: MaterialWithSpec): MaterialWithSpec => ({
+  elementId: material.elementId,
+  productId: material.productId,
+  productName: material.productName,
+  batchId: material.batchId,
+  batchNo: material.batchNo,
+  spec: material.spec,
+  price: material.price,
+  quantity: material.quantity,
+  unitValue: material.unitValue,
+  discountRate: material.discountRate,
+  amount: material.amount,
+  note: material.note
+})
+
+/** 深拷贝结构行（含用料列表），清除主键 */
+const cloneStructure = (structure: StructureWithMaterials): StructureWithMaterials => ({
+  structureId: structure.structureId,
+  height: structure.height,
+  width: structure.width,
+  leftCorner: structure.leftCorner,
+  rightCorner: structure.rightCorner,
+  pasteDirection: structure.pasteDirection,
+  installProcessId: structure.installProcessId,
+  openMethod: structure.openMethod,
+  processType: structure.processType,
+  isShaping: structure.isShaping,
+  pleatsNum: structure.pleatsNum,
+  pleatsDistance: structure.pleatsDistance,
+  skirtHeight: structure.skirtHeight,
+  note: structure.note,
+  materials: (structure.materials ?? []).map(cloneMaterial)
+})
+
+/** 深拷贝窗帘行（含结构、用料），清除主键 */
+const cloneCurtain = (curtain: CurtainWithStructures): CurtainWithStructures => ({
+  orderId: formData.value.id,
+  curtainId: curtain.curtainId,
+  room: curtain.room,
+  pleatRatioValue: curtain.pleatRatioValue,
+  pleatsDistance: curtain.pleatsDistance,
+  discountRate: curtain.discountRate,
+  amount: curtain.amount,
+  image1: curtain.image1,
+  image2: curtain.image2,
+  mountings: curtain.mountings ? [...curtain.mountings] : undefined,
+  note: curtain.note,
+  structures: (curtain.structures ?? []).map(cloneStructure),
+  templateLoading: false
+})
+
+/** 复制窗帘并插入到当前行下方 */
+const copyCurtain = (index: number) => {
+  const source = formData.value.curtains[index]
+  if (!source) return
+  formData.value.curtains.splice(index + 1, 0, cloneCurtain(source))
+  message.success('复制成功')
+}
+
 const addStructure = (curtain: CurtainWithStructures) => {
   curtain.structures.push({
     structureId: undefined,
@@ -1302,4 +1331,156 @@ const resetForm = () => {
 <style scoped>
 /* flex 流式布局中防止 label 因列宽过窄换行；:deep() 穿透 Element Plus 内部 DOM */
 :deep(.el-form-item__label) { white-space: nowrap; }
+
+/* 数值/短文本字段输入框适度收窄（约 75%），避免占满整列显得过宽 */
+:deep(.form-field-compact .el-input),
+:deep(.form-field-compact .el-input-number),
+:deep(.form-field-compact .el-select) {
+  width: 75% !important;
+}
+
+/* 窗帘卡片头部背景与左侧边框同色 */
+.curtain-card :deep(.el-card__header) {
+  background-color: var(--curtain-accent-color);
+  color: #fff;
+  border-bottom: none;
+}
+.curtain-card :deep(.curtain-header-btn) {
+  color: #fff !important;
+}
+.curtain-card :deep(.curtain-header-btn:hover) {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.curtain-card :deep(.curtain-header-btn-danger) {
+  color: #ffebeb !important;
+}
+.curtain-card :deep(.curtain-header-btn-danger:hover) {
+  color: #fff !important;
+}
+
+/* 窗帘区域左右布局 */
+.curtain-form-layout :deep(.curtain-field.el-form-item) {
+  margin-bottom: 0;
+  margin-right: 0;
+}
+.curtain-form-row :deep(.curtain-field.el-form-item) {
+  width: auto;
+}
+.curtain-form-row :deep(.curtain-field-style) {
+  width: 150px;
+}
+.curtain-form-row :deep(.curtain-field-room) {
+  width: 140px;
+}
+/* 褶倍、褶距、金额：仅固定输入区域宽度，三者一致 */
+.curtain-form-row :deep(.curtain-field-metric .el-form-item__content) {
+  width: 115px;
+  flex: none;
+}
+.curtain-form-row :deep(.curtain-field-room.form-field-compact .el-input) {
+  width: 100% !important;
+}
+.curtain-form-row :deep(.curtain-field-metric .el-input),
+.curtain-form-row :deep(.curtain-field-metric .el-input-number),
+.curtain-form-row :deep(.curtain-field-metric .el-select) {
+  width: 100% !important;
+}
+/* 配件、备注同一行：固定较窄宽度 */
+.curtain-form-row-secondary :deep(.curtain-field-mountings) {
+  width: 400px;
+}
+.curtain-form-row-secondary :deep(.curtain-field-note) {
+  width: 300px;
+}
+.curtain-form-images {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+/* 图片区域高度拉伸至与左侧两行一致，标签侧放不占用纵向空间 */
+.curtain-form-images :deep(.curtain-field-image.el-form-item) {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 100%;
+  margin-bottom: 0;
+}
+.curtain-form-images :deep(.curtain-field-image .el-form-item__label) {
+  width: auto !important;
+  height: auto;
+  line-height: 32px;
+  padding-right: 4px;
+  align-self: center;
+}
+.curtain-form-images :deep(.curtain-field-image .el-form-item__content) {
+  flex: 1;
+  width: 90px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+.curtain-form-images :deep(.curtain-field-image .upload-box) {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.curtain-form-images :deep(.curtain-field-image .upload) {
+  flex: 1;
+  height: 100%;
+}
+.curtain-form-images :deep(.curtain-field-image .el-upload),
+.curtain-form-images :deep(.curtain-field-image .el-upload-dragger) {
+  width: 90px !important;
+  height: 100% !important;
+}
+.curtain-form-images :deep(.curtain-field-image .upload-empty) {
+  height: 100%;
+}
+
+/* 结构字段行：按内容定宽，字段间距更紧凑 */
+.structure-form-row :deep(.structure-field.el-form-item) {
+  margin-bottom: 0;
+  margin-right: 0;
+  width: auto;
+}
+/* 仅固定输入区域宽度，标签保持自然宽度，避免 label 与输入框间距被拉大 */
+.structure-form-row :deep(.structure-field-name .el-form-item__content) {
+  width: 170px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-num .el-form-item__content) {
+  width: 115px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-select .el-form-item__content) {
+  width: 145px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-select-wide .el-form-item__content) {
+  width: 170px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-paste .el-form-item__content) {
+  width: 170px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-process .el-form-item__content) {
+  width: 200px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-pleats .el-form-item__content) {
+  width: 135px;
+  flex: none;
+}
+.structure-form-row :deep(.structure-field-note .el-form-item__content) {
+  width: 320px;
+  flex: none;
+}
+/* 定宽容器内输入框占满，避免 75% 留白造成视觉间距过大 */
+.structure-form-row :deep(.structure-field .el-input),
+.structure-form-row :deep(.structure-field .el-input-number),
+.structure-form-row :deep(.structure-field .el-select) {
+  width: 100% !important;
+}
 </style>
