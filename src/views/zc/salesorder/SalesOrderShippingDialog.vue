@@ -8,7 +8,11 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">发货联预览</span>
-        <div class="flex gap-8px mr-24px">
+        <div class="flex items-center gap-8px mr-24px">
+          <el-radio-group v-model="mergeStructureShipping" size="small">
+            <el-radio-button :label="false">按结构发货</el-radio-button>
+            <el-radio-button :label="true">合并结构发货</el-radio-button>
+          </el-radio-group>
           <el-tooltip content="打印 / 选择打印机 / 另存为PDF" placement="top">
             <el-button type="primary" @click="handlePrint">
               <Icon icon="ep:printer" class="mr-4px" />打印
@@ -20,10 +24,10 @@
 
     <!-- 预览区：与打印完全同尺寸（100mm × 120mm） -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
-      <template v-if="structurePages.length">
+      <template v-if="shippingPages.length">
         <div
-          v-for="page in structurePages"
-          :key="`${page.curtainIdx}-${page.structureIdx}`"
+          v-for="page in shippingPages"
+          :key="page.pageKey"
           style="
             background: white;
             width: 100mm;
@@ -46,8 +50,8 @@
                 {{ brandName ? brandName + ' ' : '' }}发货联
               </div>
               <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
-              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">第{{ page.curtainIdx + 1 }}-{{ page.structureIdx + 1 }}套/共{{ page.totalCurtains }}套</div>
-              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">房间：{{ page.room }}　结构：{{ page.structureName }}</div>
+              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">{{ page.setNoText }}</div>
+              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">房间：{{ page.room }}</div>
             </div>
             <div style="width: 123px; flex-shrink: 0; padding-left: 6px; text-align: center;">
               <template v-if="structureQrCodes[page.pageKey]">
@@ -62,12 +66,6 @@
 
           <!-- 分隔线 -->
           <div style="border-top: 1px solid #ccc; margin: 3px 0 5px;"></div>
-
-          <!-- 发货信息主区 -->
-          <div style="border: 3px solid #1D4ED8; background: #EFF6FF; padding: 4px 8px; margin-bottom: 8px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-            <span style="font-size: 14px; color: #111; font-weight: 700; white-space: nowrap;">发货信息确认联</span>
-            <span style="font-size: 14px; white-space: nowrap; color: #111; font-weight: 700;"><span style="font-size: 12px; color: #111; font-weight: 700;">打印日期：</span>{{ printDate }}</span>
-          </div>
 
           <table style="width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #F9FAFB; color: #374151; margin-bottom: 8px; font-size: 14px;">
             <tbody>
@@ -88,8 +86,16 @@
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">{{ formData?.deliveryAddress || '-' }}</td>
               </tr>
               <tr>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">结构备注</td>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">{{ page.structureNote }}</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">结构信息</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">
+                  <div
+                    v-for="(structureInfo, structureIdx) in page.structureInfos"
+                    :key="`${page.pageKey}-${structureIdx}`"
+                    style="line-height: 1.5;"
+                  >
+                    {{ structureInfo.structureName }} | 备注：{{ structureInfo.structureNote }}
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -99,6 +105,12 @@
             style="margin-top: 4px; padding: 6px 8px; font-size: 14px; border: 1px solid #D1D5DB; background: #FFFBEB;"
           >
             <span style="color: #111; font-weight: 700; font-size: 15px;">订单备注：</span>{{ formData.note }}
+          </div>
+
+          <!-- 发货信息确认联：放在页面最后 -->
+          <div style="border: 3px solid #1D4ED8; background: #EFF6FF; padding: 4px 8px; margin-top: 8px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 14px; color: #111; font-weight: 700; white-space: nowrap;">发货信息确认联</span>
+            <span style="font-size: 14px; white-space: nowrap; color: #111; font-weight: 700;"><span style="font-size: 12px; color: #111; font-weight: 700;">打印日期：</span>{{ printDate }}</span>
           </div>
         </div>
       </template>
@@ -132,6 +144,8 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<SalesOrder | null>(null)
+/** 是否合并同一窗帘下的结构到一张发货联 */
+const mergeStructureShipping = ref(false)
 /** 每个结构页的二维码信息，key 为 `${curtainIdx}-${structureIdx}` */
 const structureQrCodes = ref<Record<string, { url: string; code: string }>>({})
 
@@ -148,35 +162,62 @@ const logisticsName = computed(() => {
 
 const printDate = computed(() => formatDate(new Date()))
 
-type StructurePageItem = {
-  pageKey: string
-  curtainIdx: number
-  structureIdx: number
-  totalCurtains: number
-  curtainId: number | null
+type StructureInfoItem = {
   structureId: number | null
-  room: string
   structureName: string
   structureNote: string
 }
 
-/** 将 curtains->structures 扁平化为打印页数据，每个结构一页 */
-const structurePages = computed<StructurePageItem[]>(() => {
+type ShippingPageItem = {
+  pageKey: string
+  curtainIdx: number
+  totalCurtains: number
+  curtainId: number | null
+  structureId: number | null
+  structureIds: number[]
+  setNoText: string
+  room: string
+  structureInfos: StructureInfoItem[]
+}
+
+/** 结构发货页：支持按结构逐页或按窗帘合并结构 */
+const shippingPages = computed<ShippingPageItem[]>(() => {
   const curtains = (formData.value as (SalesOrder & { curtains?: any[] }) | null)?.curtains || []
-  const pages: StructurePageItem[] = []
+  const pages: ShippingPageItem[] = []
   curtains.forEach((curtain, curtainIdx) => {
     const structures = curtain?.structures || []
-    structures.forEach((structure: any, structureIdx: number) => {
+    const structureInfos: StructureInfoItem[] = structures.map((structure: any) => ({
+      structureId: typeof structure?.id === 'number' ? structure.id : null,
+      structureName: structure?.structureName || '-',
+      structureNote: structure?.note || '-'
+    }))
+    if (mergeStructureShipping.value) {
+      if (!structureInfos.length) return
+      pages.push({
+        pageKey: `curtain-${curtainIdx}`,
+        curtainIdx,
+        totalCurtains: curtains.length,
+        curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
+        structureId: null,
+        structureIds: structureInfos.filter((item) => item.structureId !== null).map((item) => item.structureId as number),
+        setNoText: `第${curtainIdx + 1}套/共${curtains.length}套`,
+        room: curtain?.room || '-',
+        structureInfos
+      })
+      return
+    }
+
+    structureInfos.forEach((structureInfo, structureIdx) => {
       pages.push({
         pageKey: `${curtainIdx}-${structureIdx}`,
         curtainIdx,
-        structureIdx,
         totalCurtains: curtains.length,
         curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
-        structureId: typeof structure?.id === 'number' ? structure.id : null,
+        structureId: structureInfo.structureId,
+        structureIds: structureInfo.structureId !== null ? [structureInfo.structureId] : [],
+        setNoText: `第${curtainIdx + 1}-${structureIdx + 1}套/共${curtains.length}套`,
         room: curtain?.room || '-',
-        structureName: structure?.structureName || '-',
-        structureNote: structure?.note || '-'
+        structureInfos: [structureInfo]
       })
     })
   })
@@ -189,25 +230,19 @@ const formatDate = (date: Date): string => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// ======================== 对外方法 ========================
-/**
- * 打开预览弹窗，注册并生成发货二维码
- * 二维码内容保留订单维度信息，便于后续按单追溯发货记录
- */
-const open = async (data: SalesOrder) => {
-  formData.value = data
-  visible.value = true
+/** 根据当前发货模式重新生成二维码 */
+const generateStructureQrCodes = async (data: SalesOrder) => {
   structureQrCodes.value = {}
-
-  for (const page of structurePages.value) {
+  for (const page of shippingPages.value) {
     const codeContent = JSON.stringify({
       orderId: data.id ?? null,
       customerId: data.customerId ?? null,
       curtainId: page.curtainId,
-      structureId: page.structureId
+      structureId: page.structureId,
+      structureIds: page.structureIds
     })
     const codeId = await BarcodeRegistryApi.create({
-      codeType: 'SHIP_QR',
+      codeType: 'ORDER_CURTAIN_SHIP_QR',
       targetRoute: '/pages-curtain/ship/index',
       codeContent
     })
@@ -216,17 +251,37 @@ const open = async (data: SalesOrder) => {
   }
 }
 
+// ======================== 对外方法 ========================
+/**
+ * 打开预览弹窗，注册并生成发货二维码
+ * 二维码内容保留订单维度信息，便于后续按单追溯发货记录
+ */
+const open = async (data: SalesOrder) => {
+  mergeStructureShipping.value = false
+  formData.value = data
+  visible.value = true
+  await generateStructureQrCodes(data)
+}
+
 defineExpose({ open })
+
+watch(mergeStructureShipping, async () => {
+  if (!visible.value || !formData.value) return
+  await generateStructureQrCodes(formData.value)
+})
 
 // ======================== 打印 ========================
 /** 在新窗口生成发货联 HTML，尺寸与加工单保持一致（100mm × 120mm） */
 const handlePrint = () => {
   if (!formData.value) return
   const data = formData.value
-  const pagesHtml = structurePages.value
+  const pagesHtml = shippingPages.value
     .map(
       (page) => {
         const qrEntry = structureQrCodes.value[page.pageKey]
+        const structureInfoHtml = page.structureInfos
+          .map((item) => `${item.structureName} | 备注：${item.structureNote}`)
+          .join('<br/>')
         const qrHtml = qrEntry
           ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
           : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
@@ -236,26 +291,26 @@ const handlePrint = () => {
       <div style="flex:1;min-width:0;">
         <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:1px;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
         <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">第${page.curtainIdx + 1}-${page.structureIdx + 1}套/共${page.totalCurtains}套</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">房间：${page.room}　结构：${page.structureName}</div>
+        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">${page.setNoText}</div>
+        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">房间：${page.room}</div>
       </div>
       <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;">${qrHtml}</div>
     </div>
     <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
-    <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:4px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <span style="font-size:12pt;color:#111;font-weight:700;white-space:nowrap;">发货信息确认联</span>
-      <span style="font-size:12pt;white-space:nowrap;color:#111;font-weight:700;"><span style="font-size:10pt;color:#111;font-weight:700;">打印日期：</span>${printDate.value}</span>
-    </div>
     <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;font-size:11pt;">
       <tbody>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:30%;color:#111;font-size:12pt;font-weight:700;">收货人</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.receiver || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">联系电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.mobile || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">物流方式</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${logisticsName.value}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">收货地址</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${data.deliveryAddress || '-'}</td></tr>
-        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">结构备注</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${page.structureNote}</td></tr>
+        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">结构信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;line-height:1.5;">${structureInfoHtml}</td></tr>
       </tbody>
     </table>
     ${data.note ? `<div style="margin-top:4px;padding:4px 8px;font-size:11pt;border:1px solid #D1D5DB;background:#FFFBEB;"><span style="color:#111;font-weight:700;font-size:12pt;">订单备注：</span>${data.note}</div>` : ''}
+    <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-top:4px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:12pt;color:#111;font-weight:700;white-space:nowrap;">发货信息确认联</span>
+      <span style="font-size:12pt;white-space:nowrap;color:#111;font-weight:700;"><span style="font-size:10pt;color:#111;font-weight:700;">打印日期：</span>${printDate.value}</span>
+    </div>
   </div>`
       }
     )

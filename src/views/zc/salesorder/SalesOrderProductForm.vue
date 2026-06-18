@@ -264,7 +264,7 @@
       :logistics-list="props.logisticsList"
     />
     <!-- 发货联打印预览弹窗 -->
-    <SalesOrderShippingDialog
+    <SalesOrderProductShippingDialog
       ref="shippingDialogRef"
       :customers-list="props.customersList"
       :brands-list="props.brandsList"
@@ -288,7 +288,7 @@ import { CustomerVersionSpcPriceApi } from '@/api/zc/customerversionspcprice'
 import ProductBatchSelectPanel, { type BatchConfirmItem } from './ProductBatchSelectPanel.vue'
 import SalesOrderProductPrintDialog from './SalesOrderProductPrintDialog.vue'
 import SalesOrderProductProcessingPrintDialog from './SalesOrderProductProcessingPrintDialog.vue'
-import SalesOrderShippingDialog from './SalesOrderShippingDialog.vue'
+import SalesOrderProductShippingDialog from './SalesOrderProductShippingDialog.vue'
 
 /** 面料单 表单 */
 defineOptions({ name: 'SalesOrderProductForm' })
@@ -381,7 +381,7 @@ const formRules = {
 const formRef = ref()
 const printDialogRef = ref<InstanceType<typeof SalesOrderProductPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProductProcessingPrintDialog>>()
-const shippingDialogRef = ref<InstanceType<typeof SalesOrderShippingDialog>>()
+const shippingDialogRef = ref<InstanceType<typeof SalesOrderProductShippingDialog>>()
 
 
 // ======================== 客户搜索弹窗 ========================
