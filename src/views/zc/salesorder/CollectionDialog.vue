@@ -1,7 +1,7 @@
 <!--
   销售订单 - 新增收款弹窗
   功能：选择客户后，自动加载该客户未结清/部分结清且已确认的订单，填写收款信息后提交
-  使用方：views/zc/salesorder/index.vue、views/zc/salesorder/SalesOrderForm.vue
+  使用方：views/zc/salesorder/index.vue、views/zc/salesorder/SalesOrderForm.vue、views/zc/salesorder/SalesOrderProductForm.vue
 -->
 <template>
   <Dialog title="新增收款" v-model="dialogVisible" width="70%">
@@ -171,10 +171,11 @@
               <el-input-number
                 v-model="allocMap[row.id]"
                 :min="0"
+                :max="getOrderRemainingAmount(row)"
                 :precision="2"
                 size="small"
                 class="!w-full"
-                @change="syncOrderItems"
+                @change="(val) => handleAllocAmountChange(row, val)"
               />
             </template>
           </el-table-column>
@@ -381,6 +382,36 @@ const syncOrderItems = () => {
     .map(([k, v]) => ({ orderId: Number(k), allocatedAmount: v as number }))
 }
 
+/**
+ * 校验单笔订单本次收款：不能超过订单剩余应收（订单金额 - 已收金额）
+ * 超出时提示并自动修正为最大可收金额
+ */
+const handleAllocAmountChange = (order: SalesOrder, value: number | null | undefined) => {
+  if (order.id == null) return
+  const maxAmount = getOrderRemainingAmount(order)
+  const amount = value ?? 0
+  if (amount > maxAmount) {
+    message.warning(`本次收款不能大于订单金额（剩余 ${maxAmount.toFixed(2)}）`)
+    allocMap[order.id] = maxAmount
+  }
+  syncOrderItems()
+}
+
+/** 提交前校验分摊明细：每笔本次收款不得超过对应订单剩余应收 */
+const validateOrderItems = (): boolean => {
+  syncOrderItems()
+  for (const item of formData.orderItems) {
+    const order = orderList.value.find((o) => o.id === item.orderId)
+    if (!order) continue
+    const maxAmount = getOrderRemainingAmount(order)
+    if (item.allocatedAmount > maxAmount) {
+      message.warning(`订单 ${order.orderNo} 本次收款不能大于订单金额（剩余 ${maxAmount.toFixed(2)}）`)
+      return false
+    }
+  }
+  return true
+}
+
 // ======================== 收支方式 ========================
 const billMethodsList = ref<BillMethods[]>([])
 
@@ -444,7 +475,7 @@ const message = useMessage()
 
 const submitForm = async () => {
   await formRef.value?.validate()
-  syncOrderItems()
+  if (!validateOrderItems()) return
   // 将两个附件字段合并为 attachments 数组（过滤空值）
   formData.attachments = [attachment1.value, attachment2.value].filter(Boolean) as string[]
   submitLoading.value = true

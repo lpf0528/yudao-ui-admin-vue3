@@ -2,7 +2,7 @@
   <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh" :close-on-click-modal="false">
     <!-- 顶部操作栏 -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
-      <el-button type="primary" @click="handleSave" :loading="formLoading">
+      <el-button v-if="!isConfirmed" type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
@@ -13,17 +13,24 @@
       <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <!-- 新增收款：已确认订单且已关联客户时显示，锁定当前客户进行收款 -->
+      <!-- 新增收款：已保存且已关联客户时显示；未确认时置灰，点击提示先确认订单 -->
       <el-button
-        v-if="formData.id && formData.customerId && isConfirmed"
+        v-if="formData.id && formData.customerId"
         type="warning"
         plain
+        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handleOpenCollection"
       >
         <Icon icon="ep:wallet" class="mr-4px" />新增收款
       </el-button>
-      <!-- 加急按钮：订单已保存且未加急时显示 -->
-      <el-button v-if="formData.id && !formData.isExpedited" type="warning" @click="handleExpedite" :loading="formLoading">
+      <!-- 加急按钮：订单已保存且未加急时显示；未确认时置灰，点击提示先确认订单 -->
+      <el-button
+        v-if="formData.id && !formData.isExpedited"
+        type="warning"
+        :class="{ 'print-btn-locked': !isConfirmed }"
+        @click="handleExpedite"
+        :loading="formLoading"
+      >
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
       <!-- 销售单按钮：订单已保存时显示，未确认时置灰并点击提示 -->
@@ -84,7 +91,7 @@
             <el-input
               v-model="customerInput"
               placeholder="输入客户名称后回车搜索"
-              clearable
+              :clearable="!isConfirmed"
               class="flex-1"
               :disabled="isConfirmed"
               @keyup.enter="handleOpenCustomerSearch"
@@ -103,23 +110,23 @@
         </el-form-item>
         <!-- 品牌 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full" :disabled="isConfirmed">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
+          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full" :disabled="isConfirmed">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 收货人 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
-          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 交付日期 -->
         <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" :disabled="isConfirmed" />
         </el-form-item>
       </div>
 
@@ -127,11 +134,11 @@
       <div class="flex gap-x-8px">
         <!-- 送货地址：地址文字较长，适当加宽 -->
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
-          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 运费：列宽略收窄 -->
         <el-form-item label="运费" prop="freight" style="flex: 1.5; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" :disabled="isConfirmed" />
         </el-form-item>
         <!-- 优惠金额：列宽略收窄 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
@@ -142,6 +149,7 @@
             :max="orderTotalBeforeDiscount"
             :controls="false"
             class="!w-full"
+            :disabled="isConfirmed"
           />
         </el-form-item>
         <!-- 金额：四舍五入后的订单金额，只读 -->
@@ -167,7 +175,7 @@
         </el-form-item>
         <!-- 备注：剩余空间较多，撑满 -->
         <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
-          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" :disabled="isConfirmed" />
         </el-form-item>
       </div>
     </el-form>
@@ -611,11 +619,13 @@ const toCustomerSimpleVO = (customer: Customer): CustomerSimpleVO => ({
 
 /** 回车或点击搜索图标：打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
+  if (isConfirmed.value) return
   customerSearchDialogRef.value?.open(customerInput.value)
 }
 
 /** 清空客户输入时同步清除已选客户 */
 const handleClearCustomer = () => {
+  if (isConfirmed.value) return
   formData.value.customerId = undefined
   selectedCustomerInfo.value = null
   selectedCustomerBalance.value = null
@@ -646,6 +656,7 @@ const hasAttr = (structureId: number | undefined, attr: string) => {
 }
 
 const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: number) => {
+  if (isConfirmed.value) return
   const selected = curtainList.value.find((item) => item.id === curtainId)
   if (selected) {
     curtain.pleatRatioValue = selected.pleatRatioValue as any
@@ -704,7 +715,7 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
 const { t } = useI18n()
 const message = useMessage()
 
-/** 订单已确认：仅允许修改品牌、物流、收货人、交付日期、送货地址、运费、优惠金额、金额、备注 */
+/** 订单已确认：禁止修改任何字段，仅允许取消确认 / 收款 / 打印等操作 */
 const isConfirmed = computed(() => formData.value.status === ZcSalesOrderStatus.CONFIRMED)
 
 const dialogVisible = ref(false)
@@ -808,6 +819,7 @@ const updateMaterialAuthorizedPrices = async (customerId: number) => {
 
 /** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
 const handleSelectCustomerFromSearch = async (customer: Customer) => {
+  if (isConfirmed.value) return
   console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
   customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
@@ -1090,6 +1102,7 @@ const open = async (type: string, id?: number) => {
 }
 
 const addCurtain = () => {
+  if (isConfirmed.value) return
   if (!formData.value.customerId) {
     message.warning('请先选择客户')
     return
@@ -1112,6 +1125,7 @@ const addCurtain = () => {
 }
 
 const removeCurtain = (index: number) => {
+  if (isConfirmed.value) return
   formData.value.curtains.splice(index, 1)
 }
 
@@ -1213,6 +1227,7 @@ watch(
 
 /** 复制窗帘并插入到当前行下方 */
 const copyCurtain = (index: number) => {
+  if (isConfirmed.value) return
   const source = formData.value.curtains[index]
   if (!source) return
   formData.value.curtains.splice(index + 1, 0, cloneCurtain(source))
@@ -1222,6 +1237,7 @@ const copyCurtain = (index: number) => {
 }
 
 const addStructure = (curtain: CurtainWithStructures) => {
+  if (isConfirmed.value) return
   curtain.structures.push({
     structureId: undefined,
     height: undefined,
@@ -1242,10 +1258,12 @@ const addStructure = (curtain: CurtainWithStructures) => {
 }
 
 const removeStructure = (curtain: CurtainWithStructures, index: number) => {
+  if (isConfirmed.value) return
   curtain.structures.splice(index, 1)
 }
 
 const addMaterial = (structure: StructureWithMaterials) => {
+  if (isConfirmed.value) return
   structure.materials.push({
     elementId: undefined,
     productId: undefined,
@@ -1261,6 +1279,7 @@ const addMaterial = (structure: StructureWithMaterials) => {
 }
 
 const removeMaterial = (structure: StructureWithMaterials, index: number) => {
+  if (isConfirmed.value) return
   // 已裁剪的用料行与库存扣减记录绑定，禁止删除
   if (structure.materials[index]?.status === 'HAVE_PEILIAO') {
     message.warning('该用料明细已完成裁剪，请先撤销裁剪后再删除')
@@ -1283,6 +1302,7 @@ const handleOpenCollection = () => {
     message.warning('请先选择客户')
     return
   }
+  if (!ensureConfirmedBeforePrint()) return
   collectionDialogRef.value?.open(formData.value.customerId)
 }
 
@@ -1376,6 +1396,11 @@ const reloadForm = async (id: number) => {
 
 const handleConfirm = async () => {
   if (!ensureSavedBeforeAction()) return
+  try {
+    await message.confirm('订单确认后，将不允许编辑，是否继续？')
+  } catch {
+    return
+  }
   formLoading.value = true
   try {
     // 调用专用确认接口，后端负责状态流转（unconfirmed → confirmed）并扣减客户余额
@@ -1403,7 +1428,7 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
-  if (!ensureSavedBeforeAction()) return
+  if (!ensureConfirmedBeforePrint()) return
   formLoading.value = true
   try {
     // 调用专用加急接口，后端负责标记 is_expedited=true
@@ -1417,6 +1442,7 @@ const handleExpedite = async () => {
 }
 
 const submitForm = async () => {
+  if (isConfirmed.value) return
   await formRef.value.validate()
   // 至少需要一个窗帘才能保存
   if (!formData.value.curtains || formData.value.curtains.length === 0) {
