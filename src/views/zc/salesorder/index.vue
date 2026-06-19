@@ -231,7 +231,6 @@
       <el-table-column label="物流" align="center" prop="logisticName" min-width="100px"/>
 
       <el-table-column label="运费" align="center" prop="freight" />
-      <el-table-column label="总金额" align="center" prop="totalAmount" />
       <el-table-column label="优惠金额" align="center" prop="discountAmount" />
       <el-table-column label="订单金额" align="center" prop="amount" />
       <el-table-column label="已收金额" align="center" prop="amountReceived" />

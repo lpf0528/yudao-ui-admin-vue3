@@ -112,7 +112,7 @@
                     size="small"
                   >{{ getDictLabel(DICT_TYPE.ZC_STRUCTURE_ATTRIBUTES, attr) }}</el-tag>
                 </div>
-                <!-- 配件列表：每个配件单独一行，可指定一个产品；与上方属性列对齐 -->
+                <!-- 配件列表：每个配件单独一行；与上方属性列对齐 -->
                 <div class="flex flex-col gap-1" style="padding-left: 168px">
                   <div
                     v-for="(el, eIdx) in row.elements"
@@ -131,25 +131,6 @@
                         :value="e.id"
                       />
                     </el-select>
-                    <!-- 双击打开产品选择弹窗；显示产品名称及规格 -->
-                    <div class="flex items-center gap-1" style="width: 280px; flex-shrink: 0">
-                      <el-input
-                        :model-value="getProductDisplay(el.productId)"
-                        readonly
-                        placeholder="双击选择产品"
-                        @dblclick="openProductDialog(scope.row.id, index, eIdx)"
-                        style="cursor: pointer; flex: 1"
-                      />
-                      <el-button
-                        v-if="el.productId"
-                        :icon="Close"
-                        circle
-                        plain
-                        size="small"
-                        title="清除产品"
-                        @click="el.productId = undefined"
-                      />
-                    </div>
                     <el-button
                       type="danger"
                       :icon="Delete"
@@ -234,91 +215,17 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <CurtainForm ref="formRef" @success="getList" />
-
-  <!-- 产品选择弹窗：双击产品输入框触发，支持版本/名称筛选+分页，单击行即选中 -->
-  <el-dialog
-    v-model="productDialogVisible"
-    title="选择产品"
-    width="900px"
-    append-to-body
-    destroy-on-close
-    align-center
-  >
-    <!-- 筛选条件 -->
-    <el-form :inline="true" class="mb-8px">
-      <el-form-item label="名称">
-        <el-input
-          v-model="productDialogQuery.name"
-          placeholder="请输入产品名称"
-          clearable
-          style="width: 200px"
-          @keyup.enter="searchProductDialog"
-        />
-      </el-form-item>
-      <el-form-item label="版本">
-        <el-select
-          v-model="productDialogQuery.versionId"
-          placeholder="请选择版本"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="v in productVersionList"
-            :key="v.id"
-            :label="v.name"
-            :value="v.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="searchProductDialog">
-          <Icon icon="ep:search" class="mr-4px" /> 搜索
-        </el-button>
-        <el-button @click="resetProductDialog">
-          <Icon icon="ep:refresh" class="mr-4px" /> 重置
-        </el-button>
-      </el-form-item>
-    </el-form>
-
-    <!-- 产品列表：单击行选中 -->
-    <el-table
-      v-loading="productDialogLoading"
-      :data="productDialogList"
-      height="260"
-      highlight-current-row
-      @row-click="onProductSelect"
-      style="cursor: pointer"
-    >
-      <el-table-column label="产品名称" prop="name" min-width="180" show-overflow-tooltip />
-      <el-table-column label="版本" prop="versionName" width="130" show-overflow-tooltip />
-      <el-table-column label="规格" prop="specValue" min-width="150" show-overflow-tooltip />
-      <el-table-column label="进货价" prop="inboundPrice" width="100" align="right" />
-      <el-table-column label="一级销售价" prop="onePrice" width="110" align="right" />
-      <el-table-column label="供应商" prop="supplierName" width="130" show-overflow-tooltip />
-    </el-table>
-
-    <!-- 分页 -->
-    <Pagination
-      :total="productDialogTotal"
-      v-model:page="productDialogQuery.pageNo"
-      v-model:limit="productDialogQuery.pageSize"
-      @pagination="loadProductDialogPage"
-      class="mt-8px"
-    />
-  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ElLoading } from 'element-plus'
-import { Delete, Plus, Close } from '@element-plus/icons-vue'
+import { Delete, Plus } from '@element-plus/icons-vue'
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CurtainApi, Curtain, CurtainTemplate } from '@/api/zc/curtain'
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
-import { ProductApi, ProductSimpleVO, ProductPageVO } from '@/api/zc/product'
-import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 import CurtainForm from './CurtainForm.vue'
 
@@ -340,17 +247,13 @@ const queryFormRef = ref()
 const exportLoading = ref(false)
 const tableRef = ref()
 
-/** 结构/配件/产品下拉数据 */
+/** 结构/配件下拉数据 */
 const structureList = ref<CurtainStructureSimpleVO[]>([])
 const elementList = ref<CurtainStructureElementSimpleVO[]>([])
-/** simple-list 仅用于 getProductDisplay 回显，不用于弹窗列表 */
-const productList = ref<ProductSimpleVO[]>([])
-const productVersionList = ref<ProductVersionSimpleVO[]>([])
 
-/** 单个配件行：一个配件 + 可选的产品 */
+/** 单个配件行 */
 interface ElementRow {
   elementId: number | undefined
-  productId: number | undefined
 }
 
 /** 单个结构行：一个结构 + 多个配件项 */
@@ -414,7 +317,7 @@ const getAvailableElements = (curtainId: number, structureIdx: number, elementId
 const addRowElement = (curtainId: number, structureIdx: number) => {
   const row = rowStructures[curtainId]?.[structureIdx]
   if (!row) return
-  row.elements.push({ elementId: undefined, productId: undefined })
+  row.elements.push({ elementId: undefined })
 }
 
 /** 删除配件行 */
@@ -433,19 +336,18 @@ const saveTemplate = async (curtainId: number) => {
     message.warning('结构不能为空')
     return
   }
-  // 配件行中若已添加但未选择配件，提示用户补全（productId 允许为空）
+  // 配件行中若已添加但未选择配件，提示用户补全
   if (structures.some((r) => r.elements.some((e) => e.elementId === undefined))) {
     message.warning('配件不能为空')
     return
   }
-  // 组装为后端要求的 { structureId, elements: [{ elementId, productId }] } 格式
   const payload: CurtainTemplate = {
     curtainId,
     structures: structures.map((s) => ({
       structureId: s.structureId as number,
       elements: s.elements.map((e) => ({
         elementId: e.elementId as number,
-        productId: e.productId ?? null
+        productId: null
       }))
     }))
   }
@@ -463,11 +365,7 @@ const loadTemplate = async (curtainId: number): Promise<boolean> => {
     rowStructures[curtainId] = data?.structures?.length
       ? data.structures.map((s) => ({
           structureId: s.structureId,
-          elements:
-            s.elements?.map((e) => ({
-              elementId: e.elementId,
-              productId: e.productId ?? undefined
-            })) ?? []
+          elements: s.elements?.map((e) => ({ elementId: e.elementId })) ?? []
         }))
       : []
     return true
@@ -569,83 +467,12 @@ const handleExport = async () => {
   }
 }
 
-// ======================== 产品选择弹窗 ========================
-const productDialogVisible = ref(false)
-const productDialogLoading = ref(false)
-const productDialogList = ref<ProductPageVO[]>([])
-const productDialogTotal = ref(0)
-const productDialogQuery = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  name: '',
-  versionId: undefined as number | undefined
-})
-/** 当前正在编辑的配件位置，用于弹窗选中后回写 */
-const productDialogTarget = ref<{
-  curtainId: number
-  structureIdx: number
-  elementIdx: number
-} | null>(null)
-
-/** 加载弹窗内分页产品列表 */
-const loadProductDialogPage = async () => {
-  productDialogLoading.value = true
-  try {
-    const data = await ProductApi.getProductPage(productDialogQuery)
-    productDialogList.value = data.list
-    productDialogTotal.value = data.total
-  } finally {
-    productDialogLoading.value = false
-  }
-}
-
-const searchProductDialog = () => {
-  productDialogQuery.pageNo = 1
-  loadProductDialogPage()
-}
-
-const resetProductDialog = () => {
-  productDialogQuery.name = ''
-  productDialogQuery.versionId = undefined
-  productDialogQuery.pageNo = 1
-  loadProductDialogPage()
-}
-
-/** 输入框回显文本：产品名 + 规格（若有），数据来自 simple-list */
-const getProductDisplay = (productId: number | undefined): string => {
-  if (!productId) return ''
-  const p = productList.value.find((item) => item.id === productId)
-  if (!p) return ''
-  return p.specValue ? `${p.name}  [${p.specValue}]` : p.name
-}
-
-/** 打开产品选择弹窗，重置查询并请求第一页 */
-const openProductDialog = (curtainId: number, structureIdx: number, elementIdx: number) => {
-  productDialogTarget.value = { curtainId, structureIdx, elementIdx }
-  productDialogQuery.pageNo = 1
-  productDialogQuery.name = ''
-  productDialogQuery.versionId = undefined
-  productDialogVisible.value = true
-  loadProductDialogPage()
-}
-
-/** 点击产品行：写入 productId 并关闭弹窗 */
-const onProductSelect = (product: ProductPageVO) => {
-  if (!productDialogTarget.value) return
-  const { curtainId, structureIdx, elementIdx } = productDialogTarget.value
-  rowStructures[curtainId][structureIdx].elements[elementIdx].productId = product.id
-  productDialogVisible.value = false
-}
-
-/** 初始化：并行加载结构、配件、产品简表（用于回显）、版本（用于弹窗筛选） **/
+/** 初始化：并行加载结构、配件下拉数据 */
 onMounted(async () => {
-  ;[structureList.value, elementList.value, productList.value, productVersionList.value] =
-    await Promise.all([
-      CurtainStructureApi.getCurtainStructureSimpleList(),
-      CurtainStructureElementApi.getCurtainStructureElementSimpleList(),
-      ProductApi.getProductSimpleList(),
-      ProductVersionApi.getProductVersionSimpleList()
-    ])
+  ;[structureList.value, elementList.value] = await Promise.all([
+    CurtainStructureApi.getCurtainStructureSimpleList(),
+    CurtainStructureElementApi.getCurtainStructureElementSimpleList()
+  ])
   getList()
 })
 </script>
