@@ -159,7 +159,6 @@ jobs:
             sudo docker compose up -d yudao-ui
 
             echo "▶ 清理旧镜像"
-            sudo docker image prune -f
 
             echo "✅ 前端部署完成"
 
