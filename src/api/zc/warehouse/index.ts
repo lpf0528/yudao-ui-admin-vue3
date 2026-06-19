@@ -61,4 +61,4 @@ export const WarehouseApi = {
   getWarehouseSimpleList: async () => {
     return await request.get<WarehouseSimpleVO[]>({ url: `/zc/warehouse/simple-list` })
   },
-}
+}

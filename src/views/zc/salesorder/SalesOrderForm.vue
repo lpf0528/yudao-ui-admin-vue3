@@ -635,7 +635,7 @@ const handleClearCustomer = () => {
 const syncCustomerDisplay = async (customerId: number) => {
   try {
     const customer = await CustomerApi.getCustomer(customerId)
-    customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+    customerInput.value = customer.name ?? ''
     selectedCustomerInfo.value = toCustomerSimpleVO(customer)
     selectedCustomerBalance.value = customer.balance
   } catch {
@@ -821,7 +821,7 @@ const updateMaterialAuthorizedPrices = async (customerId: number) => {
 const handleSelectCustomerFromSearch = async (customer: Customer) => {
   if (isConfirmed.value) return
   console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
-  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+  customerInput.value = customer.name ?? ''
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
   formData.value.customerId = customer.id
   formData.value.mobile = customer.mobile

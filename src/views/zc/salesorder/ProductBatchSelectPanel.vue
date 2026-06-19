@@ -154,8 +154,12 @@
           >
             <el-table-column type="selection" width="40" align="center" fixed="left" />
             <el-table-column label="批号" align="center" prop="batchNo" min-width="90px" />
-            <el-table-column label="入库日期" align="center" prop="inboundDate" width="96px" />
             <el-table-column label="规格" align="center" prop="spec" />
+            <el-table-column label="状态" align="center" prop="status" width="72px">
+              <template #default="scope">
+                <dict-tag :type="DICT_TYPE.ZC_PRODUCT_BATCH_STATUS" :value="scope.row.status" />
+              </template>
+            </el-table-column>
             <el-table-column label="版本" align="center" prop="versionName" />
             <el-table-column label="单价" align="center" prop="onePrice" />
             <el-table-column label="单位" align="center" prop="unitValue">

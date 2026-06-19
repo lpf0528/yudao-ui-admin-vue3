@@ -1,11 +1,10 @@
 <!--
   车间员工 - 新增/编辑弹窗
-  功能：提供车间员工信息的表单录入，支持新增和编辑两种模式，
-        包含工序节点多选，与后端 /zc/process-node/simple-list 联动
+  功能：提供车间员工信息的表单录入，支持新增和编辑两种模式
   使用方：views/zc/workshopuser/index.vue
 -->
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible" width="900px">
+  <Dialog :title="dialogTitle" v-model="dialogVisible">
     <el-form
       ref="formRef"
       :model="formData"
@@ -13,25 +12,12 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <!-- 名称 -->
       <el-form-item label="名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入名称" />
       </el-form-item>
-      <!-- 状态：0=禁用，1=启用 -->
+      <!-- 状态：1=开启，0=关闭 -->
       <el-form-item label="状态" prop="status">
         <el-switch v-model="formData.status" :active-value="1" :inactive-value="0" />
-      </el-form-item>
-      <!-- 工序节点：复选框组，来源于 /zc/process-node/simple-list -->
-      <el-form-item label="工序节点" prop="nodeIds">
-        <el-checkbox-group v-model="formData.nodeIds">
-          <el-checkbox
-            v-for="node in processNodeList"
-            :key="node.id"
-            :label="node.id"
-          >
-            <span class="inline-block w-[8em]">{{ node.name }}</span>
-          </el-checkbox>
-        </el-checkbox-group>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -44,7 +30,6 @@
 <script setup lang="ts">
 // ======================== 导入与声明 ========================
 import { WorkshopUserApi, WorkshopUser } from '@/api/zc/workshopuser'
-import { ProcessNodeApi, ProcessNodeSimpleVO } from '@/api/zc/processnode'
 
 /** 车间员工 表单 */
 defineOptions({ name: 'WorkshopUserForm' })
@@ -58,22 +43,16 @@ const dialogTitle = ref('')      // 弹窗标题
 const formLoading = ref(false)   // 数据加载 & 提交按钮禁用
 const formType = ref('')         // create=新增；update=修改
 
-// ======================== 工序节点下拉数据 ========================
-/** 工序节点精简列表，用于多选下拉 */
-const processNodeList = ref<ProcessNodeSimpleVO[]>([])
-
 // ======================== 表单 ========================
 const formRef = ref()
 const formData = ref<{
   id?: number
   name?: string
   status: number
-  nodeIds: number[]
 }>({
   id: undefined,
   name: undefined,
-  status: 1,    // 默认启用
-  nodeIds: []
+  status: 1 // 默认开启
 })
 
 const formRules = reactive({
@@ -92,25 +71,10 @@ const open = async (type: string, id?: number) => {
   formType.value = type
   resetForm()
 
-  // 并行加载工序节点列表（仅首次加载，后续复用缓存）
-  if (processNodeList.value.length === 0) {
-    processNodeList.value = await ProcessNodeApi.getSimpleProcessNodeList({ group: 1 })
-  }
-
   if (id) {
     formLoading.value = true
     try {
-      const data = await WorkshopUserApi.getWorkshopUser(id)
-      // 后端 nodeIds 可能以 JSON 字符串形式返回，需兼容解析
-      const rawNodeIds = data.nodeIds
-      formData.value = {
-        ...data,
-        nodeIds: Array.isArray(rawNodeIds)
-          ? rawNodeIds
-          : typeof rawNodeIds === 'string'
-            ? JSON.parse(rawNodeIds)
-            : []
-      }
+      formData.value = await WorkshopUserApi.getWorkshopUser(id)
     } finally {
       formLoading.value = false
     }
@@ -144,8 +108,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: undefined,
-    status: 1,
-    nodeIds: []
+    status: 1
   }
   formRef.value?.resetFields()
 }

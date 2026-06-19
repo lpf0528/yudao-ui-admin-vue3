@@ -530,7 +530,7 @@ const handleClearCustomer = () => {
 const syncCustomerDisplay = async (customerId: number) => {
   try {
     const customer = await CustomerApi.getCustomer(customerId)
-    customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+    customerInput.value = customer.name ?? ''
     selectedCustomerInfo.value = toCustomerSimpleVO(customer)
     selectedCustomerBalance.value = customer.balance
   } catch {
@@ -581,7 +581,7 @@ const applyCustomerToForm = async (customer: Customer) => {
 
 /** 客户搜索弹窗选中回调：直接使用接口返回的完整数据填充表单 */
 const handleSelectCustomerFromSearch = async (customer: Customer) => {
-  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+  customerInput.value = customer.name ?? ''
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
   await applyCustomerToForm(customer)
 }

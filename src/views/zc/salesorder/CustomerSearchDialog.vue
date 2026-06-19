@@ -26,7 +26,6 @@
       @row-click="handleRowClick"
       style="cursor: pointer"
     >
-      <el-table-column label="简称" prop="shortName" width="120" />
       <el-table-column label="全称" prop="name" />
       <el-table-column label="联系人" prop="contactName" width="90" />
       <el-table-column label="手机" prop="mobile" width="130" />

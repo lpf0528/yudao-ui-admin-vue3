@@ -26,7 +26,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in WORKSHOP_USER_STATUS_OPTIONS"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -75,19 +80,11 @@
       <el-table-column type="selection" width="55" />
       <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="状态" align="center" prop="status" />
-      <!-- 工序节点：将 ID 列表映射为名称标签展示 -->
-      <el-table-column label="工序节点" align="center" prop="nodeIds" min-width="180px">
+      <el-table-column label="状态" align="center" width="100px" :show-overflow-tooltip="false">
         <template #default="{ row }">
-          <el-tag
-            v-for="nodeId in parseNodeIds(row.nodeIds)"
-            :key="nodeId"
-            class="mr-4px mb-2px"
-            size="small"
-          >
-            {{ getNodeName(nodeId) }}
+          <el-tag :type="getWorkshopUserStatusTagType(row.status)">
+            {{ getWorkshopUserStatusLabel(row.status) }}
           </el-tag>
-          <span v-if="!parseNodeIds(row.nodeIds).length" class="text-gray-400">-</span>
         </template>
       </el-table-column>
       <el-table-column label="创建者" align="center" prop="creator" />
@@ -136,8 +133,13 @@
 import { isEmpty } from '@/utils/is'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { WorkshopUserApi, WorkshopUser } from '@/api/zc/workshopuser'
-import { ProcessNodeApi, ProcessNodeSimpleVO } from '@/api/zc/processnode'
+import {
+  WorkshopUserApi,
+  WorkshopUser,
+  WORKSHOP_USER_STATUS_OPTIONS,
+  getWorkshopUserStatusLabel,
+  getWorkshopUserStatusTagType
+} from '@/api/zc/workshopuser'
 import WorkshopUserForm from './WorkshopUserForm.vue'
 
 /** 车间员工 列表 */
@@ -233,27 +235,6 @@ const handleExport = async () => {
   }
 }
 
-// ======================== 工序节点映射 ========================
-/** 工序节点精简列表，用于将 ID 渲染为名称 */
-const processNodeList = ref<ProcessNodeSimpleVO[]>([])
-
-/** 将 nodeIds（可能为数组或 JSON 字符串）统一解析为 number[] */
-const parseNodeIds = (nodeIds: any): number[] => {
-  if (Array.isArray(nodeIds)) return nodeIds
-  if (typeof nodeIds === 'string') {
-    try { return JSON.parse(nodeIds) } catch { return [] }
-  }
-  return []
-}
-
-/** 根据工序节点 ID 查找名称，未找到时回退显示 ID */
-const getNodeName = (id: number): string => {
-  return processNodeList.value.find((n) => n.id === id)?.name ?? String(id)
-}
-
 /** 初始化 **/
-onMounted(async () => {
-  processNodeList.value = await ProcessNodeApi.getSimpleProcessNodeList({ group: 1 })
-  getList()
-})
+onMounted(() => getList())
 </script>

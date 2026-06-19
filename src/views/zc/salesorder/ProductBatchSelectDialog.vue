@@ -87,8 +87,12 @@
           @row-dblclick="handleSelect"
         >
           <el-table-column label="批号" prop="batchNo" width="120px" />
-          <el-table-column label="入库日期" prop="inboundDate" width="100px" />
           <el-table-column label="规格" prop="spec" width="80px" />
+          <el-table-column label="状态" align="center" prop="status" width="72px">
+            <template #default="scope">
+              <dict-tag :type="DICT_TYPE.ZC_PRODUCT_BATCH_STATUS" :value="scope.row.status" />
+            </template>
+          </el-table-column>
           <el-table-column label="版本" prop="versionName" width="80px" />
           <el-table-column label="进货价" prop="inboundPrice" width="80px" />
           <el-table-column label="单价" prop="onePrice" width="80px" />
@@ -117,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+import { DICT_TYPE } from '@/utils/dict'
 import { ProductBatchApi, ProductBatch } from '@/api/zc/productbatch'
 import { ProductApi, ProductPageVO } from '@/api/zc/product'
 import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'

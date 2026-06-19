@@ -174,7 +174,9 @@
         :data="list"
         :stripe="true"
         :show-overflow-tooltip="true"
+        class="cursor-pointer"
         @selection-change="handleRowCheckboxChange"
+        @row-dblclick="handleRowDblClick"
     >
     <el-table-column type="selection" width="55" />
       <el-table-column label="序号" type="index" align="center" width="60" />
@@ -249,16 +251,8 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px" fixed="right">
+      <el-table-column label="操作" align="center" min-width="80px" fixed="right">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="handleEdit(scope.row)"
-            v-hasPermi="['zc:sales-order:update']"
-          >
-            编辑
-          </el-button>
           <el-button
             link
             type="danger"
@@ -348,6 +342,7 @@ import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderProductForm from './SalesOrderProductForm.vue'
 import CollectionDialog from './CollectionDialog.vue'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
+import { checkPermi } from '@/utils/permission'
 
 /** 销售订单 列表 */
 defineOptions({ name: 'ZcSalesOrder' })
@@ -428,7 +423,7 @@ const handleOpenCustomerSearch = () => {
 /** 搜索弹窗选中客户：回填展示文本并设置筛选 ID */
 const handleSelectCustomerFromSearch = (customer: Customer) => {
   queryParams.customerId = customer.id
-  customerInput.value = `${customer.shortName ?? ''}/${customer.contactName ?? ''}`
+  customerInput.value = customer.name ?? ''
 }
 
 /** 清空客户输入时同步清除筛选条件 */
@@ -455,6 +450,12 @@ const handleEdit = (row: SalesOrder) => {
   } else {
     openForm('update', row.id)
   }
+}
+
+/** 双击行：与编辑按钮一致，按订单类型打开成品单/面料单编辑弹窗 */
+const handleRowDblClick = (row: SalesOrder) => {
+  if (!checkPermi(['zc:sales-order:update'])) return
+  handleEdit(row)
 }
 
 /** 打开新增收款弹窗 */
