@@ -8,7 +8,7 @@
   <Dialog :title="dialogTitle" v-model="dialogVisible" width="90%" top="3vh" :close-on-click-modal="false">
     <!-- 顶部操作栏（与成品单一致） -->
     <div class="mb-12px flex items-center gap-8px border-b border-gray-200 pb-12px">
-      <el-button v-if="!isConfirmed" type="primary" @click="handleSave" :loading="formLoading">
+      <el-button type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
       <!-- 确认订单按钮：订单已保存且未确认时显示 -->
@@ -803,7 +803,13 @@ const ensureConfirmedBeforeAction = (): boolean => {
 }
 
 // ======================== 提交 ========================
-const handleSave = () => submitForm()
+const handleSave = () => {
+  if (isConfirmed.value) {
+    message.warning('请先取消订单确认才能编辑')
+    return
+  }
+  submitForm()
+}
 
 const submitForm = async () => {
   if (isConfirmed.value) return
