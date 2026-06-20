@@ -5,12 +5,12 @@
       <el-button type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
-      <!-- 确认订单按钮：订单已保存且未确认时显示 -->
-      <el-button v-if="formData.id && formData.status !== ZcSalesOrderStatus.CONFIRMED" type="success" @click="handleConfirm" :loading="formLoading">
+      <!-- 确认订单按钮：订单已保存且无 confirmTime 时显示 -->
+      <el-button v-if="formData.id && !hasConfirmTime" type="success" @click="handleConfirm" :loading="formLoading">
         <Icon icon="ep:circle-check" class="mr-4px" />确认订单
       </el-button>
-      <!-- 取消确认按钮：订单已确认时显示 -->
-      <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
+      <!-- 取消确认按钮：存在 confirmTime 时显示 -->
+      <el-button v-if="formData.id && hasConfirmTime" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
       <!-- 新增收款：已保存且已关联客户时显示；未确认（无 confirmTime）时置灰 -->
@@ -27,15 +27,35 @@
           </el-button>
         </span>
       </el-tooltip>
-      <!-- 加急按钮：订单已保存且未加急时显示 -->
-      <el-button
-        v-if="formData.id && !formData.isExpedited"
-        type="warning"
-        @click="handleExpedite"
-        :loading="formLoading"
-      >
-        <Icon icon="ep:timer" class="mr-4px" />加急
-      </el-button>
+      <!-- 加急按钮：订单已保存且未加急时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && !formData.isExpedited"
+            type="warning"
+            :disabled="!hasConfirmTime"
+            @click="handleExpedite"
+            :loading="formLoading"
+          >
+            <Icon icon="ep:timer" class="mr-4px" />加急
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 取消加急按钮：订单已保存且已加急时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && formData.isExpedited"
+            type="info"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handleCancelExpedite"
+            :loading="formLoading"
+          >
+            <Icon icon="ep:timer" class="mr-4px" />取消加急
+          </el-button>
+        </span>
+      </el-tooltip>
       <!-- 销售单按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
       <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
         <span class="inline-flex">
@@ -578,7 +598,6 @@ import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
 import CollectionDialog from './CollectionDialog.vue'
-import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { SalesOrderApi, SalesOrderType, SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial, SalesOrderDetailCurtain, ZcSalesOrderDetailRespVO, ZcSalesOrderSubmitReqVO } from '@/api/zc/salesorder'
 import { CustomerApi, type Customer, type CustomerSimpleVO } from '@/api/zc/customer'
 import { BrandSimpleVO } from '@/api/zc/brand'
@@ -1485,12 +1504,28 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     // 调用专用加急接口，后端负责标记 is_expedited=true
     await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
     message.success('设置加急成功')
+    emit('success')
+    await reloadForm(formData.value.id!)
+  } finally {
+    formLoading.value = false
+  }
+}
+
+/** 取消订单加急 */
+const handleCancelExpedite = async () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
+  formLoading.value = true
+  try {
+    await SalesOrderApi.cancelExpeditedSalesOrder(formData.value.id!)
+    message.success('取消加急成功')
     emit('success')
     await reloadForm(formData.value.id!)
   } finally {

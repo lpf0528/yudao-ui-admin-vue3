@@ -11,68 +11,108 @@
       <el-button type="primary" @click="handleSave" :loading="formLoading">
         <Icon icon="ep:finished" class="mr-4px" />保存
       </el-button>
-      <!-- 确认订单按钮：订单已保存且未确认时显示 -->
+      <!-- 确认订单按钮：订单已保存且无 confirmTime 时显示 -->
       <el-button
-        v-if="formData.id && formData.status !== ZcSalesOrderStatus.CONFIRMED"
+        v-if="formData.id && !hasConfirmTime"
         type="success"
         @click="handleConfirm"
         :loading="formLoading"
       >
         <Icon icon="ep:circle-check" class="mr-4px" />确认订单
       </el-button>
-      <!-- 取消确认按钮：订单已确认时显示 -->
+      <!-- 取消确认按钮：存在 confirmTime 时显示 -->
       <el-button
-        v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED"
+        v-if="formData.id && hasConfirmTime"
         type="danger"
         @click="handleCancelConfirm"
         :loading="formLoading"
       >
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <!-- 新增收款：已保存且已关联客户时显示 -->
-      <el-button
-        v-if="formData.id && formData.customerId"
-        type="warning"
-        plain
-        @click="handleOpenCollection"
-      >
-        <Icon icon="ep:wallet" class="mr-4px" />新增收款
-      </el-button>
-      <!-- 加急按钮：订单已保存且未加急时显示 -->
-      <el-button
-        v-if="formData.id && !formData.isExpedited"
-        type="warning"
-        @click="handleExpedite"
-        :loading="formLoading"
-      >
-        <Icon icon="ep:timer" class="mr-4px" />加急
-      </el-button>
-      <!-- 销售单预览打印：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="info"
-        @click="handlePrint"
-      >
-        <Icon icon="ep:printer" class="mr-4px" />销售单
-      </el-button>
-      <!-- 面料加工单预览打印：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="info"
-        plain
-        @click="handlePrintProcessing"
-      >
-        <Icon icon="ep:document" class="mr-4px" />加工单
-      </el-button>
-      <!-- 发货联按钮：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="success"
-        plain
-        @click="handlePrintShipping"
-      >
-        <Icon icon="ep:van" class="mr-4px" />发货联
-      </el-button>
+      <!-- 新增收款：已保存且已关联客户时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && formData.customerId"
+            type="warning"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handleOpenCollection"
+          >
+            <Icon icon="ep:wallet" class="mr-4px" />新增收款
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 加急按钮：订单已保存且未加急时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && !formData.isExpedited"
+            type="warning"
+            :disabled="!hasConfirmTime"
+            @click="handleExpedite"
+            :loading="formLoading"
+          >
+            <Icon icon="ep:timer" class="mr-4px" />加急
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 取消加急按钮：订单已保存且已加急时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && formData.isExpedited"
+            type="info"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handleCancelExpedite"
+            :loading="formLoading"
+          >
+            <Icon icon="ep:timer" class="mr-4px" />取消加急
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 销售单预览打印：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="info"
+            :disabled="!hasConfirmTime"
+            @click="handlePrint"
+          >
+            <Icon icon="ep:printer" class="mr-4px" />销售单
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 面料加工单预览打印：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="info"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handlePrintProcessing"
+          >
+            <Icon icon="ep:document" class="mr-4px" />加工单
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 发货联按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="success"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handlePrintShipping"
+          >
+            <Icon icon="ep:van" class="mr-4px" />发货联
+          </el-button>
+        </span>
+      </el-tooltip>
     </div>
 
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
@@ -141,11 +181,11 @@
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
           <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
         </el-form-item>
-        <!-- 运费 2 -->
+        <!-- 运费 2；确认后不可修改 -->
         <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" :disabled="hasConfirmTime" class="!w-full" />
         </el-form-item>
-        <!-- 优惠金额 2 -->
+        <!-- 优惠金额 2；确认后不可修改 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
           <el-input-number
             v-model="formData.discountAmount"
@@ -153,6 +193,7 @@
             :min="0"
             :max="orderTotalBeforeDiscount"
             :controls="false"
+            :disabled="hasConfirmTime"
             class="!w-full"
           />
         </el-form-item>
@@ -208,7 +249,7 @@
           class="mb-4px items-center rounded bg-blue-50 px-2px py-4px"
         >
           <el-col :span="1" class="flex justify-center">
-            <el-button link type="danger" size="small" @click="removeBatch(idx)">
+            <el-button v-if="!hasConfirmTime" link type="danger" size="small" @click="removeBatch(idx)">
               <Icon icon="ep:delete" />
             </el-button>
           </el-col>
@@ -231,6 +272,7 @@
               size="small"
               class="!w-full"
               clearable
+              :disabled="hasConfirmTime"
               @change="(spec: string) => handleBatchSpecChange(batch, spec)"
             >
               <el-option
@@ -246,7 +288,7 @@
               placeholder="规格"
               size="small"
               class="!w-full"
-              :readonly="!!batch.batchId"
+              :readonly="!!batch.batchId || hasConfirmTime"
             />
           </el-col>
           <!-- 批次号（由面板回填，只读展示） -->
@@ -266,6 +308,7 @@
               size="small"
               :controls="false"
               class="!w-full"
+              :disabled="hasConfirmTime"
             />
           </el-col>
           <el-col :span="2">
@@ -275,6 +318,7 @@
               size="small"
               :controls="false"
               class="!w-full"
+              :disabled="hasConfirmTime"
             />
           </el-col>
           <!-- 单位由批次回填，只读展示 -->
@@ -294,7 +338,7 @@
             />
           </el-col>
           <el-col :span="3">
-            <el-input v-model="batch.note" placeholder="备注" size="small" />
+            <el-input v-model="batch.note" placeholder="备注" size="small" :disabled="hasConfirmTime" />
           </el-col>
         </el-row>
       </template>
@@ -306,9 +350,11 @@
       />
     </div>
 
-    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
-    <el-divider content-position="left">选择面料</el-divider>
-    <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
+    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表）；订单已确认后隐藏 -->
+    <template v-if="!hasConfirmTime">
+      <el-divider content-position="left">选择面料</el-divider>
+      <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
+    </template>
 
     <!-- 面料单打印预览弹窗 -->
     <SalesOrderProductPrintDialog
@@ -341,7 +387,6 @@
 <script setup lang="ts">
 import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { SalesOrderApi, SalesOrderType, SalesOrderDetailCurtain } from '@/api/zc/salesorder'
-import { ZcSalesOrderStatus } from '@/enums/zc/salesOrder'
 import { CustomerApi, type Customer, type CustomerSimpleVO } from '@/api/zc/customer'
 import { ProductVersionSpecSimpleVO } from '@/api/zc/productversion'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
@@ -434,6 +479,7 @@ const getInitFormData = () => ({
   deliveryDate: (() => { const d = new Date(); d.setDate(d.getDate() + 6); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })() as string | undefined,
   payStatus: undefined as string | undefined,
   status: undefined as string | undefined,
+  confirmTime: undefined as string | undefined,
   isExpedited: undefined as boolean | undefined,
   note: undefined as string | undefined,
   batchs: [] as BatchRow[],
@@ -449,6 +495,12 @@ const getOrderTotalBeforeDiscount = (form = formData.value) => {
 
 /** 供优惠金额输入框 max 限制及校验使用 */
 const orderTotalBeforeDiscount = computed(() => getOrderTotalBeforeDiscount(formData.value))
+
+/** 订单是否已确认：以 confirmTime 是否存在为准，不依赖 status 字段 */
+const hasConfirmTime = computed(() => {
+  const confirmTime = formData.value.confirmTime
+  return confirmTime != null && confirmTime !== ''
+})
 
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
@@ -575,6 +627,10 @@ const handleSelectCustomerFromSearch = async (customer: Customer) => {
 
 // ======================== 批次列表操作 ========================
 const removeBatch = (index: number) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许删除面料')
+    return
+  }
   formData.value.batchs.splice(index, 1)
 }
 
@@ -584,6 +640,10 @@ const removeBatch = (index: number) => {
  * 若当前有客户，并发查询各产品的授权价并覆盖单价
  */
 const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许新增面料')
+    return
+  }
   const customerId = formData.value.customerId
   const newBatchs = await Promise.all(
     rows.map(async (row) => {
@@ -613,6 +673,7 @@ const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
 
 /** 仅选产品时手动切换规格：重新查询授权价 */
 const handleBatchSpecChange = async (batch: BatchRow, spec: string) => {
+  if (hasConfirmTime.value) return
   const customerId = formData.value.customerId
   if (!customerId) return
   await fetchBatchAuthorizedPrice(batch, customerId, spec)
@@ -777,6 +838,15 @@ const ensureSavedBeforeAction = (): boolean => {
   return true
 }
 
+/** 收款/打印/加急类操作前校验：订单须已确认（存在 confirmTime） */
+const ensureOrderConfirmedBeforeAction = (): boolean => {
+  if (!hasConfirmTime.value) {
+    message.warning('请先确认订单')
+    return false
+  }
+  return true
+}
+
 // ======================== 提交 ========================
 const handleSave = () => {
   submitForm()
@@ -823,17 +893,12 @@ const submitForm = async () => {
 // ======================== 确认 / 取消确认 / 加急 ========================
 const handleConfirm = async () => {
   if (!ensureSavedBeforeAction()) return
-  try {
-    await message.confirm('订单确认后，将不允许编辑，是否继续？')
-  } catch {
-    return
-  }
   formLoading.value = true
   try {
     await SalesOrderApi.confirmSalesOrder(formData.value.id!)
-    formData.value.status = ZcSalesOrderStatus.CONFIRMED
     message.success('确认订单成功')
     emit('success')
+    await reloadForm(formData.value.id!)
   } finally {
     formLoading.value = false
   }
@@ -844,21 +909,38 @@ const handleCancelConfirm = async () => {
   formLoading.value = true
   try {
     await SalesOrderApi.cancelConfirmSalesOrder(formData.value.id!)
-    formData.value.status = ZcSalesOrderStatus.UNCONFIRMED
     message.success('取消确认成功')
     emit('success')
+    await reloadForm(formData.value.id!)
   } finally {
     formLoading.value = false
   }
 }
 
 const handleExpedite = async () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
     message.success('设置加急成功')
     emit('success')
+    await reloadForm(formData.value.id!)
+  } finally {
+    formLoading.value = false
+  }
+}
+
+/** 取消订单加急 */
+const handleCancelExpedite = async () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
+  formLoading.value = true
+  try {
+    await SalesOrderApi.cancelExpeditedSalesOrder(formData.value.id!)
+    message.success('取消加急成功')
+    emit('success')
+    await reloadForm(formData.value.id!)
   } finally {
     formLoading.value = false
   }
@@ -871,6 +953,7 @@ const handleOpenCollection = () => {
     message.warning('请先选择客户')
     return
   }
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   collectionDialogRef.value?.open(formData.value.customerId)
 }
@@ -908,18 +991,21 @@ const handleCollectionSuccess = async () => {
 // ======================== 打印 ========================
 /** 打开面料单销售单打印预览弹窗 */
 const handlePrint = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开面料加工单打印预览弹窗 */
 const handlePrintProcessing = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览弹窗 */
 const handlePrintShipping = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
