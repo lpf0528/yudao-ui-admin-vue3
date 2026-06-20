@@ -370,18 +370,29 @@ export interface ZcOrderProcessRecordRespVO {
   updateTime: string       // 最后更新时间（撤销时更新）
 }
 
+/** 订单工序时间线查询参数 */
+export interface OrderProcessRecordListReqVO {
+  orderId?: number       // 订单 ID，不传则返回全部
+  masterId?: number      // 主操作人员 ID，不传则返回全部
+  curtainId?: number     // 窗帘行 ID，不传则返回全部
+  structureId?: number   // 结构行 ID，不传则返回全部
+  materialId?: number    // 用料明细 ID，不传则返回全部
+  nodeId?: number        // 工序节点 ID，不传则返回全部
+  groups?: string        // 工序节点分组多选：0=系统配置，1=手工配置，逗号分隔，默认 "0,1"
+}
+
 // 订单工序记录 API
 export const OrderProcessRecordApi = {
   // 获取订单工序时间线（按时间降序），对应后端：GET /zc/order-process-record/list
-  getOrderProcessRecordList: async (params: {
-    orderId?: number
-    masterId?: number
-    curtainId?: number
-    structureId?: number
-    materialId?: number
-    nodeId?: number
-  }): Promise<ZcOrderProcessRecordRespVO[]> => {
-    return await request.get({ url: `/zc/order-process-record/list`, params })
+  // 默认查询 groups=0,1（系统节点 + 手工配置节点）
+  getOrderProcessRecordList: async (
+    params: OrderProcessRecordListReqVO = {}
+  ): Promise<ZcOrderProcessRecordRespVO[]> => {
+    const { groups = '0,1', ...rest } = params
+    return await request.get({
+      url: `/zc/order-process-record/list`,
+      params: { ...rest, groups }
+    })
   }
 }
 
