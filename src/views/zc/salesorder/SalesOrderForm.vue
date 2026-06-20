@@ -13,15 +13,20 @@
       <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <!-- 新增收款：已保存且已关联客户时显示 -->
-      <el-button
-        v-if="formData.id && formData.customerId"
-        type="warning"
-        plain
-        @click="handleOpenCollection"
-      >
-        <Icon icon="ep:wallet" class="mr-4px" />新增收款
-      </el-button>
+      <!-- 新增收款：已保存且已关联客户时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id && formData.customerId"
+            type="warning"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handleOpenCollection"
+          >
+            <Icon icon="ep:wallet" class="mr-4px" />新增收款
+          </el-button>
+        </span>
+      </el-tooltip>
       <!-- 加急按钮：订单已保存且未加急时显示 -->
       <el-button
         v-if="formData.id && !formData.isExpedited"
@@ -31,41 +36,61 @@
       >
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
-      <!-- 销售单按钮：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="info"
-        @click="handlePrintOrder"
-      >
-        <Icon icon="ep:printer" class="mr-4px" />销售单
-      </el-button>
-      <!-- 加工单按钮：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="info"
-        plain
-        @click="handlePrintProcessing"
-      >
-        <Icon icon="ep:document" class="mr-4px" />加工单
-      </el-button>
-      <!-- 水洗码按钮：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="warning"
-        plain
-        @click="handlePrintWashLabel"
-      >
-        <Icon icon="ep:ticket" class="mr-4px" />水洗码
-      </el-button>
-      <!-- 发货联按钮：订单已保存时显示 -->
-      <el-button
-        v-if="formData.id"
-        type="success"
-        plain
-        @click="handlePrintShipping"
-      >
-        <Icon icon="ep:van" class="mr-4px" />发货联
-      </el-button>
+      <!-- 销售单按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="info"
+            :disabled="!hasConfirmTime"
+            @click="handlePrintOrder"
+          >
+            <Icon icon="ep:printer" class="mr-4px" />销售单
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 加工单按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="info"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handlePrintProcessing"
+          >
+            <Icon icon="ep:document" class="mr-4px" />加工单
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 水洗码按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="warning"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handlePrintWashLabel"
+          >
+            <Icon icon="ep:ticket" class="mr-4px" />水洗码
+          </el-button>
+        </span>
+      </el-tooltip>
+      <!-- 发货联按钮：订单已保存时显示；未确认（无 confirmTime）时置灰 -->
+      <el-tooltip content="请先确认订单" :disabled="hasConfirmTime" placement="top">
+        <span class="inline-flex">
+          <el-button
+            v-if="formData.id"
+            type="success"
+            plain
+            :disabled="!hasConfirmTime"
+            @click="handlePrintShipping"
+          >
+            <Icon icon="ep:van" class="mr-4px" />发货联
+          </el-button>
+        </span>
+      </el-tooltip>
       <!-- 销售单2：请求后端 PDF 接口，在弹窗内预览并打印 -->
       <!-- <el-button v-if="formData.id" type="success" plain @click="handlePrintOrder2" :loading="pdfLoading">
         <Icon icon="ep:document-checked" class="mr-4px" />销售单2
@@ -79,18 +104,19 @@
         <el-form-item label="订单号" prop="orderNo" style="flex: 2; min-width: 0">
           <el-input v-model="formData.orderNo" disabled placeholder="" class="w-full" />
         </el-form-item>
-        <!-- 客户：展示简称/联系人，稍宽 -->
+        <!-- 客户：展示简称/联系人，稍宽；保存后（存在订单号）不可修改 -->
         <el-form-item label="客户" prop="customerId" style="flex: 3; min-width: 0">
           <div class="flex items-center w-full gap-4px">
             <el-input
               v-model="customerInput"
               placeholder="输入客户名称后回车搜索"
-              clearable
+              :clearable="!hasOrderNo"
+              :disabled="hasOrderNo"
               class="flex-1"
               @keyup.enter="handleOpenCustomerSearch"
               @clear="handleClearCustomer"
             />
-            <el-button :icon="SearchIcon" circle size="small" @click="handleOpenCustomerSearch" title="搜索客户" />
+            <el-button :icon="SearchIcon" circle size="small" :disabled="hasOrderNo" @click="handleOpenCustomerSearch" title="搜索客户" />
           </div>
         </el-form-item>
         <!-- 手机 -->
@@ -129,11 +155,11 @@
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
           <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
         </el-form-item>
-        <!-- 运费：列宽略收窄 -->
+        <!-- 运费：列宽略收窄；确认后不可修改 -->
         <el-form-item label="运费" prop="freight" style="flex: 1.5; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" :disabled="hasConfirmTime" class="!w-full" />
         </el-form-item>
-        <!-- 优惠金额：列宽略收窄 -->
+        <!-- 优惠金额：列宽略收窄；确认后不可修改 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
           <el-input-number
             v-model="formData.discountAmount"
@@ -141,6 +167,7 @@
             :min="0"
             :max="orderTotalBeforeDiscount"
             :controls="false"
+            :disabled="hasConfirmTime"
             class="!w-full"
           />
         </el-form-item>
@@ -173,7 +200,7 @@
     </el-form>
 
     <el-divider content-position="left">窗帘列表</el-divider>
-    <el-button type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
+    <el-button v-if="!hasConfirmTime" type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
     <div style="max-height: 65vh; overflow-y: auto; padding-right: 4px">
       <el-card
         v-for="(curtain, idx) in formData.curtains"
@@ -191,9 +218,9 @@
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-8px">
               <span class="text-sm font-semibold">窗帘 #{{ idx + 1 }}</span>
-              <el-button link class="curtain-header-btn" @click="copyCurtain(idx)">复制</el-button>
+              <el-button v-if="!hasConfirmTime" link class="curtain-header-btn" @click="copyCurtain(idx)">复制</el-button>
             </div>
-            <el-button link type="danger" class="curtain-header-btn-danger" @click="removeCurtain(idx)">删除</el-button>
+            <el-button v-if="!hasConfirmTime" link type="danger" class="curtain-header-btn-danger" @click="removeCurtain(idx)">删除</el-button>
           </div>
         </template>
         <!-- 窗帘区域：左右布局，左侧按内容宽度排列，图片紧跟基本信息后 -->
@@ -268,7 +295,7 @@
 
         <el-divider content-position="left">结构列表</el-divider>
         <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板..." style="min-height: 60px">
-          <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
+          <el-button v-if="!hasConfirmTime" type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
           <div
             v-for="(structure, sIdx) in curtain.structures"
             :key="sIdx"
@@ -276,7 +303,7 @@
           >
             <div class="flex justify-between items-center mb-8px">
               <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
-              <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
+              <el-button v-if="!hasConfirmTime" link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
             </div>
             <!-- 结构字段行：flex 按内容定宽，减少字段间距 -->
             <div class="structure-form-row flex flex-wrap items-start gap-x-8px gap-y-8px">
@@ -365,7 +392,7 @@
             <div class="mt-4px pl-4px">
               <div class="flex items-center mb-2px">
                 <span class="text-sm font-medium text-gray-600 mr-8px">用料列表</span>
-                <el-button type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
+                <el-button v-if="!hasConfirmTime" type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
               </div>
               <template v-if="structure.materials.length > 0">
                 <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
@@ -388,19 +415,19 @@
                   class="mb-2px items-center rounded bg-blue-50 px-2px py-2px"
                 >
                   <el-col :span="1" class="flex justify-center">
-                    <!-- 已裁剪的用料行禁止删除，需先撤销裁剪 -->
+                    <!-- 已确认或已裁剪的用料行禁止删除 -->
                     <el-tooltip
-                      :content="material.status === 'HAVE_PEILIAO' ? '该用料明细已完成裁剪，请先撤销裁剪后再删除' : ''"
-                      :disabled="material.status !== 'HAVE_PEILIAO'"
+                      :content="getMaterialDeleteDisabledReason(material)"
+                      :disabled="isMaterialEditable(material)"
                       placement="top"
                     >
-                      <el-button link type="danger" size="small" :disabled="material.status === 'HAVE_PEILIAO'" @click="removeMaterial(structure, mIdx)">
+                      <el-button link type="danger" size="small" :disabled="!isMaterialEditable(material)" @click="removeMaterial(structure, mIdx)">
                         <Icon icon="ep:delete" />
                       </el-button>
                     </el-tooltip>
                   </el-col>
                   <el-col :span="3">
-                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1">
+                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
                       <el-option
                         v-for="item in curtainStructureElementList"
                         :key="item.id"
@@ -411,29 +438,29 @@
                   </el-col>
                   <el-col :span="3">
                     <!-- 显示产品名称，未确认且未裁剪时回车或双击打开批次选择弹窗 -->
-                    <div @dblclick="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
+                    <div @dblclick="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.productName"
                         placeholder="货号(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="material.status === 'HAVE_PEILIAO'"
-                        @keyup.enter="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="!isMaterialEditable(material)"
+                        @keyup.enter="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
                   <el-col :span="3">
                     <!-- 已裁剪行的批次字段只读（库存已绑定，不允许变更） -->
-                    <div @dblclick="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
+                    <div @dblclick="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.batchNo"
                         placeholder="批次(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="material.status === 'HAVE_PEILIAO'"
-                        @keyup.enter="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="!isMaterialEditable(material)"
+                        @keyup.enter="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
@@ -442,13 +469,13 @@
                     <el-input v-model="material.spec" placeholder="规格" size="small" class="!w-full" readonly />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
+                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
+                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                   <el-col :span="2">
-                    <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
+                    <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
                       <el-option
                         v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
                         :key="dict.value"
@@ -465,7 +492,7 @@
                     <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
                   </el-col>
                   <el-col :span="2">
-                    <el-input v-model="material.note" placeholder="备注" size="small" />
+                    <el-input v-model="material.note" placeholder="备注" size="small" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                 </el-row>
               </template>
@@ -609,11 +636,13 @@ const toCustomerSimpleVO = (customer: Customer): CustomerSimpleVO => ({
 
 /** 回车或点击搜索图标：打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
+  if (hasOrderNo.value) return
   customerSearchDialogRef.value?.open(customerInput.value)
 }
 
 /** 清空客户输入时同步清除已选客户 */
 const handleClearCustomer = () => {
+  if (hasOrderNo.value) return
   formData.value.customerId = undefined
   selectedCustomerInfo.value = null
   selectedCustomerBalance.value = null
@@ -745,6 +774,29 @@ const getOrderTotalBeforeDiscount = (form = formData.value) => {
 /** 供优惠金额输入框 max 限制及校验使用 */
 const orderTotalBeforeDiscount = computed(() => getOrderTotalBeforeDiscount(formData.value))
 
+/** 订单是否已确认：以 confirmTime 是否存在为准，不依赖 status 字段 */
+const hasConfirmTime = computed(() => {
+  const confirmTime = formData.value.confirmTime
+  return confirmTime != null && confirmTime !== ''
+})
+
+/** 订单已保存：以 orderNo 是否存在为准 */
+const hasOrderNo = computed(() => {
+  const orderNo = formData.value.orderNo
+  return orderNo != null && orderNo !== ''
+})
+
+/** 用料行是否允许编辑/删除：订单已确认或已完成裁剪时锁定 */
+const isMaterialEditable = (material: MaterialWithSpec) =>
+  !hasConfirmTime.value && material.status !== 'HAVE_PEILIAO'
+
+/** 用料删除按钮禁用时的提示文案 */
+const getMaterialDeleteDisabledReason = (material: MaterialWithSpec) => {
+  if (hasConfirmTime.value) return '订单已确认，不允许删除用料'
+  if (material.status === 'HAVE_PEILIAO') return '该用料明细已完成裁剪，请先撤销裁剪后再删除'
+  return ''
+}
+
 /** 切换客户后，更新已有用料中已选产品+规格的授权价 */
 const updateMaterialAuthorizedPrices = async (customerId: number) => {
   console.log('[SalesOrderForm 授权价] updateMaterialAuthorizedPrices 开始', { customerId })
@@ -803,6 +855,7 @@ const updateMaterialAuthorizedPrices = async (customerId: number) => {
 
 /** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
 const handleSelectCustomerFromSearch = async (customer: Customer) => {
+  if (hasOrderNo.value) return
   console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
   customerInput.value = customer.name ?? ''
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
@@ -1028,6 +1081,15 @@ const ensureSavedBeforeAction = (): boolean => {
   return true
 }
 
+/** 收款/打印类操作前校验：订单须已确认（存在 confirmTime） */
+const ensureOrderConfirmedBeforeAction = (): boolean => {
+  if (!hasConfirmTime.value) {
+    message.warning('请先确认订单')
+    return false
+  }
+  return true
+}
+
 /** 挂载时一次性加载不常变动的基础配置数据 */
 onMounted(async () => {
   ;[
@@ -1075,6 +1137,10 @@ const open = async (type: string, id?: number) => {
 }
 
 const addCurtain = () => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许添加窗帘')
+    return
+  }
   if (!formData.value.customerId) {
     message.warning('请先选择客户')
     return
@@ -1097,6 +1163,10 @@ const addCurtain = () => {
 }
 
 const removeCurtain = (index: number) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许删除窗帘')
+    return
+  }
   formData.value.curtains.splice(index, 1)
 }
 
@@ -1198,6 +1268,10 @@ watch(
 
 /** 复制窗帘并插入到当前行下方 */
 const copyCurtain = (index: number) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许复制窗帘')
+    return
+  }
   const source = formData.value.curtains[index]
   if (!source) return
   formData.value.curtains.splice(index + 1, 0, cloneCurtain(source))
@@ -1207,6 +1281,10 @@ const copyCurtain = (index: number) => {
 }
 
 const addStructure = (curtain: CurtainWithStructures) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许添加结构')
+    return
+  }
   curtain.structures.push({
     structureId: undefined,
     height: undefined,
@@ -1227,10 +1305,18 @@ const addStructure = (curtain: CurtainWithStructures) => {
 }
 
 const removeStructure = (curtain: CurtainWithStructures, index: number) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许删除结构')
+    return
+  }
   curtain.structures.splice(index, 1)
 }
 
 const addMaterial = (structure: StructureWithMaterials) => {
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许添加用料')
+    return
+  }
   structure.materials.push({
     elementId: undefined,
     productId: undefined,
@@ -1246,8 +1332,13 @@ const addMaterial = (structure: StructureWithMaterials) => {
 }
 
 const removeMaterial = (structure: StructureWithMaterials, index: number) => {
+  const material = structure.materials[index]
+  if (hasConfirmTime.value) {
+    message.warning('订单已确认，不允许删除用料')
+    return
+  }
   // 已裁剪的用料行与库存扣减记录绑定，禁止删除
-  if (structure.materials[index]?.status === 'HAVE_PEILIAO') {
+  if (material?.status === 'HAVE_PEILIAO') {
     message.warning('该用料明细已完成裁剪，请先撤销裁剪后再删除')
     return
   }
@@ -1268,6 +1359,7 @@ const handleOpenCollection = () => {
     message.warning('请先选择客户')
     return
   }
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   collectionDialogRef.value?.open(formData.value.customerId)
 }
@@ -1282,12 +1374,14 @@ const handleCollectionSuccess = async () => {
 
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
 const handlePrintOrder = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   console.log('[加工单] 打印数据：', JSON.parse(JSON.stringify(formData.value)))
   processingPrintDialogRef.value?.open(formData.value as any)
@@ -1295,12 +1389,14 @@ const handlePrintProcessing = () => {
 
 /** 打开水洗标打印预览，每个结构生成 6 张相同标签 */
 const handlePrintWashLabel = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   washLabelDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览 */
 const handlePrintShipping = () => {
+  if (!ensureOrderConfirmedBeforeAction()) return
   if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
@@ -1362,11 +1458,6 @@ const reloadForm = async (id: number) => {
 
 const handleConfirm = async () => {
   if (!ensureSavedBeforeAction()) return
-  try {
-    await message.confirm('订单确认后，将不允许编辑，是否继续？')
-  } catch {
-    return
-  }
   formLoading.value = true
   try {
     // 调用专用确认接口，后端负责状态流转（unconfirmed → confirmed）并扣减客户余额
