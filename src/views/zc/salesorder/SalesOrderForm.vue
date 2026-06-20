@@ -13,61 +13,55 @@
       <el-button v-if="formData.id && formData.status === ZcSalesOrderStatus.CONFIRMED" type="danger" @click="handleCancelConfirm" :loading="formLoading">
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <!-- 新增收款：已保存且已关联客户时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 新增收款：已保存且已关联客户时显示 -->
       <el-button
         v-if="formData.id && formData.customerId"
         type="warning"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handleOpenCollection"
       >
         <Icon icon="ep:wallet" class="mr-4px" />新增收款
       </el-button>
-      <!-- 加急按钮：订单已保存且未加急时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 加急按钮：订单已保存且未加急时显示 -->
       <el-button
         v-if="formData.id && !formData.isExpedited"
         type="warning"
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handleExpedite"
         :loading="formLoading"
       >
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
-      <!-- 销售单按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <!-- 销售单按钮：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="info"
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintOrder"
       >
         <Icon icon="ep:printer" class="mr-4px" />销售单
       </el-button>
-      <!-- 加工单按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <!-- 加工单按钮：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="info"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintProcessing"
       >
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
-      <!-- 水洗码按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <!-- 水洗码按钮：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="warning"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintWashLabel"
       >
         <Icon icon="ep:ticket" class="mr-4px" />水洗码
       </el-button>
-      <!-- 发货联按钮：订单已保存时显示，未确认时置灰并点击提示 -->
+      <!-- 发货联按钮：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="success"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintShipping"
       >
         <Icon icon="ep:van" class="mr-4px" />发货联
@@ -91,42 +85,41 @@
             <el-input
               v-model="customerInput"
               placeholder="输入客户名称后回车搜索"
-              :clearable="!isConfirmed"
+              clearable
               class="flex-1"
-              :disabled="isConfirmed"
               @keyup.enter="handleOpenCustomerSearch"
               @clear="handleClearCustomer"
             />
-            <el-button :icon="SearchIcon" circle size="small" :disabled="isConfirmed" @click="handleOpenCustomerSearch" title="搜索客户" />
+            <el-button :icon="SearchIcon" circle size="small" @click="handleOpenCustomerSearch" title="搜索客户" />
           </div>
         </el-form-item>
         <!-- 手机 -->
         <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
-          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" />
         </el-form-item>
         <!-- 下单日期 -->
         <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :disabled="isConfirmed" :clearable="false" />
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :clearable="false" />
         </el-form-item>
         <!-- 品牌 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full" :disabled="isConfirmed">
+          <el-select v-model="formData.brandId" clearable placeholder="请选择品牌" class="w-full">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full" :disabled="isConfirmed">
+          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 收货人 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
-          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
         </el-form-item>
         <!-- 交付日期 -->
         <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" :disabled="isConfirmed" />
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
         </el-form-item>
       </div>
 
@@ -134,11 +127,11 @@
       <div class="flex gap-x-8px">
         <!-- 送货地址：地址文字较长，适当加宽 -->
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
-          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
         </el-form-item>
         <!-- 运费：列宽略收窄 -->
         <el-form-item label="运费" prop="freight" style="flex: 1.5; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" :disabled="isConfirmed" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
         </el-form-item>
         <!-- 优惠金额：列宽略收窄 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 1.5; min-width: 0">
@@ -149,7 +142,6 @@
             :max="orderTotalBeforeDiscount"
             :controls="false"
             class="!w-full"
-            :disabled="isConfirmed"
           />
         </el-form-item>
         <!-- 金额：四舍五入后的订单金额，只读 -->
@@ -175,13 +167,13 @@
         </el-form-item>
         <!-- 备注：剩余空间较多，撑满 -->
         <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
-          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
         </el-form-item>
       </div>
     </el-form>
 
     <el-divider content-position="left">窗帘列表</el-divider>
-    <el-button v-if="!isConfirmed" type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
+    <el-button type="primary" link class="mb-8px" @click="addCurtain">+ 添加窗帘</el-button>
     <div style="max-height: 65vh; overflow-y: auto; padding-right: 4px">
       <el-card
         v-for="(curtain, idx) in formData.curtains"
@@ -199,9 +191,9 @@
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-8px">
               <span class="text-sm font-semibold">窗帘 #{{ idx + 1 }}</span>
-              <el-button v-if="!isConfirmed" link class="curtain-header-btn" @click="copyCurtain(idx)">复制</el-button>
+              <el-button link class="curtain-header-btn" @click="copyCurtain(idx)">复制</el-button>
             </div>
-            <el-button v-if="!isConfirmed" link type="danger" class="curtain-header-btn-danger" @click="removeCurtain(idx)">删除</el-button>
+            <el-button link type="danger" class="curtain-header-btn-danger" @click="removeCurtain(idx)">删除</el-button>
           </div>
         </template>
         <!-- 窗帘区域：左右布局，左侧按内容宽度排列，图片紧跟基本信息后 -->
@@ -215,7 +207,6 @@
                   clearable
                   placeholder="请选择款式"
                   class="w-1/1"
-                  :disabled="isConfirmed"
                   @change="(val) => handleCurtainChange(curtain, val)"
                 >
                   <el-option
@@ -227,10 +218,10 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="房间" class="curtain-field curtain-field-room form-field-compact">
-                <el-input v-model="curtain.room" placeholder="请输入房间" :disabled="isConfirmed" />
+                <el-input v-model="curtain.room" placeholder="请输入房间" />
               </el-form-item>
               <el-form-item label="褶倍" class="curtain-field curtain-field-metric form-field-compact">
-                <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1">
                   <el-option
                     v-for="item in pleatRatioList"
                     :key="item.id"
@@ -240,7 +231,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="褶距" class="curtain-field curtain-field-metric form-field-compact">
-                <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item label="金额" class="curtain-field curtain-field-metric form-field-compact">
                 <!-- 金额 = 所有结构用料小计之和 × 折扣率，自动计算，禁止手动编辑 -->
@@ -250,7 +241,7 @@
             <!-- 配件、备注同一行 -->
             <div class="curtain-form-row curtain-form-row-secondary flex flex-wrap items-start gap-x-8px gap-y-8px mt-8px">
               <el-form-item label="配件" class="curtain-field curtain-field-mountings">
-                <el-select v-model="curtain.mountings" multiple clearable placeholder="请选择配件" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="curtain.mountings" multiple clearable placeholder="请选择配件" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_CURTAIN_MOUNTINGS)"
                     :key="dict.value"
@@ -260,24 +251,24 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="备注" class="curtain-field curtain-field-note">
-                <el-input v-model="curtain.note" placeholder="请输入备注" :rows="1" :disabled="isConfirmed" />
+                <el-input v-model="curtain.note" placeholder="请输入备注" :rows="1" />
               </el-form-item>
             </div>
           </div>
           <!-- 右侧：图片上传，高度与左侧两行对齐 -->
           <div class="curtain-form-images flex gap-8px shrink-0">
             <el-form-item label="图片1" class="curtain-field curtain-field-image">
-              <UploadImg v-model="curtain.image1" width="90px" height="100%" :disabled="isConfirmed" />
+              <UploadImg v-model="curtain.image1" width="90px" height="100%" />
             </el-form-item>
             <el-form-item label="图片2" class="curtain-field curtain-field-image">
-              <UploadImg v-model="curtain.image2" width="90px" height="100%" :disabled="isConfirmed" />
+              <UploadImg v-model="curtain.image2" width="90px" height="100%" />
             </el-form-item>
           </div>
         </div>
 
         <el-divider content-position="left">结构列表</el-divider>
         <div v-loading="curtain.templateLoading" element-loading-text="正在加载款式模板..." style="min-height: 60px">
-          <el-button v-if="!isConfirmed" type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
+          <el-button type="primary" link class="mb-8px" @click="addStructure(curtain)">+ 添加结构</el-button>
           <div
             v-for="(structure, sIdx) in curtain.structures"
             :key="sIdx"
@@ -285,12 +276,12 @@
           >
             <div class="flex justify-between items-center mb-8px">
               <span class="text-sm font-semibold text-gray-700">结构 #{{ sIdx + 1 }}</span>
-              <el-button v-if="!isConfirmed" link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
+              <el-button link type="danger" @click="removeStructure(curtain, sIdx)">删除</el-button>
             </div>
             <!-- 结构字段行：flex 按内容定宽，减少字段间距 -->
             <div class="structure-form-row flex flex-wrap items-start gap-x-8px gap-y-8px">
               <el-form-item label="结构" class="structure-field structure-field-name form-field-compact">
-                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
                   <el-option
                     v-for="item in curtainStructureList"
                     :key="item.id"
@@ -300,19 +291,19 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="宽" class="structure-field structure-field-num form-field-compact">
-                <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="structure.width" placeholder="宽" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item label="高" class="structure-field structure-field-num form-field-compact">
-                <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="structure.height" placeholder="高" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'leftCorner')" label="左转角" class="structure-field structure-field-num form-field-compact">
-                <el-input v-model="structure.leftCorner" placeholder="左转角" :disabled="isConfirmed" />
+                <el-input v-model="structure.leftCorner" placeholder="左转角" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'rightCorner')" label="右转角" class="structure-field structure-field-num form-field-compact">
-                <el-input v-model="structure.rightCorner" placeholder="右转角" :disabled="isConfirmed" />
+                <el-input v-model="structure.rightCorner" placeholder="右转角" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'pasteDirection')" label="粘贴方向" class="structure-field structure-field-paste">
-                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
                     :key="dict.value"
@@ -322,7 +313,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'installProcessId')" label="安装工艺" class="structure-field structure-field-process">
-                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1">
                   <el-option
                     v-for="item in props.installProcessList"
                     :key="item.id"
@@ -332,7 +323,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'openMethod')" label="打开方式" class="structure-field structure-field-select form-field-compact">
-                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
                     :key="dict.value"
@@ -342,7 +333,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'processType')" label="加工类型" class="structure-field structure-field-process">
-                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1" :disabled="isConfirmed">
+                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
                     :key="dict.value"
@@ -352,29 +343,29 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'isShaping')" label="是否定型" class="structure-field structure-field-select form-field-compact">
-                <el-select v-model="structure.isShaping" placeholder="是否定型" :disabled="isConfirmed">
+                <el-select v-model="structure.isShaping" placeholder="是否定型">
                   <el-option label="是" :value="true" />
                   <el-option label="否" :value="false" />
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'pleatsNum')" label="总褶数" class="structure-field structure-field-pleats form-field-compact">
-                <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="structure.pleatsNum" placeholder="总褶数" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'pleatsDistance')" label="褶距" class="structure-field structure-field-pleats form-field-compact">
-                <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="structure.pleatsDistance" placeholder="褶距" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'skirtHeight')" label="裙摆高度" class="structure-field structure-field-pleats form-field-compact">
-                <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                <el-input-number v-model="structure.skirtHeight" placeholder="裙摆高度" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item label="备注" class="structure-field structure-field-note">
-                <el-input v-model="structure.note" placeholder="备注" :disabled="isConfirmed" />
+                <el-input v-model="structure.note" placeholder="备注" />
               </el-form-item>
             </div>
 
             <div class="mt-4px pl-4px">
               <div class="flex items-center mb-2px">
                 <span class="text-sm font-medium text-gray-600 mr-8px">用料列表</span>
-                <el-button v-if="!isConfirmed" type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
+                <el-button type="primary" link @click="addMaterial(structure)">+ 添加用料</el-button>
               </div>
               <template v-if="structure.materials.length > 0">
                 <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
@@ -399,7 +390,6 @@
                   <el-col :span="1" class="flex justify-center">
                     <!-- 已裁剪的用料行禁止删除，需先撤销裁剪 -->
                     <el-tooltip
-                      v-if="!isConfirmed"
                       :content="material.status === 'HAVE_PEILIAO' ? '该用料明细已完成裁剪，请先撤销裁剪后再删除' : ''"
                       :disabled="material.status !== 'HAVE_PEILIAO'"
                       placement="top"
@@ -410,7 +400,7 @@
                     </el-tooltip>
                   </el-col>
                   <el-col :span="3">
-                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1" :disabled="isConfirmed">
+                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1">
                       <el-option
                         v-for="item in curtainStructureElementList"
                         :key="item.id"
@@ -421,44 +411,44 @@
                   </el-col>
                   <el-col :span="3">
                     <!-- 显示产品名称，未确认且未裁剪时回车或双击打开批次选择弹窗 -->
-                    <div @dblclick="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
+                    <div @dblclick="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.productName"
                         placeholder="货号(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="isConfirmed || material.status === 'HAVE_PEILIAO'"
-                        @keyup.enter="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="material.status === 'HAVE_PEILIAO'"
+                        @keyup.enter="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
                   <el-col :span="3">
                     <!-- 已裁剪行的批次字段只读（库存已绑定，不允许变更） -->
-                    <div @dblclick="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
+                    <div @dblclick="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)">
                       <el-input
                         v-model="material.batchNo"
                         placeholder="批次(回车/双击选择)"
                         size="small"
                         class="!w-full"
                         readonly
-                        :disabled="isConfirmed || material.status === 'HAVE_PEILIAO'"
-                        @keyup.enter="!isConfirmed && material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
+                        :disabled="material.status === 'HAVE_PEILIAO'"
+                        @keyup.enter="material.status !== 'HAVE_PEILIAO' && batchSelectRef?.open(material, formData.customerId)"
                       />
                     </div>
                   </el-col>
                   <el-col :span="2">
                     <!-- 规格：批次选定后自动回填，只读 -->
-                    <el-input v-model="material.spec" placeholder="规格" size="small" class="!w-full" readonly :disabled="isConfirmed" />
+                    <el-input v-model="material.spec" placeholder="规格" size="small" class="!w-full" readonly />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" />
                   </el-col>
                   <el-col :span="2">
-                    <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1" :disabled="isConfirmed">
+                    <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1">
                       <el-option
                         v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
                         :key="dict.value"
@@ -468,14 +458,14 @@
                     </el-select>
                   </el-col>
                   <el-col :span="2" style="display:none">
-                    <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" :disabled="isConfirmed" />
+                    <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
                   </el-col>
                   <el-col :span="2">
                     <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
                     <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
                   </el-col>
                   <el-col :span="2">
-                    <el-input v-model="material.note" placeholder="备注" size="small" :disabled="isConfirmed" />
+                    <el-input v-model="material.note" placeholder="备注" size="small" />
                   </el-col>
                 </el-row>
               </template>
@@ -619,13 +609,11 @@ const toCustomerSimpleVO = (customer: Customer): CustomerSimpleVO => ({
 
 /** 回车或点击搜索图标：打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
-  if (isConfirmed.value) return
   customerSearchDialogRef.value?.open(customerInput.value)
 }
 
 /** 清空客户输入时同步清除已选客户 */
 const handleClearCustomer = () => {
-  if (isConfirmed.value) return
   formData.value.customerId = undefined
   selectedCustomerInfo.value = null
   selectedCustomerBalance.value = null
@@ -656,7 +644,6 @@ const hasAttr = (structureId: number | undefined, attr: string) => {
 }
 
 const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: number) => {
-  if (isConfirmed.value) return
   const selected = curtainList.value.find((item) => item.id === curtainId)
   if (selected) {
     curtain.pleatRatioValue = selected.pleatRatioValue as any
@@ -714,9 +701,6 @@ const handleCurtainChange = async (curtain: CurtainWithStructures, curtainId: nu
 
 const { t } = useI18n()
 const message = useMessage()
-
-/** 订单已确认：禁止修改任何字段，仅允许取消确认 / 收款 / 打印等操作 */
-const isConfirmed = computed(() => formData.value.status === ZcSalesOrderStatus.CONFIRMED)
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -819,7 +803,6 @@ const updateMaterialAuthorizedPrices = async (customerId: number) => {
 
 /** 客户搜索弹窗选中回调：使用接口返回的完整数据填充表单 */
 const handleSelectCustomerFromSearch = async (customer: Customer) => {
-  if (isConfirmed.value) return
   console.log('[SalesOrderForm 授权价] handleSelectCustomerFromSearch 触发', { customerId: customer?.id, customer })
   customerInput.value = customer.name ?? ''
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
@@ -1045,16 +1028,6 @@ const ensureSavedBeforeAction = (): boolean => {
   return true
 }
 
-/** 打印类操作前置校验：已保存且订单已确认 */
-const ensureConfirmedBeforePrint = (): boolean => {
-  if (!ensureSavedBeforeAction()) return false
-  if (formData.value.status !== ZcSalesOrderStatus.CONFIRMED) {
-    message.warning('请先确认订单')
-    return false
-  }
-  return true
-}
-
 /** 挂载时一次性加载不常变动的基础配置数据 */
 onMounted(async () => {
   ;[
@@ -1102,7 +1075,6 @@ const open = async (type: string, id?: number) => {
 }
 
 const addCurtain = () => {
-  if (isConfirmed.value) return
   if (!formData.value.customerId) {
     message.warning('请先选择客户')
     return
@@ -1125,7 +1097,6 @@ const addCurtain = () => {
 }
 
 const removeCurtain = (index: number) => {
-  if (isConfirmed.value) return
   formData.value.curtains.splice(index, 1)
 }
 
@@ -1227,7 +1198,6 @@ watch(
 
 /** 复制窗帘并插入到当前行下方 */
 const copyCurtain = (index: number) => {
-  if (isConfirmed.value) return
   const source = formData.value.curtains[index]
   if (!source) return
   formData.value.curtains.splice(index + 1, 0, cloneCurtain(source))
@@ -1237,7 +1207,6 @@ const copyCurtain = (index: number) => {
 }
 
 const addStructure = (curtain: CurtainWithStructures) => {
-  if (isConfirmed.value) return
   curtain.structures.push({
     structureId: undefined,
     height: undefined,
@@ -1258,12 +1227,10 @@ const addStructure = (curtain: CurtainWithStructures) => {
 }
 
 const removeStructure = (curtain: CurtainWithStructures, index: number) => {
-  if (isConfirmed.value) return
   curtain.structures.splice(index, 1)
 }
 
 const addMaterial = (structure: StructureWithMaterials) => {
-  if (isConfirmed.value) return
   structure.materials.push({
     elementId: undefined,
     productId: undefined,
@@ -1279,7 +1246,6 @@ const addMaterial = (structure: StructureWithMaterials) => {
 }
 
 const removeMaterial = (structure: StructureWithMaterials, index: number) => {
-  if (isConfirmed.value) return
   // 已裁剪的用料行与库存扣减记录绑定，禁止删除
   if (structure.materials[index]?.status === 'HAVE_PEILIAO') {
     message.warning('该用料明细已完成裁剪，请先撤销裁剪后再删除')
@@ -1293,10 +1259,6 @@ defineExpose({ open })
 const emit = defineEmits(['success'])
 
 const handleSave = async () => {
-  if (isConfirmed.value) {
-    message.warning('请先取消订单确认才能编辑')
-    return
-  }
   await submitForm()
 }
 
@@ -1306,7 +1268,7 @@ const handleOpenCollection = () => {
     message.warning('请先选择客户')
     return
   }
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   collectionDialogRef.value?.open(formData.value.customerId)
 }
 
@@ -1320,26 +1282,26 @@ const handleCollectionSuccess = async () => {
 
 /** 打开销售单打印预览，传入当前表单数据（含所有窗帘、结构、用料） */
 const handlePrintOrder = () => {
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开加工单打印预览 */
 const handlePrintProcessing = () => {
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   console.log('[加工单] 打印数据：', JSON.parse(JSON.stringify(formData.value)))
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开水洗标打印预览，每个结构生成 6 张相同标签 */
 const handlePrintWashLabel = () => {
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   washLabelDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览 */
 const handlePrintShipping = () => {
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
 
@@ -1432,7 +1394,7 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
-  if (!ensureConfirmedBeforePrint()) return
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     // 调用专用加急接口，后端负责标记 is_expedited=true
@@ -1446,7 +1408,6 @@ const handleExpedite = async () => {
 }
 
 const submitForm = async () => {
-  if (isConfirmed.value) return
   await formRef.value.validate()
   // 至少需要一个窗帘才能保存
   if (!formData.value.curtains || formData.value.curtains.length === 0) {
@@ -1665,10 +1626,5 @@ const resetForm = () => {
 .structure-form-row :deep(.structure-field .el-input-number),
 .structure-form-row :deep(.structure-field .el-select) {
   width: 100% !important;
-}
-/* 未确认订单时打印按钮置灰，仍可点击以弹出提示 */
-.print-btn-locked {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 </style>

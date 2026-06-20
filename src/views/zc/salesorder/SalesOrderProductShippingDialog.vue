@@ -228,7 +228,9 @@ const visible = ref(false)
 const formData = ref<SalesOrder | null>(null)
 /** 是否合并发货：true=所有面料信息合并为一个表格 */
 const isMergedShipping = ref(false)
-/** 每个面料页的二维码信息，key 为 `curtain-${curtainIdx}` */
+/** 合并发货二维码（仅需订单 id、客户 id，整单只注册一次） */
+const mergedShippingQrCode = ref<{ url: string; code: string } | null>(null)
+/** 分开发货：每个面料页的二维码信息，key 为 `curtain-${curtainIdx}` */
 const materialQrCodes = ref<Record<string, { url: string; code: string }>>({})
 
 // ======================== 计算属性 ========================
@@ -276,12 +278,8 @@ const materialPages = computed<MaterialPageItem[]>(() => {
   return pages
 })
 
-/** 合并发货模式使用第一套的二维码展示 */
-const mergedQrCode = computed(() => {
-  const firstPage = materialPages.value[0]
-  if (!firstPage) return null
-  return materialQrCodes.value[firstPage.pageKey] || null
-})
+/** 合并发货模式展示整单二维码 */
+const mergedQrCode = computed(() => mergedShippingQrCode.value)
 
 // ======================== 工具函数 ========================
 /** 统一输出 yyyy-MM-dd，避免不同浏览器本地化差异 */
@@ -296,15 +294,28 @@ const formatMaterialDisplay = (materialNameWithVersion: string, materialNote?: s
   return `${materialNameWithVersion} | 备注：${note}`
 }
 
-// ======================== 对外方法 ========================
-/**
- * 打开预览弹窗，按每个 curtain 的 structures[0].materials[0] 生成发货二维码
- */
-const open = async (data: SalesOrder) => {
-  formData.value = data
-  visible.value = true
+/** 根据当前发货模式注册并生成二维码 */
+const generateMaterialQrCodes = async (data: SalesOrder) => {
   materialQrCodes.value = {}
+  mergedShippingQrCode.value = null
 
+  if (isMergedShipping.value) {
+    // 合并发货：整单只需订单 id、客户 id，注册一次即可
+    const codeContent = JSON.stringify({
+      orderId: data.id ?? null,
+      customerId: data.customerId ?? null
+    })
+    const codeId = await BarcodeRegistryApi.create({
+      codeType: 'ORDER_FABRIC_SHIP_QR',
+      targetRoute: '/pages-curtain/ship/index',
+      codeContent
+    })
+    const url = await QRCode.toDataURL(codeId, { width: 180, margin: 1 })
+    mergedShippingQrCode.value = { url, code: codeId }
+    return
+  }
+
+  // 分开发货：按每套 curtain 的 structures[0].materials[0] 分别注册
   for (const page of materialPages.value) {
     const codeContent = JSON.stringify({
       orderId: data.id ?? null,
@@ -322,7 +333,23 @@ const open = async (data: SalesOrder) => {
   }
 }
 
+// ======================== 对外方法 ========================
+/**
+ * 打开预览弹窗，按发货模式注册并生成发货二维码
+ */
+const open = async (data: SalesOrder) => {
+  isMergedShipping.value = false
+  formData.value = data
+  visible.value = true
+  await generateMaterialQrCodes(data)
+}
+
 defineExpose({ open })
+
+watch(isMergedShipping, async () => {
+  if (!visible.value || !formData.value) return
+  await generateMaterialQrCodes(formData.value)
+})
 
 // ======================== 打印 ========================
 /** 在新窗口生成发货联 HTML，尺寸与加工单保持一致（100mm × 120mm） */

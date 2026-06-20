@@ -29,51 +29,46 @@
       >
         <Icon icon="ep:circle-close" class="mr-4px" />取消确认
       </el-button>
-      <!-- 新增收款：已保存且已关联客户时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 新增收款：已保存且已关联客户时显示 -->
       <el-button
         v-if="formData.id && formData.customerId"
         type="warning"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handleOpenCollection"
       >
         <Icon icon="ep:wallet" class="mr-4px" />新增收款
       </el-button>
-      <!-- 加急按钮：订单已保存且未加急时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 加急按钮：订单已保存且未加急时显示 -->
       <el-button
         v-if="formData.id && !formData.isExpedited"
         type="warning"
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handleExpedite"
         :loading="formLoading"
       >
         <Icon icon="ep:timer" class="mr-4px" />加急
       </el-button>
-      <!-- 销售单预览打印：订单已保存时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 销售单预览打印：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="info"
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrint"
       >
         <Icon icon="ep:printer" class="mr-4px" />销售单
       </el-button>
-      <!-- 面料加工单预览打印：订单已保存时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 面料加工单预览打印：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="info"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintProcessing"
       >
         <Icon icon="ep:document" class="mr-4px" />加工单
       </el-button>
-      <!-- 发货联按钮：订单已保存时显示；未确认时置灰，点击提示先确认订单 -->
+      <!-- 发货联按钮：订单已保存时显示 -->
       <el-button
         v-if="formData.id"
         type="success"
         plain
-        :class="{ 'print-btn-locked': !isConfirmed }"
         @click="handlePrintShipping"
       >
         <Icon icon="ep:van" class="mr-4px" />发货联
@@ -93,9 +88,9 @@
             <el-input
               v-model="customerInput"
               placeholder="输入客户名称后回车搜索"
-              :clearable="!isCustomerLocked && !isConfirmed"
+              :clearable="!isCustomerLocked"
               class="flex-1"
-              :disabled="isCustomerLocked || isConfirmed"
+              :disabled="isCustomerLocked"
               @keyup.enter="handleOpenCustomerSearch"
               @clear="handleClearCustomer"
             />
@@ -103,7 +98,7 @@
               :icon="SearchIcon"
               circle
               size="small"
-              :disabled="isCustomerLocked || isConfirmed"
+              :disabled="isCustomerLocked"
               @click="handleOpenCustomerSearch"
               title="搜索客户"
             />
@@ -111,31 +106,31 @@
         </el-form-item>
         <!-- 手机 2 -->
         <el-form-item label="手机" prop="mobile" style="flex: 2.5; min-width: 0">
-          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.mobile" placeholder="请输入手机" class="w-full" />
         </el-form-item>
         <!-- 下单日期 2 -->
         <el-form-item label="下单日期" prop="orderDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :disabled="isConfirmed" :clearable="false" />
+          <el-date-picker v-model="formData.orderDate" type="date" value-format="YYYY-MM-DD" placeholder="选择下单日期" class="!w-full" :clearable="false" />
         </el-form-item>
         <!-- 品牌 2 -->
         <el-form-item label="品牌" prop="brandId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.brandId" clearable filterable placeholder="请选择品牌" class="w-full" :disabled="isConfirmed">
+          <el-select v-model="formData.brandId" clearable filterable placeholder="请选择品牌" class="w-full">
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 物流 2 -->
         <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full" :disabled="isConfirmed">
+          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
             <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <!-- 收货人 2 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
-          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.receiver" placeholder="请输入收货人" class="w-full" />
         </el-form-item>
         <!-- 交付日期 2 -->
         <el-form-item label="交付日期" prop="deliveryDate" style="flex: 2.5; min-width: 0">
-          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" :disabled="isConfirmed" />
+          <el-date-picker v-model="formData.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="选择交付日期" class="!w-full" />
         </el-form-item>
 
       </div>
@@ -144,11 +139,11 @@
       <div class="flex gap-x-8px">
         <!-- 送货地址 3：地址文字较长，适当加宽 -->
         <el-form-item label="送货地址" prop="deliveryAddress" style="flex: 4; min-width: 0">
-          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.deliveryAddress" placeholder="请输入送货地址" class="w-full" />
         </el-form-item>
         <!-- 运费 2 -->
         <el-form-item label="运费" prop="freight" style="flex: 2; min-width: 0">
-          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" :disabled="isConfirmed" />
+          <el-input-number v-model="formData.freight" placeholder="请输入运费" :controls="false" class="!w-full" />
         </el-form-item>
         <!-- 优惠金额 2 -->
         <el-form-item label="优惠金额" prop="discountAmount" style="flex: 2; min-width: 0">
@@ -159,7 +154,6 @@
             :max="orderTotalBeforeDiscount"
             :controls="false"
             class="!w-full"
-            :disabled="isConfirmed"
           />
         </el-form-item>
         <!-- 金额 2 -->
@@ -185,7 +179,7 @@
         </el-form-item>
         <!-- 备注 6：剩余空间较多，撑满 -->
         <el-form-item label="备注" prop="note" style="flex: 6; min-width: 0">
-          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" :disabled="isConfirmed" />
+          <el-input v-model="formData.note" placeholder="请输入备注" class="w-full" />
         </el-form-item>
       </div>
     </el-form>
@@ -214,7 +208,7 @@
           class="mb-4px items-center rounded bg-blue-50 px-2px py-4px"
         >
           <el-col :span="1" class="flex justify-center">
-            <el-button v-if="!isConfirmed" link type="danger" size="small" @click="removeBatch(idx)">
+            <el-button link type="danger" size="small" @click="removeBatch(idx)">
               <Icon icon="ep:delete" />
             </el-button>
           </el-col>
@@ -237,7 +231,6 @@
               size="small"
               class="!w-full"
               clearable
-              :disabled="isConfirmed"
               @change="(spec: string) => handleBatchSpecChange(batch, spec)"
             >
               <el-option
@@ -273,7 +266,6 @@
               size="small"
               :controls="false"
               class="!w-full"
-              :disabled="isConfirmed"
             />
           </el-col>
           <el-col :span="2">
@@ -283,7 +275,6 @@
               size="small"
               :controls="false"
               class="!w-full"
-              :disabled="isConfirmed"
             />
           </el-col>
           <!-- 单位由批次回填，只读展示 -->
@@ -303,7 +294,7 @@
             />
           </el-col>
           <el-col :span="3">
-            <el-input v-model="batch.note" placeholder="备注" size="small" :disabled="isConfirmed" />
+            <el-input v-model="batch.note" placeholder="备注" size="small" />
           </el-col>
         </el-row>
       </template>
@@ -315,11 +306,9 @@
       />
     </div>
 
-    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表）；已确认订单禁止新增面料 -->
-    <template v-if="!isConfirmed">
-      <el-divider content-position="left">选择面料</el-divider>
-      <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
-    </template>
+    <!-- 面料选择面板（内嵌，确认后直接追加到上方列表） -->
+    <el-divider content-position="left">选择面料</el-divider>
+    <ProductBatchSelectPanel @confirm="handleBatchConfirm" />
 
     <!-- 面料单打印预览弹窗 -->
     <SalesOrderProductPrintDialog
@@ -490,8 +479,6 @@ const shippingDialogRef = ref<InstanceType<typeof SalesOrderProductShippingDialo
 /** 新增收款弹窗 */
 const collectionDialogRef = ref<InstanceType<typeof CollectionDialog>>()
 
-/** 订单是否已确认，用于控制收款按钮显示 */
-const isConfirmed = computed(() => formData.value.status === ZcSalesOrderStatus.CONFIRMED)
 /** 订单已保存后禁止切换客户（避免授权价、收款等关联数据错乱） */
 const isCustomerLocked = computed(() => !!formData.value.id)
 
@@ -514,13 +501,13 @@ const toCustomerSimpleVO = (customer: Customer): CustomerSimpleVO => ({
 
 /** 回车或点击搜索图标：打开客户搜索弹窗 */
 const handleOpenCustomerSearch = () => {
-  if (isCustomerLocked.value || isConfirmed.value) return
+  if (isCustomerLocked.value) return
   customerSearchDialogRef.value?.open(customerInput.value)
 }
 
 /** 清空客户输入时同步清除已选客户 */
 const handleClearCustomer = () => {
-  if (isCustomerLocked.value || isConfirmed.value) return
+  if (isCustomerLocked.value) return
   formData.value.customerId = undefined
   selectedCustomerInfo.value = null
   selectedCustomerBalance.value = null
@@ -588,7 +575,6 @@ const handleSelectCustomerFromSearch = async (customer: Customer) => {
 
 // ======================== 批次列表操作 ========================
 const removeBatch = (index: number) => {
-  if (isConfirmed.value) return
   formData.value.batchs.splice(index, 1)
 }
 
@@ -598,7 +584,6 @@ const removeBatch = (index: number) => {
  * 若当前有客户，并发查询各产品的授权价并覆盖单价
  */
 const handleBatchConfirm = async (rows: BatchConfirmItem[]) => {
-  if (isConfirmed.value) return
   const customerId = formData.value.customerId
   const newBatchs = await Promise.all(
     rows.map(async (row) => {
@@ -792,27 +777,12 @@ const ensureSavedBeforeAction = (): boolean => {
   return true
 }
 
-/** 打印/加急等操作前置校验：已保存且订单已确认 */
-const ensureConfirmedBeforeAction = (): boolean => {
-  if (!ensureSavedBeforeAction()) return false
-  if (formData.value.status !== ZcSalesOrderStatus.CONFIRMED) {
-    message.warning('请先确认订单')
-    return false
-  }
-  return true
-}
-
 // ======================== 提交 ========================
 const handleSave = () => {
-  if (isConfirmed.value) {
-    message.warning('请先取消订单确认才能编辑')
-    return
-  }
   submitForm()
 }
 
 const submitForm = async () => {
-  if (isConfirmed.value) return
   await formRef.value.validate()
   if (!formData.value.batchs || formData.value.batchs.length === 0) {
     message.warning('请至少添加一条面料数据')
@@ -883,7 +853,7 @@ const handleCancelConfirm = async () => {
 }
 
 const handleExpedite = async () => {
-  if (!ensureConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
   formLoading.value = true
   try {
     await SalesOrderApi.expeditedSalesOrder(formData.value.id!)
@@ -901,7 +871,7 @@ const handleOpenCollection = () => {
     message.warning('请先选择客户')
     return
   }
-  if (!ensureConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
   collectionDialogRef.value?.open(formData.value.customerId)
 }
 
@@ -938,19 +908,19 @@ const handleCollectionSuccess = async () => {
 // ======================== 打印 ========================
 /** 打开面料单销售单打印预览弹窗 */
 const handlePrint = () => {
-  if (!ensureConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
   printDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开面料加工单打印预览弹窗 */
 const handlePrintProcessing = () => {
-  if (!ensureConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
   processingPrintDialogRef.value?.open(formData.value as any)
 }
 
 /** 打开发货联打印预览弹窗 */
 const handlePrintShipping = () => {
-  if (!ensureConfirmedBeforeAction()) return
+  if (!ensureSavedBeforeAction()) return
   shippingDialogRef.value?.open(formData.value as any)
 }
 </script>
@@ -958,9 +928,4 @@ const handlePrintShipping = () => {
 <style scoped>
 /* flex 流式布局中防止 label 因列宽过窄换行；:deep() 穿透 Element Plus 内部 DOM */
 :deep(.el-form-item__label) { white-space: nowrap; }
-/* 未确认订单时按钮置灰，仍可点击以弹出提示 */
-.print-btn-locked {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
 </style>
