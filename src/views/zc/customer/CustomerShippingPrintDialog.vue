@@ -1,10 +1,16 @@
 <!--
   客户发货联打印预览弹窗
   功能：按客户信息生成发货联，右上角显示发货二维码（不包含订单号、订单ID）
-  使用方：views/zc/customer/index.vue
+  使用方：views/zc/customer/index.vue、CustomerSearchDialog.vue
 -->
 <template>
-  <el-dialog v-model="visible" width="660px" top="6vh" :close-on-click-modal="false">
+  <el-dialog
+    v-model="visible"
+    width="660px"
+    top="6vh"
+    append-to-body
+    :close-on-click-modal="false"
+  >
     <template #header>
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">发货联预览</span>
