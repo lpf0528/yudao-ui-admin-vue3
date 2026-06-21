@@ -74,14 +74,16 @@
             <span>
               <b>客户：</b>{{ customerName }}
               <b>电话：</b>{{ formData?.mobile || '-' }}
-              <b>地址：</b>{{ formData?.deliveryAddress || '-' }}
             </span>
             <span style="flex-shrink: 0; margin-left: 12px;"><b>下单日期：</b>{{ formData?.orderDate || '-' }}</span>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span><b>地址：</b>{{ formData?.deliveryAddress || '-' }}</span>
+            <span style="flex-shrink: 0; margin-left: 12px;"><b>交付日期：</b>{{ formData?.deliveryDate || '-' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <span>
               <b>物流：</b>{{ logisticName }}
-              <b>交付日期：</b>{{ formData?.deliveryDate || '-' }}
             </span>
             <span><b>订单号：</b>{{ formData?.orderNo || '-' }}</span>
           </div>
@@ -396,11 +398,15 @@ const handlePrint = () => {
   </div>
   <div style="line-height:1.4;margin-bottom:2px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;">
-      <span><b>客户：</b>${cName} <b>电话：</b>${fd.mobile || '-'} <b>地址：</b>${fd.deliveryAddress || '-'}</span>
+      <span><b>客户：</b>${cName} <b>电话：</b>${fd.mobile || '-'}</span>
       <span style="flex-shrink:0;margin-left:12px;"><b>下单日期：</b>${fd.orderDate || '-'}</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;">
-      <span><b>物流：</b>${lName} <b>交付日期：</b>${fd.deliveryDate || '-'}</span>
+      <span><b>地址：</b>${fd.deliveryAddress || '-'}</span>
+      <span style="flex-shrink:0;margin-left:12px;"><b>交付日期：</b>${fd.deliveryDate || '-'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <span><b>物流：</b>${lName}</span>
       <span><b>订单号：</b>${fd.orderNo || '-'}</span>
     </div>
     <div><b>备注：</b>${fd.note || '-'}</div>
