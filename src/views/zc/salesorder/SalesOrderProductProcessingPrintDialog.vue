@@ -77,7 +77,7 @@
               <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: center;">{{ idx + 1 }}</td>
               <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.productName || '-' }}</td>
               <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.spec || '-' }}</td>
-              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ formatMaterialQuantity(batch) }}</td>
+              <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right; font-weight: bold; font-size: 14pt; color: #000;">{{ formatMaterialQuantity(batch) }}</td>
               <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
@@ -204,7 +204,7 @@ const handlePrint = async () => {
       <td style="${tdS}text-align:center;">${idx + 1}</td>
       <td style="${tdS}">${b.productName || '-'}</td>
       <td style="${tdS}">${b.spec || '-'}</td>
-      <td style="${tdS}text-align:right;">${formatMaterialQuantity(b)}</td>
+      <td style="${tdS}text-align:right;font-weight:bold;font-size:14pt;color:#000;">${formatMaterialQuantity(b)}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
 

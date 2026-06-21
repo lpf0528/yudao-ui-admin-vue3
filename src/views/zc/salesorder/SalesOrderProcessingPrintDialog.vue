@@ -89,7 +89,13 @@
                       </template>
                     </template>
                     <template v-else>
-                      <span v-if="!cell.noLabel" style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ cell.label }}：</span><span :style="cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold'">{{ cell.value }}</span>
+                      <span
+                        v-if="!cell.noLabel"
+                        :style="cell.isDim ? 'font-size: 13px; color: #000; white-space: nowrap;' : 'font-size: 10px; color: #6B7280; white-space: nowrap;'"
+                      >{{ cell.label }}：</span>
+                      <span
+                        :style="cell.isDim ? 'font-size: 18px; font-weight: bold; color: #000;' : (cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold')"
+                      >{{ cell.value }}</span>
                     </template>
                   </td>
                 </tr>
@@ -115,7 +121,7 @@
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.productName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.spec || '-' }}</td>
-                  <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right;">{{ material.quantity ?? '-' }}</td>
+                  <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right; font-weight: bold; font-size: 16px; color: #000;">{{ material.quantity ?? '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.note || '' }}</td>
                 </tr>
               </tbody>
@@ -217,17 +223,19 @@ type StructureAttr = {
   noLabel?: boolean
   /** 同一单元格内多组 label/value，label 小号灰色、value 加粗 */
   labeledValues?: { label: string; value: string }[]
+  /** 宽高字段：label 黑色、value 加大加粗 */
+  isDim?: boolean
 }
 
 /** 将结构的属性字段按固定顺序收集，无值的字段跳过 */
 const getStructureAttrs = (structure: any): StructureAttr[] => {
   const attrs: StructureAttr[] = []
-  if (structure.width != null && structure.height != null) {
-    attrs.push({ label: '宽*高', value: `${structure.width}m*${structure.height}m` })
-  } else if (structure.width != null) {
-    attrs.push({ label: '宽', value: `${structure.width}m` })
-  } else if (structure.height != null) {
-    attrs.push({ label: '高', value: `${structure.height}m` })
+  // 宽、高分开展示，使用 isDim 样式（label 黑色、value 加大）
+  if (structure.width != null) {
+    attrs.push({ label: '宽', value: `${structure.width}m`, isDim: true })
+  }
+  if (structure.height != null) {
+    attrs.push({ label: '高', value: `${structure.height}m`, isDim: true })
   }
   const shapingPart = structure.isShaping === true ? '定型' : ''
   const openMethodPart = structure.openMethod ? (getDictLabel(DICT_TYPE.ZC_OPEN_METHOD, structure.openMethod) || structure.openMethod) : ''
@@ -368,6 +376,8 @@ const handlePrint = async () => {
       const attrRows = chunkAttrs(structure, 3)
       const sC = 'border:1px solid #4B5563;padding:4px 5px;width:33.33%;vertical-align:middle;'
       const lS = 'font-size:8pt;color:#6B7280;white-space:nowrap;'
+      const dimLabelS = 'font-size:10pt;color:#000;white-space:nowrap;'
+      const dimValS = 'font-size:16pt;font-weight:bold;color:#000;'
       const vS = 'font-size:14pt;'
 
       const renderAttrCell = (cell: StructureAttr) => {
@@ -379,6 +389,9 @@ const handlePrint = async () => {
             )
             .join('')
           return parts
+        }
+        if (cell.isDim) {
+          return `<span style="${dimLabelS}">${cell.label}：</span><span style="${dimValS}">${cell.value}</span>`
         }
         return `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:bold;' : vS + 'font-weight:bold;'}">${cell.value}</span>`
       }
@@ -410,7 +423,7 @@ const handlePrint = async () => {
                   <td style="${tdS}">${getElementName(m.elementId) || m.elementName || '-'}</td>
                   <td style="${tdS}">${m.productName || '-'}</td>
                   <td style="${tdS}">${m.spec || '-'}</td>
-                  <td style="${tdS}text-align:right;">${m.quantity ?? '-'}</td>
+                  <td style="${tdS}text-align:right;font-weight:bold;font-size:14pt;color:#000;">${m.quantity ?? '-'}</td>
                   <td style="${tdS}">${m.note || ''}</td>
                 </tr>`
                 )

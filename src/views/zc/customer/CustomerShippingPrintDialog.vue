@@ -1,6 +1,7 @@
 <!--
   客户发货联打印预览弹窗
   功能：按客户信息生成发货联，右上角显示发货二维码（不包含订单号、订单ID）
+  页面尺寸：宽100mm × 高120mm，预览与打印尺寸一致
   使用方：views/zc/customer/index.vue、CustomerSearchDialog.vue
 -->
 <template>
@@ -22,28 +23,30 @@
       </div>
     </template>
 
-    <!-- 预览区：单张发货联 -->
+    <!-- 预览区：宽100mm × 高120mm，与打印页面尺寸一致 -->
     <div style="background: #e8e8e8; padding: 20px; display: flex; justify-content: center;">
       <div
         style="
           background: white;
-          width: 600px;
+          width: 100mm;
+          height: 120mm;
           padding: 24px 28px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.18);
           font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
           color: #1a1a1a;
           box-sizing: border-box;
           border: 1px solid #ddd;
+          overflow: hidden;
         "
       >
         <!-- 抬头：品牌 + 发货联 + 右上角二维码 -->
         <div style="display: flex; align-items: flex-start; margin-bottom: 28px; border-bottom: 2px solid #1a1a1a; padding-bottom: 16px;">
           <div style="flex: 1; min-width: 0;">
             <div style="text-align: center;">
-              <div style="font-size: 32px; font-weight: 700; letter-spacing: 2px; margin-top: 4px; line-height: 1.1;">
+              <div style="font-size: 30px; font-weight: 700; letter-spacing: 2px; margin-top: 4px; line-height: 1.1;">
                 发货联
               </div>
-              <div style="font-size: 24px; font-weight: 800; letter-spacing: 3px; line-height: 1.1; margin-top: 4px;">
+              <div style="font-size: 22px; font-weight: 800; letter-spacing: 3px; line-height: 1.1; margin-top: 4px;">
                 {{ slipData.brandName || '-' }}
               </div>
             </div>
@@ -54,13 +57,13 @@
             </template>
             <div
               v-else
-              style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
+              style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
             >二维码</div>
           </div>
         </div>
 
         <!-- 信息列表 -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 21px; line-height: 2;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 19px; line-height: 2;">
           <tbody>
             <tr>
               <td style="color: #666; white-space: nowrap; padding-right: 16px; width: 120px;">客户名称</td>
@@ -167,12 +170,12 @@ const open = async (data: Customer) => {
 defineExpose({ open })
 
 // ======================== 打印 ========================
-/** 在新窗口生成发货联 HTML 并触发打印对话框 */
+/** 在新窗口生成发货联 HTML 并触发打印对话框（页面尺寸 100mm × 120mm） */
 const handlePrint = () => {
   const d = slipData.value
   const qrImg = shippingQrCode.value
     ? `<img src="${shippingQrCode.value.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
-    : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11pt;">二维码</div>`
+    : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9pt;">二维码</div>`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -180,9 +183,20 @@ const handlePrint = () => {
   <meta charset="utf-8">
   <title>${d.brandName || ''} 发货联</title>
   <style>
-    @page { size: A5; margin: 12mm; }
+    @page { size: 100mm 120mm; margin: 0mm; }
+    html, body { margin: 0; padding: 0; }
     * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
-    body { margin: 0; padding: 0; color: #1a1a1a; font-size: 20pt; }
+    body { color: #1a1a1a; font-size: 18pt; }
+    .page {
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+      padding: 24px 28px;
+      width: 100mm;
+      height: 120mm;
+      box-sizing: border-box;
+    }
+    .page:last-child { page-break-after: auto; }
     .header {
       display: flex;
       align-items: flex-start;
@@ -193,25 +207,26 @@ const handlePrint = () => {
     .header-main { flex: 1; min-width: 0; }
     .header-title-wrap { text-align: center; }
     .header-brand {
-      font-size: 27pt;
+      font-size: 25pt;
       font-weight: 800;
       letter-spacing: 4pt;
       line-height: 1.1;
     }
     .header-title {
-      font-size: 35pt;
+      font-size: 33pt;
       font-weight: 700;
       letter-spacing: 3pt;
       line-height: 1.1;
       margin-top: 4pt;
     }
     .header-qr { width: 117pt; flex-shrink: 0; padding-left: 8pt; text-align: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 20pt; line-height: 2.2; }
+    table { width: 100%; border-collapse: collapse; font-size: 18pt; line-height: 2.2; }
     td.lbl { color: #555; white-space: nowrap; padding-right: 18pt; width: 105pt; }
     td.val { font-weight: 600; word-break: break-all; }
   </style>
 </head>
 <body>
+<div class="page">
   <div class="header">
     <div class="header-main">
       <div class="header-title-wrap">
@@ -231,10 +246,11 @@ const handlePrint = () => {
       <tr><td class="lbl">打印日期</td><td class="val">${d.printDate}</td></tr>
     </tbody>
   </table>
+</div>
 </body>
 </html>`
 
-  const win = window.open('', '_blank', 'width=700,height=600')
+  const win = window.open('', '_blank', 'width=480,height=640')
   if (!win) {
     ElMessage.warning('浏览器阻止了弹窗，请允许弹窗后重试')
     return
