@@ -115,6 +115,7 @@
       </el-tooltip>
     </div>
 
+    <div ref="enterNavRootRef" @keydown.enter="handleEnterFocusNext">
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
       <!-- 第一行：flex 流式布局，数字为各字段宽度比例 -->
       <div class="flex gap-x-8px">
@@ -131,6 +132,7 @@
               :clearable="!isCustomerLocked"
               class="flex-1"
               :disabled="isCustomerLocked"
+              data-enter-skip
               @keyup.enter="handleOpenCustomerSearch"
               @clear="handleClearCustomer"
             />
@@ -356,6 +358,7 @@
         class="py-16px"
       />
     </div>
+    </div>
 
     <!-- 面料选择面板（内嵌，确认后直接追加到上方列表）；订单已确认后隐藏 -->
     <template v-if="!hasConfirmTime">
@@ -531,6 +534,63 @@ const formRules = {
 }
 
 const formRef = ref()
+/** 回车跳转：覆盖基础信息表单与面料批次列表内的可编辑输入框 */
+const enterNavRootRef = ref<HTMLElement>()
+
+/** 收集容器内按 DOM 顺序排列、可聚焦的输入框（跳过禁用、只读、隐藏及客户搜索框） */
+const getEnterNavigableInputs = (): HTMLInputElement[] => {
+  const root = enterNavRootRef.value
+  if (!root) return []
+  return Array.from(root.querySelectorAll<HTMLInputElement>('input:not([disabled]):not([type="hidden"])')).filter(
+    (input) => {
+      if (input.closest('[data-enter-skip]')) return false
+      // el-select / 日期 / 自动完成内部 input 常带 readonly，但仍需参与回车跳转
+      const inElFormControl = input.closest('.el-select, .el-date-picker, .el-autocomplete')
+      if (!inElFormControl && input.readOnly) return false
+      // 过滤不可见输入（如日期选择器等附属隐藏 input）
+      if (input.offsetParent === null) {
+        const { width, height } = input.getBoundingClientRect()
+        if (width === 0 && height === 0) return false
+      }
+      return true
+    }
+  )
+}
+
+/** Element Plus 下拉/日期面板展开时，回车应留给组件自身（选中选项、确认日期等） */
+const hasOpenElPopper = () =>
+  Array.from(document.querySelectorAll('.el-popper')).some(
+    (el) => el.getAttribute('aria-hidden') !== 'true' && window.getComputedStyle(el).visibility !== 'hidden'
+  )
+
+/** 回车跳转到下一个可编辑输入框 */
+const handleEnterFocusNext = (event: KeyboardEvent) => {
+  if (event.isComposing) return
+  const target = event.target as HTMLElement
+  if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return
+  if (target.closest('[data-enter-skip]')) return
+  if (hasOpenElPopper()) return
+
+  const input = target as HTMLInputElement
+  if (input.disabled) return
+  const inElFormControl = input.closest('.el-select, .el-date-picker, .el-autocomplete')
+  if (!inElFormControl && input.readOnly) return
+
+  const inputs = getEnterNavigableInputs()
+  const currentIndex = inputs.indexOf(input)
+  if (currentIndex < 0 || currentIndex >= inputs.length - 1) return
+
+  event.preventDefault()
+  const next = inputs[currentIndex + 1]
+  next.focus()
+  // 数字类输入框聚焦后全选，便于直接覆盖录入
+  try {
+    next.select?.()
+  } catch {
+    // select() 对部分 input 无效，忽略
+  }
+}
+
 const printDialogRef = ref<InstanceType<typeof SalesOrderProductPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProductProcessingPrintDialog>>()
 const shippingDialogRef = ref<InstanceType<typeof SalesOrderProductShippingDialog>>()

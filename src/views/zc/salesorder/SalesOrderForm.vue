@@ -117,6 +117,7 @@
       </el-button> -->
     </div>
 
+    <div ref="enterNavRootRef" @keydown.enter="handleEnterFocusNext">
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="68px" v-loading="formLoading">
       <!-- 第一行：订单号、客户、手机、下单日期、品牌、物流、收货人、交付日期 -->
       <div class="flex gap-x-8px">
@@ -133,6 +134,7 @@
               :clearable="!hasOrderNo"
               :disabled="hasOrderNo"
               class="flex-1"
+              data-enter-skip
               @keyup.enter="handleOpenCustomerSearch"
               @clear="handleClearCustomer"
             />
@@ -259,7 +261,8 @@
                 <el-select
                   v-model="curtain.curtainId"
                   clearable
-                  placeholder="请选择款式"
+                  filterable
+                  placeholder="请选择或搜索款式"
                   class="w-1/1"
                   @change="(val) => handleCurtainChange(curtain, val)"
                 >
@@ -275,14 +278,7 @@
                 <el-input v-model="curtain.room" placeholder="请输入房间" />
               </el-form-item>
               <el-form-item label="褶倍" class="curtain-field curtain-field-metric form-field-compact">
-                <el-select v-model="curtain.pleatRatioValue" clearable placeholder="请选择褶倍" class="w-1/1">
-                  <el-option
-                    v-for="item in pleatRatioList"
-                    :key="item.id"
-                    :label="item.value"
-                    :value="item.value"
-                  />
-                </el-select>
+                <el-input-number v-model="curtain.pleatRatioValue" placeholder="请输入褶倍" :controls="false" class="!w-full" />
               </el-form-item>
               <el-form-item label="褶距" class="curtain-field curtain-field-metric form-field-compact">
                 <el-input-number v-model="curtain.pleatsDistance" placeholder="请输入褶距" :controls="false" class="!w-full" />
@@ -335,7 +331,7 @@
             <!-- 结构字段行：flex 按内容定宽，减少字段间距 -->
             <div class="structure-form-row flex flex-wrap items-start gap-x-8px gap-y-8px">
               <el-form-item label="结构" class="structure-field structure-field-name form-field-compact">
-                <el-select v-model="structure.structureId" clearable placeholder="请选择结构" class="w-1/1">
+                <el-select v-model="structure.structureId" clearable filterable placeholder="请选择或搜索结构" class="w-1/1">
                   <el-option
                     v-for="item in curtainStructureList"
                     :key="item.id"
@@ -454,7 +450,7 @@
                     </el-tooltip>
                   </el-col>
                   <el-col :span="3">
-                    <el-select v-model="material.elementId" clearable placeholder="组件类型" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
+                    <el-select v-model="material.elementId" clearable filterable placeholder="请选择或搜索组件" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
                       <el-option
                         v-for="item in curtainStructureElementList"
                         :key="item.id"
@@ -472,6 +468,7 @@
                         size="small"
                         class="!w-full"
                         readonly
+                        data-enter-skip
                         :disabled="!isMaterialEditable(material)"
                         @keyup.enter="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)"
                       />
@@ -486,6 +483,7 @@
                         size="small"
                         class="!w-full"
                         readonly
+                        data-enter-skip
                         :disabled="!isMaterialEditable(material)"
                         @keyup.enter="isMaterialEditable(material) && batchSelectRef?.open(material, formData.customerId)"
                       />
@@ -527,6 +525,7 @@
           </div>
         </div>
       </el-card>
+    </div>
     </div>
     <!-- 客户搜索弹窗 -->
     <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
@@ -610,7 +609,6 @@ import { CustomerApi, type Customer, type CustomerSimpleVO } from '@/api/zc/cust
 import { BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { CurtainApi, CurtainSimpleVO } from '@/api/zc/curtain'
-import { CurtainPleatRatioApi, CurtainPleatRatioSimpleVO } from '@/api/zc/curtainpleatratio'
 import { CurtainStructureApi, CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import { CurtainStructureElementApi, CurtainStructureElementSimpleVO } from '@/api/zc/curtainstructureelement'
 import { CurtainInstallProcessSimpleVO } from '@/api/zc/curtaininstallprocess'
@@ -689,7 +687,6 @@ const syncCustomerDisplay = async (customerId: number) => {
 }
 
 const curtainList = ref<CurtainSimpleVO[]>([])
-const pleatRatioList = ref<CurtainPleatRatioSimpleVO[]>([])
 const curtainStructureList = ref<CurtainStructureSimpleVO[]>([])
 const curtainStructureElementList = ref<CurtainStructureElementSimpleVO[]>([])
 const hasAttr = (structureId: number | undefined, attr: string) => {
@@ -964,6 +961,63 @@ const formRules = {
 }
 
 const formRef = ref()
+/** 回车跳转：覆盖基础信息表单、窗帘列表及用料明细内的可编辑输入框 */
+const enterNavRootRef = ref<HTMLElement>()
+
+/** 收集容器内按 DOM 顺序排列、可聚焦的输入框（跳过禁用、只读、隐藏及特殊回车行为字段） */
+const getEnterNavigableInputs = (): HTMLInputElement[] => {
+  const root = enterNavRootRef.value
+  if (!root) return []
+  return Array.from(root.querySelectorAll<HTMLInputElement>('input:not([disabled]):not([type="hidden"])')).filter(
+    (input) => {
+      if (input.closest('[data-enter-skip]')) return false
+      // el-select / 日期 / 自动完成内部 input 常带 readonly，但仍需参与回车跳转
+      const inElFormControl = input.closest('.el-select, .el-date-picker, .el-autocomplete')
+      if (!inElFormControl && input.readOnly) return false
+      // 过滤不可见输入（如日期选择器等附属隐藏 input）
+      if (input.offsetParent === null) {
+        const { width, height } = input.getBoundingClientRect()
+        if (width === 0 && height === 0) return false
+      }
+      return true
+    }
+  )
+}
+
+/** Element Plus 下拉/日期面板展开时，回车应留给组件自身（选中选项、确认日期等） */
+const hasOpenElPopper = () =>
+  Array.from(document.querySelectorAll('.el-popper')).some(
+    (el) => el.getAttribute('aria-hidden') !== 'true' && window.getComputedStyle(el).visibility !== 'hidden'
+  )
+
+/** 回车跳转到下一个可编辑输入框 */
+const handleEnterFocusNext = (event: KeyboardEvent) => {
+  if (event.isComposing) return
+  const target = event.target as HTMLElement
+  if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return
+  if (target.closest('[data-enter-skip]')) return
+  if (hasOpenElPopper()) return
+
+  const input = target as HTMLInputElement
+  if (input.disabled) return
+  const inElFormControl = input.closest('.el-select, .el-date-picker, .el-autocomplete')
+  if (!inElFormControl && input.readOnly) return
+
+  const inputs = getEnterNavigableInputs()
+  const currentIndex = inputs.indexOf(input)
+  if (currentIndex < 0 || currentIndex >= inputs.length - 1) return
+
+  event.preventDefault()
+  const next = inputs[currentIndex + 1]
+  next.focus()
+  // 数字类输入框聚焦后全选，便于直接覆盖录入
+  try {
+    next.select?.()
+  } catch {
+    // select() 对部分 input 无效，忽略
+  }
+}
+
 const batchSelectRef = ref<InstanceType<typeof ProductBatchSelectDialog>>()
 const printDialogRef = ref<InstanceType<typeof SalesOrderPrintDialog>>()
 const processingPrintDialogRef = ref<InstanceType<typeof SalesOrderProcessingPrintDialog>>()
@@ -1162,12 +1216,10 @@ const ensureOrderConfirmedBeforeAction = (): boolean => {
 onMounted(async () => {
   ;[
     curtainList.value,
-    pleatRatioList.value,
     curtainStructureList.value,
     curtainStructureElementList.value
   ] = await Promise.all([
     CurtainApi.getCurtainSimpleList(),
-    CurtainPleatRatioApi.getCurtainPleatRatioSimpleList(),
     CurtainStructureApi.getCurtainStructureSimpleList(),
     CurtainStructureElementApi.getCurtainStructureElementSimpleList()
   ])
