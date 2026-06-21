@@ -28,13 +28,13 @@
           margin: 0 auto;
           padding: 32px 36px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-          font-size: 13px;
+          font-size: 14px;
           color: #1a1a1a;
           font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
         "
       >
         <!-- 标题区：居中显示 -->
-        <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 8px;">
+        <div style="text-align: center; font-size: 25px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 8px;">
           {{ brandName ? brandName + ' ' : '' }}成品销售单
         </div>
 
@@ -61,7 +61,7 @@
         </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 6px 0 8px;"></div>
+        <div style="border-top: 2px solid #000; margin: 6px 0 8px;"></div>
 
         <!-- 窗帘明细列表 -->
         <div
@@ -73,11 +73,10 @@
           <div
             style="
               background: #EFF6FF;
-              border: 1px solid #BFDBFE;
-              border-left: 4px solid #3B82F6;
+              border: 2px solid #000;
               padding: 8px 12px;
               font-weight: 600;
-              font-size: 13px;
+              font-size: 14px;
               line-height: 1.6;
             "
           >
@@ -95,13 +94,13 @@
             <template v-if="curtain.mountings?.length">
               &nbsp;|&nbsp;<span style="font-weight: 400;">配件：</span>{{ Array.isArray(curtain.mountings) ? curtain.mountings.join('、') : curtain.mountings }}
             </template>
-            <span style="float: right; color: #DC2626; font-size: 14px;">
+            <span style="float: right; color: #DC2626; font-size: 15px;">
               金额：{{ formatMoney(curtain.amount) }}
             </span>
           </div>
 
           <!-- 窗帘备注 -->
-          <div v-if="curtain.note" style="padding: 4px 12px; font-size: 12px; color: #4B5563; border: 1px solid #BFDBFE; border-top: none;">
+          <div v-if="curtain.note" style="padding: 4px 12px; font-size: 13px; color: #4B5563; border: 2px solid #000; border-top: none;">
             备注：{{ curtain.note }}
           </div>
 
@@ -112,7 +111,7 @@
             style="margin-left: 16px; margin-top: 6px;"
           >
             <!-- 结构描述行 -->
-            <div style="background: #F9FAFB; border: 1px solid #D1D5DB; padding: 5px 10px; font-size: 12px; color: #374151;">
+            <div style="background: #F9FAFB; border: 2px solid #000; padding: 5px 10px; font-size: 13px; color: #374151;">
               <b>结构 #{{ sIdx + 1 }}：</b>{{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
               <template v-if="structure.width != null">　宽：{{ structure.width }}</template>
               <template v-if="structure.height != null">　高：{{ structure.height }}</template>
@@ -133,28 +132,28 @@
             <!-- 用料表格 -->
             <table
               v-if="(structure as any).materials?.length"
-              style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 2px;"
+              style="width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 2px;"
             >
               <thead>
                 <tr style="background: #F3F4F6;">
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">组件类型</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">货号</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">小计</th>
-                  <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">组件类型</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">货号</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">小计</th>
+                  <th style="border: 2px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(material, mIdx) in (structure as any).materials" :key="mIdx">
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.productName || '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.batchNo || '-' }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMoney(material.price) }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMaterialQuantity(material) }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(material.amount) }}</td>
-                  <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ material.note || '' }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px;">{{ material.productName || '-' }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px;">{{ material.batchNo || '-' }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px; text-align: right;">{{ formatMoney(material.price) }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px; text-align: right;">{{ formatMaterialQuantity(material) }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(material.amount) }}</td>
+                  <td style="border: 2px solid #000; padding: 4px 6px;">{{ material.note || '' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -162,7 +161,7 @@
             <!-- 无用料时提示 -->
             <div
               v-if="!(structure as any).materials?.length"
-              style="padding: 4px 10px; font-size: 11px; color: #9CA3AF; border: 1px solid #D1D5DB; border-top: none;"
+              style="padding: 4px 10px; font-size: 12px; color: #9CA3AF; border: 2px solid #000; border-top: none;"
             >
               （无用料）
             </div>
@@ -170,8 +169,8 @@
         </div>
 
         <!-- 金额汇总 -->
-        <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
-          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center; flex-wrap: wrap;">
+        <div style="border-top: 2px solid #000; margin-top: 20px; padding-top: 12px;">
+          <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 14px; align-items: center; flex-wrap: wrap;">
             <div v-if="balanceLog && !hidePrices"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
             <div v-if="formData?.freight">
               <b>运费：</b>{{ formatMoney(formData.freight) }}
@@ -181,7 +180,7 @@
               <b>优惠金额：</b>
               <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
             </div>
-            <div style="font-size: 16px; font-weight: bold;">
+            <div style="font-size: 17px; font-weight: bold;">
               合计：<span style="color: #DC2626;">{{ formatMoney(formData?.amount ?? 0) }}</span>
             </div>
             <div v-if="balanceLog && !hidePrices"><b>账户余额：</b>{{ formatBalance(balanceLog.balanceAfter) }}</div>
@@ -189,7 +188,7 @@
         </div>
 
         <!-- 底部：左侧品牌联系信息，右侧签字栏 -->
-        <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 13px; color: #555;">
+        <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 14px; color: #555;">
           <div style="flex: 1; line-height: 1.8;">
             <div><b>电话：</b>{{ brandDetail?.mobile || '-' }}</div>
             <div><b>地址：</b>{{ brandDetail?.address || '-' }}</div>
@@ -202,7 +201,7 @@
         </div>
 
         <!-- 底部提示语 -->
-        <div style="margin-top: 20px; font-size: 12px; color: #555; border-top: 1px solid #ddd; padding-top: 10px;">
+        <div style="margin-top: 20px; font-size: 13px; color: #555; border-top: 2px solid #000; padding-top: 10px;">
           尊敬的客户：销售单确认后，布料一经裁剪后一概不予退换。
         </div>
       </div>
@@ -369,8 +368,8 @@ const handlePrint = () => {
   const bName = brandName.value
   const lName = logisticName.value
 
-  const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
-  const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
+  const thS = 'border:2px solid #000;padding:4px 6px;font-weight:600;'
+  const tdS = 'border:2px solid #000;padding:4px 6px;'
   /** 价格掩码辅助：隐藏价格模式下返回 *** */
   const mp = (val: any) => formatMoney(val)
 
@@ -400,7 +399,7 @@ const handlePrint = () => {
 
       const mats: any[] = structure.materials || []
       const materialsHtml = mats.length
-        ? `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;">
+        ? `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:2px;">
             <thead>
               <tr style="background:#F3F4F6;">
                 <th style="${thS}text-align:left;">组件类型</th>
@@ -425,11 +424,11 @@ const handlePrint = () => {
                 </tr>`).join('')}
             </tbody>
           </table>`
-        : `<div style="padding:4px 10px;font-size:11px;color:#9CA3AF;border:1px solid #D1D5DB;border-top:none;">（无用料）</div>`
+        : `<div style="padding:4px 10px;font-size:12px;color:#9CA3AF;border:2px solid #000;border-top:none;">（无用料）</div>`
 
       return `
         <div style="margin-left:16px;margin-top:6px;">
-          <div style="background:#F9FAFB;border:1px solid #D1D5DB;padding:5px 10px;font-size:12px;color:#374151;">
+          <div style="background:#F9FAFB;border:2px solid #000;padding:5px 10px;font-size:13px;color:#374151;">
             <b>结构 #${sIdx + 1}：</b>${strName}${attrs ? '　' + attrs : ''}
           </div>
           ${materialsHtml}
@@ -437,18 +436,18 @@ const handlePrint = () => {
     }).join('')
 
     const noteRow = curtain.note
-      ? `<div style="padding:4px 12px;font-size:12px;color:#4B5563;border:1px solid #BFDBFE;border-top:none;">备注：${curtain.note}</div>`
+      ? `<div style="padding:4px 12px;font-size:13px;color:#4B5563;border:2px solid #000;border-top:none;">备注：${curtain.note}</div>`
       : ''
 
     return `
       <div style="margin-bottom:16px;">
-        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #3B82F6;padding:8px 12px;font-weight:600;font-size:13px;line-height:1.6;">
+        <div style="background:#EFF6FF;border:2px solid #000;padding:8px 12px;font-weight:600;font-size:14px;line-height:1.6;">
           <span style="color:#1D4ED8;">窗帘 #${idx + 1}</span>
           &nbsp;|&nbsp;<span style="font-weight:400;">款式：</span>${ctnName}
           &nbsp;|&nbsp;<span style="font-weight:400;">房间：</span>${curtain.room || '-'}
           ${curtain.pleatRatioValue != null ? `&nbsp;|&nbsp;<span style="font-weight:400;">褶倍：</span>${curtain.pleatRatioValue}` : ''}
           ${mountingsStr ? `&nbsp;|&nbsp;<span style="font-weight:400;">配件：</span>${mountingsStr}` : ''}
-          <span style="float:right;color:#DC2626;font-size:14px;">金额：${formatMoney(curtain.amount)}</span>
+          <span style="float:right;color:#DC2626;font-size:15px;">金额：${formatMoney(curtain.amount)}</span>
         </div>
         ${noteRow}
         ${structuresHtml}
@@ -465,13 +464,13 @@ const handlePrint = () => {
       ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
       : ''
   const summaryHtml = `
-    <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
-      <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;flex-wrap:wrap;">
+    <div style="border-top:2px solid #000;margin-top:20px;padding-top:12px;">
+      <div style="display:flex;justify-content:flex-end;gap:32px;font-size:14px;align-items:center;flex-wrap:wrap;">
         ${balanceBeforeHtml}
         ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
         <div><b>本单总金额：</b>${formatTotalAmount(fd.totalAmount)}</div>
         ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
-        <div style="font-size:16px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
+        <div style="font-size:17px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
         ${balanceAfterHtml}
       </div>
     </div>`
@@ -485,13 +484,13 @@ const handlePrint = () => {
   <style>
     @page { size: A4; margin: 15mm; }
     * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
-    body { margin: 0; padding: 20px; color: #1a1a1a; font-size: 13px; }
+    body { margin: 0; padding: 20px; color: #1a1a1a; font-size: 14px; }
     b { font-weight: 600; }
   </style>
 </head>
 <body>
   <!-- 标题居中 -->
-  <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:8px;">
+  <div style="text-align:center;font-size:25px;font-weight:bold;letter-spacing:6px;line-height:1.2;margin-bottom:8px;">
     ${bName ? bName + '&nbsp;' : ''}销售单
   </div>
 
@@ -508,12 +507,12 @@ const handlePrint = () => {
     <div><b>备注：</b>${fd.note || '-'}</div>
   </div>
 
-  <div style="border-top:1px solid #ccc;margin:6px 0 8px;"></div>
+  <div style="border-top:2px solid #000;margin:6px 0 8px;"></div>
 
   ${curtainsHtml}
   ${summaryHtml}
 
-  <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;font-size:13px;color:#555;">
+  <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;font-size:14px;color:#555;">
     <div style="flex:1;line-height:1.8;">
       <div><b>电话：</b>${brandDetail.value?.mobile || '-'}</div>
       <div><b>地址：</b>${brandDetail.value?.address || '-'}</div>
@@ -525,7 +524,7 @@ const handlePrint = () => {
     </div>
   </div>
 
-  <div style="margin-top:20px;font-size:12px;color:#555;border-top:1px solid #ddd;padding-top:10px;">
+  <div style="margin-top:20px;font-size:13px;color:#555;border-top:2px solid #000;padding-top:10px;">
     尊敬的客户：销售单确认后，布料一经裁剪后一概不予退换。
   </div>
 </body>

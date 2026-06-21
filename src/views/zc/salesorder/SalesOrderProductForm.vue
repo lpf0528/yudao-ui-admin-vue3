@@ -513,7 +513,6 @@ const hasConfirmTime = computed(() => {
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
-  logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   discountAmount: [{
     validator: (_rule: unknown, value: number | undefined, callback: (err?: Error) => void) => {
@@ -914,10 +913,13 @@ const submitForm = async () => {
     message.warning('请至少添加一条面料数据')
     return
   }
-  const emptySpecIndex = formData.value.batchs.findIndex((b) => !b.spec?.trim())
-  if (emptySpecIndex !== -1) {
-    message.warning(`第 ${emptySpecIndex + 1} 行面料规格不能为空`)
-    return
+  // 新增时校验规格必填；更新时允许规格为空（历史数据兼容）
+  if (formType.value === 'create') {
+    const emptySpecIndex = formData.value.batchs.findIndex((b) => !b.spec?.trim())
+    if (emptySpecIndex !== -1) {
+      message.warning(`第 ${emptySpecIndex + 1} 行面料规格不能为空`)
+      return
+    }
   }
   formLoading.value = true
   try {

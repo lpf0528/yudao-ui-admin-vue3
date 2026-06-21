@@ -942,7 +942,6 @@ const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
   brandId: [{ required: true, message: '品牌不能为空', trigger: 'blur' }],
-  logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
