@@ -429,10 +429,10 @@
                   <el-col :span="3">批次</el-col>
                   <el-col :span="2">规格</el-col>
                   <el-col :span="2">用料</el-col>
-                  <el-col :span="2">单价</el-col>
                   <el-col :span="2">单位</el-col>
+                  <el-col :span="2">单价</el-col>
                   <el-col :span="2" style="display:none">折扣率</el-col>
-                  <el-col :span="2">小计</el-col>
+                  <el-col :span="2">金额</el-col>
                   <el-col :span="2">备注</el-col>
                 </el-row>
                 <el-row
@@ -499,9 +499,6 @@
                     <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
-                  </el-col>
-                  <el-col :span="2">
                     <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
                       <el-option
                         v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PRODUCT_UNIT)"
@@ -511,12 +508,15 @@
                       />
                     </el-select>
                   </el-col>
+                  <el-col :span="2">
+                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
+                  </el-col>
                   <el-col :span="2" style="display:none">
                     <el-input-number v-model="material.discountRate" placeholder="折扣率" size="small" :controls="false" class="!w-full" />
                   </el-col>
                   <el-col :span="2">
-                    <!-- 小计由单价×用料×折扣率自动计算，禁止手动编辑 -->
-                    <el-input-number v-model="material.amount" placeholder="小计" size="small" :controls="false" class="!w-full" disabled />
+                    <!-- 金额由单价×用料×折扣率自动计算，禁止手动编辑 -->
+                    <el-input-number v-model="material.amount" placeholder="金额" size="small" :controls="false" class="!w-full" disabled />
                   </el-col>
                   <el-col :span="2">
                     <el-input v-model="material.note" placeholder="备注" size="small" :disabled="!isMaterialEditable(material)" />
@@ -944,7 +944,6 @@ const formRules = {
   brandId: [{ required: true, message: '品牌不能为空', trigger: 'blur' }],
   logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
-  deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
   payStatus: [{ required: true, message: '结算状态不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '状态不能为空', trigger: 'blur' }],

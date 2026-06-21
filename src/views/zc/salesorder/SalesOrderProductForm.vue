@@ -1,7 +1,7 @@
 <!--
   面料单 新增/修改弹窗
   表单顶部（操作栏 + 基础信息三行）与成品单（SalesOrderForm.vue）保持一致
-  底部为面料批次列表（货号 / 规格 / 批次 / 单价 / 用料 / 单位 / 金额 / 备注）
+  底部为面料批次列表（货号 / 批次 / 规格 / 用料 / 单位 / 单价 / 金额 / 备注）
   通过 open(type, id?) 方法打开，成功后 emit('success') 通知父组件刷新列表
 -->
 <template>
@@ -240,11 +240,11 @@
         <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-4px px-4px">
           <el-col :span="1" />
           <el-col :span="5">货号</el-col>
-          <el-col :span="3">规格</el-col>
           <el-col :span="4">批次</el-col>
-          <el-col :span="2">单价</el-col>
+          <el-col :span="3">规格</el-col>
           <el-col :span="2">用料</el-col>
           <el-col :span="2">单位</el-col>
+          <el-col :span="2">单价</el-col>
           <el-col :span="2">金额</el-col>
           <el-col :span="3">备注</el-col>
         </el-row>
@@ -265,6 +265,16 @@
             <el-input
               v-model="batch.productName"
               placeholder="货号"
+              size="small"
+              class="!w-full"
+              readonly
+            />
+          </el-col>
+          <!-- 批次号（由面板回填，只读展示） -->
+          <el-col :span="4">
+            <el-input
+              v-model="batch.batchNo"
+              placeholder="批次"
               size="small"
               class="!w-full"
               readonly
@@ -298,26 +308,6 @@
               :readonly="!!batch.batchId || hasConfirmTime"
             />
           </el-col>
-          <!-- 批次号（由面板回填，只读展示） -->
-          <el-col :span="4">
-            <el-input
-              v-model="batch.batchNo"
-              placeholder="批次"
-              size="small"
-              class="!w-full"
-              readonly
-            />
-          </el-col>
-          <el-col :span="2">
-            <el-input-number
-              v-model="batch.price"
-              placeholder="单价"
-              size="small"
-              :controls="false"
-              class="!w-full"
-              :disabled="hasConfirmTime"
-            />
-          </el-col>
           <el-col :span="2">
             <el-input-number
               v-model="batch.quantity"
@@ -332,6 +322,16 @@
           <el-col :span="2" class="flex items-center justify-center">
             <dict-tag v-if="batch.unitValue" :type="DICT_TYPE.ZC_PRODUCT_UNIT" :value="batch.unitValue" />
             <span v-else class="text-xs text-gray-400">-</span>
+          </el-col>
+          <el-col :span="2">
+            <el-input-number
+              v-model="batch.price"
+              placeholder="单价"
+              size="small"
+              :controls="false"
+              class="!w-full"
+              :disabled="hasConfirmTime"
+            />
           </el-col>
           <!-- 金额由数量 × 单价自动计算，禁止手动编辑 -->
           <el-col :span="2">
@@ -515,7 +515,6 @@ const formRules = {
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
   logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
-  deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   discountAmount: [{
     validator: (_rule: unknown, value: number | undefined, callback: (err?: Error) => void) => {
       if (value == null || value === '') {
