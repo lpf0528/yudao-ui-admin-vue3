@@ -158,11 +158,18 @@
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <!-- 物流 2 -->
-        <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
-            <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
-          </el-select>
+        <!-- 物流 2：支持从列表选择或手输；未匹配到列表项时 logisticId 为空，仅传 logisticName -->
+        <el-form-item label="物流" prop="logisticName" style="flex: 2.5; min-width: 0">
+          <el-autocomplete
+            v-model="formData.logisticName"
+            :fetch-suggestions="fetchLogisticSuggestions"
+            clearable
+            placeholder="请输入或选择物流"
+            class="w-full"
+            value-key="name"
+            @select="handleLogisticSelect"
+            @blur="syncLogisticIdByName"
+          />
         </el-form-item>
         <!-- 收货人 2 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
@@ -469,6 +476,7 @@ const getInitFormData = () => ({
   brandId: undefined as number | undefined,
   orderDate: todayStr() as any,
   logisticId: undefined as number | undefined,
+  logisticName: undefined as string | undefined,
   receiver: undefined as string | undefined,
   deliveryAddress: undefined as string | undefined,
   freight: undefined as number | undefined,
@@ -505,7 +513,7 @@ const hasConfirmTime = computed(() => {
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
-  logisticId: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
+  logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   discountAmount: [{
@@ -612,6 +620,7 @@ const applyCustomerToForm = async (customer: Customer) => {
   formData.value.mobile = customer.mobile
   formData.value.brandId = customer.brandId ?? getDefaultBrandId()
   formData.value.logisticId = customer.logisticId
+  formData.value.logisticName = props.logisticsList.find((item) => item.id === customer.logisticId)?.name ?? ''
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
   selectedCustomerBalance.value = customer.balance
@@ -623,6 +632,46 @@ const handleSelectCustomerFromSearch = async (customer: Customer) => {
   customerInput.value = customer.name ?? ''
   selectedCustomerInfo.value = toCustomerSimpleVO(customer)
   await applyCustomerToForm(customer)
+}
+
+/** 物流自动完成：按名称过滤已有物流公司 */
+const fetchLogisticSuggestions = (queryString: string, cb: (results: LogisticsSimpleVO[]) => void) => {
+  const keyword = queryString.trim().toLowerCase()
+  const list = keyword
+    ? props.logisticsList.filter((item) => item.name.toLowerCase().includes(keyword))
+    : props.logisticsList
+  cb(list)
+}
+
+/** 从下拉选中物流：同时回填 ID 与名称 */
+const handleLogisticSelect = (item: LogisticsSimpleVO) => {
+  formData.value.logisticName = item.name
+  formData.value.logisticId = item.id
+}
+
+/** 失焦时按名称精确匹配物流 ID；未匹配则清空 logisticId，仅保留手输名称 */
+const syncLogisticIdByName = () => {
+  const name = formData.value.logisticName?.trim()
+  if (!name) {
+    formData.value.logisticName = undefined
+    formData.value.logisticId = undefined
+    return
+  }
+  formData.value.logisticName = name
+  formData.value.logisticId = props.logisticsList.find((item) => item.name === name)?.id
+}
+
+/** 提交前解析物流：名称精确匹配列表则带 ID，否则仅传 logisticName */
+const resolveLogisticForSubmit = (logisticName?: string) => {
+  const name = logisticName?.trim()
+  if (!name) {
+    return { logisticId: undefined, logisticName: undefined }
+  }
+  const matched = props.logisticsList.find((item) => item.name === name)
+  return {
+    logisticId: matched?.id,
+    logisticName: name
+  }
 }
 
 // ======================== 批次列表操作 ========================
@@ -758,6 +807,11 @@ const open = async (type: string, id?: number) => {
         ...data,
         batchs: mapCurtainsToBatchRows(data.curtains ?? []),
       } as any
+      // 详情仅有 logisticId 时，从物流列表回填展示名称
+      if (!formData.value.logisticName && formData.value.logisticId) {
+        formData.value.logisticName =
+          props.logisticsList.find((item) => item.id === formData.value.logisticId)?.name ?? ''
+      }
       if (data?.customerId) {
         await syncCustomerDisplay(data.customerId)
       }
@@ -782,6 +836,7 @@ const resetForm = () => {
 const buildSubmitPayload = () => {
   const form = formData.value
   const batchTotal = form.batchs.reduce((sum, b) => sum + (b.amount ?? 0), 0)
+  const { logisticId, logisticName } = resolveLogisticForSubmit(form.logisticName)
   return {
     id: form.id,
     customerId: form.customerId,
@@ -789,7 +844,8 @@ const buildSubmitPayload = () => {
     brandId: form.brandId,
     orderDate: form.orderDate,
     deliveryDate: form.deliveryDate,
-    logisticId: form.logisticId,
+    logisticId,
+    logisticName,
     receiver: form.receiver,
     deliveryAddress: form.deliveryAddress,
     freight: form.freight,
@@ -853,6 +909,7 @@ const handleSave = () => {
 }
 
 const submitForm = async () => {
+  syncLogisticIdByName()
   await formRef.value.validate()
   if (!formData.value.batchs || formData.value.batchs.length === 0) {
     message.warning('请至少添加一条面料数据')

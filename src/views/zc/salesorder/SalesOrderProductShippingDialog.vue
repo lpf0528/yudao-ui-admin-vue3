@@ -240,6 +240,7 @@ const brandName = computed(() => {
 })
 
 const logisticsName = computed(() => {
+  if (formData.value?.logisticName) return formData.value.logisticName
   if (!formData.value?.logisticId) return '-'
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
 })

@@ -83,7 +83,8 @@ export interface SalesOrder {
   mobile?: string                      // 手机
   brandId?: number                     // 品牌
   orderDate?: string | Dayjs           // 下单日期
-  logisticId?: number                  // 物流
+  logisticId?: number                  // 物流 ID（匹配列表时有值，自定义名称时为 null）
+  logisticName?: string                // 物流名称（可手输；logisticId 为空时后端按名称查找或创建）
   receiver?: string                    // 收货人
   deliveryAddress?: string             // 送货地址
   freight?: number                     // 运费
@@ -101,7 +102,6 @@ export interface SalesOrder {
   note?: string                        // 备注
   // —— 仅展示用
   customerName?: string
-  logisticName?: string
   creatorName?: string
   createTime?: number
   currentNodeName?: string              // 当前工序名称快照（订单推进工序时更新）
@@ -177,6 +177,7 @@ export interface ZcSalesOrderSubmitReqVO {
   brandId?: number
   orderDate?: string | Dayjs
   logisticId?: number
+  logisticName?: string                // 物流名称；logisticId 为空时后端按名称查找或自动创建
   receiver?: string
   deliveryAddress?: string
   freight?: number

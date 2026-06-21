@@ -153,11 +153,18 @@
             <el-option v-for="item in props.brandsList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <!-- 物流 -->
-        <el-form-item label="物流" prop="logisticId" style="flex: 2.5; min-width: 0">
-          <el-select v-model="formData.logisticId" clearable filterable placeholder="请选择物流" class="w-full">
-            <el-option v-for="item in props.logisticsList" :key="item.id" :label="item.name" :value="item.id" />
-          </el-select>
+        <!-- 物流：支持从列表选择或手输；未匹配到列表项时 logisticId 为空，仅传 logisticName -->
+        <el-form-item label="物流" prop="logisticName" style="flex: 2.5; min-width: 0">
+          <el-autocomplete
+            v-model="formData.logisticName"
+            :fetch-suggestions="fetchLogisticSuggestions"
+            clearable
+            placeholder="请输入或选择物流"
+            class="w-full"
+            value-key="name"
+            @select="handleLogisticSelect"
+            @blur="syncLogisticIdByName"
+          />
         </el-form-item>
         <!-- 收货人 -->
         <el-form-item label="收货人" prop="receiver" style="flex: 2.2; min-width: 0">
@@ -421,8 +428,8 @@
                   <el-col :span="3">货号</el-col>
                   <el-col :span="3">批次</el-col>
                   <el-col :span="2">规格</el-col>
-                  <el-col :span="2">单价</el-col>
                   <el-col :span="2">用料</el-col>
+                  <el-col :span="2">单价</el-col>
                   <el-col :span="2">单位</el-col>
                   <el-col :span="2" style="display:none">折扣率</el-col>
                   <el-col :span="2">小计</el-col>
@@ -489,10 +496,10 @@
                     <el-input v-model="material.spec" placeholder="规格" size="small" class="!w-full" readonly />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
+                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                   <el-col :span="2">
-                    <el-input-number v-model="material.quantity" placeholder="用料" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
+                    <el-input-number v-model="material.price" placeholder="单价" size="small" :controls="false" class="!w-full" :disabled="!isMaterialEditable(material)" />
                   </el-col>
                   <el-col :span="2">
                     <el-select v-model="material.unitValue" clearable placeholder="单位" size="small" class="w-1/1" :disabled="!isMaterialEditable(material)">
@@ -766,6 +773,7 @@ const getInitFormData = (): SalesOrder & { curtains: CurtainWithStructures[] } =
   brandId: undefined,
   orderDate: todayStr() as any,
   logisticId: undefined,
+  logisticName: undefined,
   receiver: undefined,
   deliveryAddress: undefined,
   freight: undefined,
@@ -882,6 +890,7 @@ const handleSelectCustomerFromSearch = async (customer: Customer) => {
   formData.value.mobile = customer.mobile
   formData.value.brandId = customer.brandId ?? getDefaultBrandId()
   formData.value.logisticId = customer.logisticId
+  formData.value.logisticName = props.logisticsList.find((item) => item.id === customer.logisticId)?.name ?? ''
   formData.value.receiver = customer.contactName
   formData.value.deliveryAddress = customer.deliveryAddress
   selectedCustomerBalance.value = customer.balance
@@ -889,11 +898,51 @@ const handleSelectCustomerFromSearch = async (customer: Customer) => {
   await updateMaterialAuthorizedPrices(customer.id)
 }
 
+/** 物流自动完成：按名称过滤已有物流公司 */
+const fetchLogisticSuggestions = (queryString: string, cb: (results: LogisticsSimpleVO[]) => void) => {
+  const keyword = queryString.trim().toLowerCase()
+  const list = keyword
+    ? props.logisticsList.filter((item) => item.name.toLowerCase().includes(keyword))
+    : props.logisticsList
+  cb(list)
+}
+
+/** 从下拉选中物流：同时回填 ID 与名称 */
+const handleLogisticSelect = (item: LogisticsSimpleVO) => {
+  formData.value.logisticName = item.name
+  formData.value.logisticId = item.id
+}
+
+/** 失焦时按名称精确匹配物流 ID；未匹配则清空 logisticId，仅保留手输名称 */
+const syncLogisticIdByName = () => {
+  const name = formData.value.logisticName?.trim()
+  if (!name) {
+    formData.value.logisticName = undefined
+    formData.value.logisticId = undefined
+    return
+  }
+  formData.value.logisticName = name
+  formData.value.logisticId = props.logisticsList.find((item) => item.name === name)?.id
+}
+
+/** 提交前解析物流：名称精确匹配列表则带 ID，否则仅传 logisticName */
+const resolveLogisticForSubmit = (logisticName?: string) => {
+  const name = logisticName?.trim()
+  if (!name) {
+    return { logisticId: undefined, logisticName: undefined }
+  }
+  const matched = props.logisticsList.find((item) => item.name === name)
+  return {
+    logisticId: matched?.id,
+    logisticName: name
+  }
+}
+
 const formRules = {
   customerId: [{ required: true, message: '客户不能为空', trigger: 'blur' }],
   mobile: [{ required: true, message: '手机不能为空', trigger: 'blur' }],
   brandId: [{ required: true, message: '品牌不能为空', trigger: 'blur' }],
-  logisticId: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
+  logisticName: [{ required: true, message: '物流不能为空', trigger: 'blur' }],
   receiver: [{ required: true, message: '收货人不能为空', trigger: 'blur' }],
   deliveryAddress: [{ required: true, message: '送货地址不能为空', trigger: 'blur' }],
   types: [{ required: true, message: '订单类型不能为空', trigger: 'blur' }],
@@ -1059,13 +1108,15 @@ const mapSubmitCurtain = (curtain: CurtainWithStructures) => ({
 const buildSubmitPayload = (): ZcSalesOrderSubmitReqVO => {
   const form = formData.value
   const curtainAmountSum = form.curtains.reduce((sum, c) => sum + (c.amount ?? 0), 0)
+  const { logisticId, logisticName } = resolveLogisticForSubmit(form.logisticName)
   return {
     id: form.id,
     customerId: form.customerId,
     mobile: form.mobile,
     brandId: form.brandId,
     orderDate: form.orderDate,
-    logisticId: form.logisticId,
+    logisticId,
+    logisticName,
     receiver: form.receiver,
     deliveryAddress: form.deliveryAddress,
     freight: form.freight,
@@ -1142,6 +1193,11 @@ const open = async (type: string, id?: number) => {
       formData.value = {
         ...detail,
         curtains: transformDetailCurtains(detail.curtains)
+      }
+      // 详情仅有 logisticId 时，从物流列表回填展示名称
+      if (!formData.value.logisticName && formData.value.logisticId) {
+        formData.value.logisticName =
+          props.logisticsList.find((item) => item.id === formData.value.logisticId)?.name ?? ''
       }
       // 同步客户余额与输入框展示
       if (detail.customerId) {
@@ -1534,6 +1590,7 @@ const handleCancelExpedite = async () => {
 }
 
 const submitForm = async () => {
+  syncLogisticIdByName()
   await formRef.value.validate()
   // 至少需要一个窗帘才能保存
   if (!formData.value.curtains || formData.value.curtains.length === 0) {

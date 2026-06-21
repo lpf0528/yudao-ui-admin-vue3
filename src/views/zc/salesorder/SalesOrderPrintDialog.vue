@@ -267,8 +267,9 @@ const brandName = computed(() => {
   return props.brandsList.find((item) => item.id === formData.value!.brandId)?.name || ''
 })
 
-/** 物流显示名 */
+/** 物流显示名：优先使用表单中的 logisticName，兼容仅含 logisticId 的旧数据 */
 const logisticName = computed(() => {
+  if (formData.value?.logisticName) return formData.value.logisticName
   if (!formData.value?.logisticId) return '-'
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
 })
