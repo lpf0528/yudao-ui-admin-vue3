@@ -1,6 +1,6 @@
 <!--
   面料单打印预览弹窗
-  父组件通过 open(formData) 方法打开，支持打印（含打印机选择）及浏览器截图/另存为PDF
+  父组件通过 open(formData) 方法打开，支持打印、预览区缩放及截图保存为 PNG
 -->
 <template>
   <el-dialog v-model="visible" width="860px" top="2vh" :close-on-click-modal="false">
@@ -21,18 +21,48 @@
 
     <!-- 预览区，模拟 A4 纸张效果 -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
-      <div
-        style="
-          background: white;
-          max-width: 780px;
-          margin: 0 auto;
-          padding: 32px 36px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-          font-size: 13px;
-          color: #1a1a1a;
-          font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-        "
-      >
+      <!-- 预览缩放与截图工具栏 -->
+      <div class="flex items-center justify-center gap-8px mb-12px">
+        <el-button-group>
+          <el-tooltip content="缩小" placement="top">
+            <el-button size="small" :disabled="previewScale <= MIN_PREVIEW_SCALE" @click="zoomOut">
+              <Icon icon="ep:zoom-out" />
+            </el-button>
+          </el-tooltip>
+          <el-button size="small" disabled style="min-width: 64px;">{{ previewScalePercent }}%</el-button>
+          <el-tooltip content="放大" placement="top">
+            <el-button size="small" :disabled="previewScale >= MAX_PREVIEW_SCALE" @click="zoomIn">
+              <Icon icon="ep:zoom-in" />
+            </el-button>
+          </el-tooltip>
+        </el-button-group>
+        <el-tooltip content="截图并复制到剪贴板" placement="top">
+          <el-button size="small" :loading="screenshotLoading" @click="handleScreenshot">
+            <Icon icon="ep:camera" class="mr-4px" />截图
+          </el-button>
+        </el-tooltip>
+        <el-tooltip content="下载为 PNG 图片" placement="top">
+          <el-button size="small" :loading="downloadLoading" @click="handleDownload">
+            <Icon icon="ep:download" class="mr-4px" />下载
+          </el-button>
+        </el-tooltip>
+      </div>
+      <div class="flex justify-center">
+        <div
+          ref="previewPaperRef"
+          :style="{
+            transform: `scale(${previewScale})`,
+            transformOrigin: 'top center',
+            background: 'white',
+            maxWidth: '780px',
+            width: '100%',
+            padding: '32px 36px',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+            fontSize: '13px',
+            color: '#1a1a1a',
+            fontFamily: `'Microsoft YaHei', '微软雅黑', Arial, sans-serif`
+          }"
+        >
         <!-- 标题区：居中显示 -->
         <div style="text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 6px; line-height: 1.2; margin-bottom: 8px;">
           {{ brandName ? brandName + ' ' : '' }}面料单销售单
@@ -61,38 +91,38 @@
         </div>
 
         <!-- 分隔线 -->
-        <div style="border-top: 1px solid #ccc; margin: 6px 0 8px;"></div>
+        <div style="border-top: 1px solid #000; margin: 6px 0 8px;"></div>
 
         <!-- 面料批次明细表格 -->
         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <thead>
             <tr style="background: #F3F4F6;">
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">货号</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">规格</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center; font-weight: 600;">单位</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">金额</th>
-              <th style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">货号</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">批次</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">规格</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">用料</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: center; font-weight: 600;">单位</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">单价</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">金额</th>
+              <th style="border: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: 600;">备注</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(batch, idx) in formData?.batchs" :key="idx">
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.productName || '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.spec || '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.batchNo || '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ formatMoney(batch.price) }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right;">{{ batch.quantity ?? '-' }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: center;">{{ formatUnit(batch.unitValue) }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(batch.amount) }}</td>
-              <td style="border: 1px solid #D1D5DB; padding: 4px 6px;">{{ batch.note || '' }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px;">{{ batch.productName || '-' }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px;">{{ batch.batchNo || '-' }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px;">{{ batch.spec || '-' }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: bold;">{{ batch.quantity ?? '-' }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px; text-align: center;">{{ formatUnit(batch.unitValue) }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px; text-align: right;">{{ formatMoney(batch.price) }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: 600;">{{ formatMoney(batch.amount) }}</td>
+              <td style="border: 1px solid #000; padding: 4px 6px;">{{ batch.note || '' }}</td>
             </tr>
           </tbody>
         </table>
 
         <!-- 金额汇总 -->
-        <div style="border-top: 2px solid #333; margin-top: 20px; padding-top: 12px;">
+        <div style="border-top: 1px solid #000; margin-top: 20px; padding-top: 12px;">
           <div style="display: flex; justify-content: flex-end; gap: 32px; font-size: 13px; align-items: center; flex-wrap: wrap;">
             <div v-if="balanceLog && !hidePrices"><b>上期余额：</b>{{ formatBalance(balanceLog.balanceBefore) }}</div>
             <div v-if="formData?.freight">
@@ -124,8 +154,9 @@
         </div>
 
         <!-- 底部提示语 -->
-        <div style="margin-top: 20px; font-size: 12px; color: #555; border-top: 1px solid #ddd; padding-top: 10px;">
+        <div style="margin-top: 20px; font-size: 12px; color: #555; border-top: 1px solid #000; padding-top: 10px;">
           尊敬的客户：面料单确认后，布料一经裁剪后一概不予退换。
+        </div>
         </div>
       </div>
     </div>
@@ -140,6 +171,11 @@ import { BrandApi } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
 import { formatDate } from '@/utils/formatTime'
 import { DICT_TYPE, getDictLabel } from '@/utils/dict'
+import {
+  MAX_PREVIEW_SCALE,
+  MIN_PREVIEW_SCALE,
+  usePrintPreviewTools
+} from '@/hooks/web/usePrintPreviewTools'
 
 /** 面料单打印预览弹窗 */
 defineOptions({ name: 'SalesOrderProductPrintDialog' })
@@ -193,6 +229,20 @@ const brandDetail = ref<Brand | null>(null)
 const printTime = ref('')
 /** 订单确认扣减的最新客户余额流水 */
 const balanceLog = ref<ZcCustomerBalanceLogRespVO | null>(null)
+
+// ======================== 预览缩放与截图 ========================
+const {
+  previewPaperRef,
+  previewScale,
+  previewScalePercent,
+  screenshotLoading,
+  downloadLoading,
+  zoomIn,
+  zoomOut,
+  resetPreviewScale,
+  handleScreenshot,
+  handleDownload
+} = usePrintPreviewTools(() => `${formData.value?.orderNo || '面料单'}-面料单`)
 
 // ======================== 计算属性 ========================
 /** 客户显示名 */
@@ -269,6 +319,7 @@ const loadBalanceLog = async (customerId?: number, refId?: number) => {
 const open = async (data: FormDataType) => {
   formData.value = data
   printTime.value = formatDate(new Date())
+  resetPreviewScale()
   visible.value = true
   await Promise.all([
     loadBrandDetail(data.brandId),
@@ -292,17 +343,17 @@ const handlePrint = () => {
   const bName = brandName.value
   const lName = logisticName.value
 
-  const thS = 'border:1px solid #D1D5DB;padding:4px 6px;font-weight:600;'
-  const tdS = 'border:1px solid #D1D5DB;padding:4px 6px;'
+  const thS = 'border:1px solid #000;padding:4px 6px;font-weight:600;'
+  const tdS = 'border:1px solid #000;padding:4px 6px;'
 
   const batchRowsHtml = (fd.batchs || []).map((b) => `
     <tr>
       <td style="${tdS}">${b.productName || '-'}</td>
-      <td style="${tdS}">${b.spec || '-'}</td>
       <td style="${tdS}">${b.batchNo || '-'}</td>
-      <td style="${tdS}text-align:right;">${formatMoney(b.price)}</td>
-      <td style="${tdS}text-align:right;">${b.quantity ?? '-'}</td>
+      <td style="${tdS}">${b.spec || '-'}</td>
+      <td style="${tdS}text-align:right;font-weight:bold;">${b.quantity ?? '-'}</td>
       <td style="${tdS}text-align:center;">${formatUnit(b.unitValue)}</td>
+      <td style="${tdS}text-align:right;">${formatMoney(b.price)}</td>
       <td style="${tdS}text-align:right;font-weight:600;">${formatMoney(b.amount)}</td>
       <td style="${tdS}">${b.note || ''}</td>
     </tr>`).join('')
@@ -316,7 +367,7 @@ const handlePrint = () => {
       ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
       : ''
   const summaryHtml = `
-    <div style="border-top:2px solid #333;margin-top:20px;padding-top:12px;">
+    <div style="border-top:1px solid #000;margin-top:20px;padding-top:12px;">
       <div style="display:flex;justify-content:flex-end;gap:32px;font-size:13px;align-items:center;flex-wrap:wrap;">
         ${balanceBeforeHtml}
         ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
@@ -354,16 +405,16 @@ const handlePrint = () => {
     </div>
     <div><b>备注：</b>${fd.note || '-'}</div>
   </div>
-  <div style="border-top:1px solid #ccc;margin:6px 0 8px;"></div>
+  <div style="border-top:1px solid #000;margin:6px 0 8px;"></div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;">
     <thead>
       <tr style="background:#F3F4F6;">
         <th style="${thS}text-align:left;">货号</th>
-        <th style="${thS}text-align:left;">规格</th>
         <th style="${thS}text-align:left;">批次</th>
-        <th style="${thS}text-align:right;">单价</th>
+        <th style="${thS}text-align:left;">规格</th>
         <th style="${thS}text-align:right;">用料</th>
         <th style="${thS}text-align:center;">单位</th>
+        <th style="${thS}text-align:right;">单价</th>
         <th style="${thS}text-align:right;">金额</th>
         <th style="${thS}text-align:left;">备注</th>
       </tr>
@@ -382,7 +433,7 @@ const handlePrint = () => {
       <div>打印时间：${printTime.value}</div>
     </div>
   </div>
-  <div style="margin-top:20px;font-size:12px;color:#555;border-top:1px solid #ddd;padding-top:10px;">
+  <div style="margin-top:20px;font-size:12px;color:#555;border-top:1px solid #000;padding-top:10px;">
     尊敬的客户：面料单确认后，布料一经裁剪后一概不予退换。
   </div>
 </body>
