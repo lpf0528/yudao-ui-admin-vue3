@@ -27,7 +27,8 @@ export interface Customer {
           deliveryAddress: string; // 送货地址
           mobile: string; // 手机
           mobile2: string; // 联系电话
-          logisticId: number; // 物流
+          logisticId?: number; // 物流 ID（匹配列表时有值，自定义名称时为空）
+          logisticName?: string; // 物流名称（可手输；logisticId 为空时后端按名称查找或创建）
           brandId: number; // 关联品牌
           balance: number; // 账户余额
           note: string; // 备注
