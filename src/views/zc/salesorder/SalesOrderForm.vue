@@ -353,7 +353,7 @@
                 <el-input v-model="structure.rightCorner" placeholder="右转角" />
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'pasteDirection')" label="粘贴方向" class="structure-field structure-field-paste">
-                <el-select v-model="structure.pasteDirection" clearable placeholder="请选择粘贴方向" class="w-1/1">
+                <el-select v-model="structure.pasteDirection" clearable filterable placeholder="请选择或搜索粘贴方向" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PASTE_DIRECTION)"
                     :key="dict.value"
@@ -363,7 +363,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'installProcessId')" label="安装工艺" class="structure-field structure-field-process">
-                <el-select v-model="structure.installProcessId" clearable placeholder="请选择安装工艺" class="w-1/1">
+                <el-select v-model="structure.installProcessId" clearable filterable placeholder="请选择或搜索安装工艺" class="w-1/1">
                   <el-option
                     v-for="item in props.installProcessList"
                     :key="item.id"
@@ -373,7 +373,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'openMethod')" label="打开方式" class="structure-field structure-field-select form-field-compact">
-                <el-select v-model="structure.openMethod" clearable placeholder="请选择打开方式" class="w-1/1">
+                <el-select v-model="structure.openMethod" clearable filterable placeholder="请选择或搜索打开方式" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_OPEN_METHOD)"
                     :key="dict.value"
@@ -383,7 +383,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item v-if="hasAttr(structure.structureId, 'processType')" label="加工类型" class="structure-field structure-field-process">
-                <el-select v-model="structure.processType" clearable placeholder="请选择加工类型" class="w-1/1">
+                <el-select v-model="structure.processType" clearable filterable placeholder="请选择或搜索加工类型" class="w-1/1">
                   <el-option
                     v-for="dict in getStrDictOptions(DICT_TYPE.ZC_PROCESS_TYPE)"
                     :key="dict.value"
