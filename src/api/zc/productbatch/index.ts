@@ -17,6 +17,7 @@ export interface ProductBatch {
           status?: number; // 状态: 1:整匹、0:零裁、-1:余料
           productName?: string; // 产品名称
           versionName?: string; // 版本名称
+          versionId?: number; // 版本 ID
           supplierName?: string; // 供应商名称
           warehouseName?: string; // 仓库名称
           unitValue?: string; // 单位（来自产品版本）
@@ -24,6 +25,16 @@ export interface ProductBatch {
           barcode?: string; // 条码
           createTime?: string; // 创建时间
   }
+
+/** 盘点记录新增 Request VO，对应后端 ZcInventoryRecordSaveReqVO */
+export interface ZcInventoryRecordSaveReqVO {
+  productId: number // 产品 ID
+  batchId: number // 批次 ID
+  oldQuantity: number // 盘点前数量
+  newQuantity: number // 盘点后数量
+  note?: string // 备注
+  spec?: string // 规格
+}
 
 // 产品批次 API
 export const ProductBatchApi = {
@@ -70,5 +81,10 @@ export const ProductBatchApi = {
   // 更新产品批次状态
   updateProductBatchStatus: async (data: { id: number; status: number }) => {
     return await request.put({ url: `/zc/product-batch/update-status`, data })
+  },
+
+  // 盘点产品批次，对应后端：POST /zc/product-batch/inventory
+  inventoryProductBatch: async (data: ZcInventoryRecordSaveReqVO) => {
+    return await request.post({ url: `/zc/product-batch/inventory`, data })
   }
 }

@@ -14,6 +14,31 @@
       <el-form-item label="批号">
         <el-input :value="batchNo" disabled />
       </el-form-item>
+      <!-- 规格：有版本规格列表时下拉选择，否则手动输入 -->
+      <el-form-item label="规格" prop="spec">
+        <el-select
+          v-if="specConfs.length > 0"
+          v-model="formData.spec"
+          placeholder="请选择规格"
+          clearable
+          :loading="specLoading"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in specConfs"
+            :key="item.spec"
+            :label="item.spec"
+            :value="item.spec"
+          />
+        </el-select>
+        <el-input
+          v-else
+          v-model="formData.spec"
+          placeholder="请输入规格"
+          clearable
+          :disabled="specLoading"
+        />
+      </el-form-item>
       <!-- 只读展示：当前库存（当前剩余数量） -->
       <el-form-item label="当前库存">
         <el-input-number :model-value="formData.oldQuantity" disabled style="width: 100%" :controls="false" />
@@ -52,7 +77,10 @@
 </template>
 
 <script setup lang="ts">
-import { InventoryRecordApi } from '@/api/zc/inventoryrecord'
+import { ProductBatchApi } from '@/api/zc/productbatch'
+import type { ProductBatch } from '@/api/zc/productbatch'
+import { ProductVersionApi } from '@/api/zc/productversion'
+import type { ZcProductVersionSpcRespVO } from '@/api/zc/productversion'
 
 defineOptions({ name: 'InventoryRecordForm' })
 
@@ -62,6 +90,10 @@ const message = useMessage()
 // ======================== 弹窗状态 ========================
 const dialogVisible = ref(false)
 const formLoading = ref(false)
+/** 版本规格列表加载状态 */
+const specLoading = ref(false)
+/** 当前版本的可选规格列表，来自 GET /zc/product-version/get */
+const specConfs = ref<ZcProductVersionSpcRespVO[]>([])
 
 /** 只读展示字段，从父组件传入的批次行数据中解析 */
 const productName = ref('')
@@ -74,6 +106,7 @@ const formData = reactive({
   oldQuantity: undefined as number | undefined,
   newQuantity: undefined as number | undefined,
   note: '',
+  spec: '', // 批次规格，随盘点请求一并提交
 })
 
 const formRules = {
@@ -104,9 +137,9 @@ const formRef = ref()
 
 /**
  * 打开弹窗
- * @param row 产品批次行数据
+ * @param row 产品批次行数据（含 versionId，用于拉取版本规格列表）
  */
-const open = (row: any) => {
+const open = async (row: ProductBatch) => {
   productName.value = row.productName ?? ''
   batchNo.value = row.batchNo ?? ''
   formData.productId = row.productId
@@ -114,8 +147,21 @@ const open = (row: any) => {
   formData.oldQuantity = row.quantity
   formData.newQuantity = undefined
   formData.note = ''
+  formData.spec = row.spec ?? ''
+  specConfs.value = []
   formRef.value?.clearValidate()
   dialogVisible.value = true
+
+  // 根据批次关联的版本 ID 获取规格列表，供下拉选择
+  if (row.versionId) {
+    specLoading.value = true
+    try {
+      const version = await ProductVersionApi.getProductVersion(row.versionId)
+      specConfs.value = version.specConfs ?? []
+    } finally {
+      specLoading.value = false
+    }
+  }
 }
 defineExpose({ open })
 
@@ -124,13 +170,14 @@ const submitForm = async () => {
   await formRef.value.validate()
   formLoading.value = true
   try {
-    await InventoryRecordApi.createInventoryRecord({
-      productId: formData.productId,
-      batchId: formData.batchId,
-      oldQuantity: formData.oldQuantity,
-      newQuantity: formData.newQuantity,
+    await ProductBatchApi.inventoryProductBatch({
+      productId: formData.productId!,
+      batchId: formData.batchId!,
+      oldQuantity: formData.oldQuantity!,
+      newQuantity: formData.newQuantity!,
       note: formData.note,
-    } as any)
+      spec: formData.spec,
+    })
     message.success('盘点记录提交成功')
     dialogVisible.value = false
     emit('success')
