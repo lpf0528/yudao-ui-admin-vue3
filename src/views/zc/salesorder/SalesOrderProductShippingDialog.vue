@@ -91,7 +91,7 @@
                             {{ idx + 1 }}、
                           </td>
                           <td style="border-bottom: 1px solid #D1D5DB; padding: 4px 6px 4px 0; font-weight: 700; word-break: break-all;">
-                            {{ formatMaterialDisplay(page.materialNameWithVersion, page.materialNote) }}
+                            {{ formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote) }}
                           </td>
                         </tr>
                       </tbody>
@@ -177,7 +177,7 @@
               <tr>
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700;">面料信息</td>
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">
-                  {{ formatMaterialDisplay(page.materialNameWithVersion, page.materialNote) }}
+                  {{ formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote) }}
                 </td>
               </tr>
             </tbody>
@@ -212,6 +212,7 @@ import type { CustomerSimpleVO } from '@/api/zc/customer'
 import type { BrandSimpleVO } from '@/api/zc/brand'
 import type { LogisticsSimpleVO } from '@/api/zc/logistics'
 import type { SalesOrder } from '@/api/zc/salesorder'
+import { DICT_TYPE, getDictLabel } from '@/utils/dict'
 
 /** 面料单发货联打印预览弹窗 */
 defineOptions({ name: 'SalesOrderProductShippingDialog' })
@@ -254,6 +255,7 @@ type MaterialPageItem = {
   curtainId: number | null
   structureId: number | null
   materialNameWithVersion: string
+  materialQuantity: string
   materialNote: string
 }
 
@@ -273,6 +275,7 @@ const materialPages = computed<MaterialPageItem[]>(() => {
       curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
       structureId: typeof structure?.id === 'number' ? structure.id : null,
       materialNameWithVersion: `${productName}${version}`.trim(),
+      materialQuantity: formatMaterialQuantity(material || {}),
       materialNote: material?.note?.trim() || ''
     })
   })
@@ -288,11 +291,27 @@ const formatDate = (date: Date): string => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-/** 面料信息展示：有备注时才拼接「备注：」，为空则不显示 */
-const formatMaterialDisplay = (materialNameWithVersion: string, materialNote?: string) => {
+/** 用料数量展示：数值后接计量单位，如 10米 */
+const formatMaterialQuantity = (material: { quantity?: number; unitValue?: string }) => {
+  if (material.quantity == null) return ''
+  const unit = material.unitValue
+    ? getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, material.unitValue) || material.unitValue
+    : ''
+  return `${material.quantity}${unit}`
+}
+
+/** 面料信息展示：有用料/备注时才拼接对应标签，为空则不显示 */
+const formatMaterialDisplay = (
+  materialNameWithVersion: string,
+  materialQuantity?: string,
+  materialNote?: string
+) => {
+  const parts = [materialNameWithVersion]
+  const quantity = materialQuantity?.trim()
+  if (quantity) parts.push(`用料：${quantity}`)
   const note = materialNote?.trim()
-  if (!note) return materialNameWithVersion
-  return `${materialNameWithVersion} | 备注：${note}`
+  if (note) parts.push(`备注：${note}`)
+  return parts.join(' | ')
 }
 
 /** 根据当前发货模式注册并生成二维码 */
@@ -381,7 +400,7 @@ const handlePrint = () => {
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">联系电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.mobile || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">物流方式</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${logisticsName.value}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">收货地址</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${data.deliveryAddress || '-'}</td></tr>
-        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">面料信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${formatMaterialDisplay(page.materialNameWithVersion, page.materialNote)}</td></tr>
+        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">面料信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote)}</td></tr>
       </tbody>
     </table>
     <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:4px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -399,7 +418,7 @@ const handlePrint = () => {
       (page, idx) => `
         <tr>
           <td style="border-bottom:1px solid #D1D5DB;padding:4px 0 4px 2px;width:1%;white-space:nowrap;color:#111;font-weight:700;text-align:left;">${idx + 1}、</td>
-          <td style="border-bottom:1px solid #D1D5DB;padding:4px 6px 4px 0;font-weight:700;word-break:break-all;">${formatMaterialDisplay(page.materialNameWithVersion, page.materialNote)}</td>
+          <td style="border-bottom:1px solid #D1D5DB;padding:4px 6px 4px 0;font-weight:700;word-break:break-all;">${formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote)}</td>
         </tr>`
     )
     .join('')
