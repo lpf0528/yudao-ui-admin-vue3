@@ -132,12 +132,12 @@
             >
               （无用料）
             </div>
-            <!-- 款式备注放最下方 -->
+            <!-- 款式备注 + 结构备注放最下方，用 | 分隔 -->
             <div
-              v-if="curtain.note"
+              v-if="formatCurtainStructureNote(curtain.note, structure.note)"
               style="margin-top: 4px; padding: 3px 8px; font-size: 14px; border: 1px solid #D1D5DB; background: #FFFBEB;"
             >
-              <span style="color: #6B7280;">款式备注：</span>{{ curtain.note }}
+              <span style="color: #6B7280;">款式备注：</span>{{ formatCurtainStructureNote(curtain.note, structure.note) }}
             </div>
           </div>
         </template>
@@ -213,6 +213,11 @@ const getStructureName = (id?: number): string => {
 const getElementName = (id?: number): string => {
   if (!id) return ''
   return props.elementList.find((item) => item.id === id)?.name || ''
+}
+
+/** 合并款式备注与结构备注，用 | 分隔，均无值时返回空字符串 */
+const formatCurtainStructureNote = (curtainNote?: string, structureNote?: string): string => {
+  return [curtainNote, structureNote].filter(Boolean).join(' | ')
 }
 
 type StructureAttr = {
@@ -432,7 +437,8 @@ const handlePrint = async () => {
           </table>`
         : `<div style="padding:2px 8px;font-size:11pt;color:#9CA3AF;border:1px solid #D1D5DB;">（无用料）</div>`
 
-      const noteHtml = (curtain as any).note ? `<div style="margin-top:3px;padding:2px 8px;font-size:12pt;border:1px solid #D1D5DB;background:#FFFBEB;"><span style="color:#6B7280;">款式备注：</span>${(curtain as any).note}</div>` : ''
+      const noteText = formatCurtainStructureNote((curtain as any).note, structure.note)
+      const noteHtml = noteText ? `<div style="margin-top:3px;padding:2px 8px;font-size:12pt;border:1px solid #D1D5DB;background:#FFFBEB;"><span style="color:#6B7280;">款式备注：</span>${noteText}</div>` : ''
       pages.push(`<div class="page">${buildHeaderHtml(cIdx, sIdx)}${curtainHeaderHtml}${structureHtml}${materialsHtml}${noteHtml}</div>`)
     }
   }
