@@ -292,6 +292,8 @@ const allocMap = reactive<Record<number, number | undefined>>({})
 /** 当前勾选的订单行 */
 const selectedOrders = ref<SalesOrder[]>([])
 const orderTableRef = ref()
+/** 批量分摊进行中，避免 el-input-number @change 与 handleAllocate 互相覆盖 */
+const isBulkAllocating = ref(false)
 
 const handleSelectionChange = (rows: SalesOrder[]) => {
   selectedOrders.value = rows
@@ -305,9 +307,10 @@ const totalAllocAmount = computed(
 
 /** 当前勾选订单的合计应收金额（订单金额 - 已收金额） */
 const selectedUnpaidAmount = computed(() =>
-  selectedOrders.value.reduce((sum, o) => {
-    return Math.round((sum + Math.max(0, (o.amount ?? 0) - (o.amountReceived ?? 0))) * 100) / 100
-  }, 0)
+  selectedOrders.value.reduce(
+    (sum, o) => Math.round((sum + getOrderRemainingAmount(o)) * 100) / 100,
+    0
+  )
 )
 
 /** 分摊剩余金额 = 合计分摊金额 - 已填写的本次收款合计 */
@@ -333,20 +336,32 @@ const handleAllocate = () => {
   const orderedSelected = orderList.value.filter((o) =>
     selectedOrders.value.some((s) => s.id === o.id)
   )
-  let remaining = totalAllocAmount.value
-  for (const order of orderedSelected) {
-    if (order.id == null) continue
-    if (remaining <= 0) {
-      allocMap[order.id] = 0
-      continue
+  isBulkAllocating.value = true
+  try {
+    // 先清空已选订单的旧分摊，避免残留金额干扰
+    for (const order of orderedSelected) {
+      if (order.id != null) delete allocMap[order.id]
     }
-    const unpaid = Math.max(0, (order.amount ?? 0) - (order.amountReceived ?? 0))
-    // 若订单未结余额为 0（数据异常），则将剩余全部分摊到该笔
-    const alloc = unpaid > 0 ? Math.min(remaining, unpaid) : remaining
-    allocMap[order.id] = Math.round(alloc * 100) / 100
-    remaining = Math.round((remaining - alloc) * 100) / 100
+    let remaining = totalAllocAmount.value
+    for (const order of orderedSelected) {
+      if (order.id == null || remaining <= 0) break
+      const unpaid = getOrderRemainingAmount(order)
+      if (unpaid <= 0) continue
+      const alloc = Math.min(remaining, unpaid)
+      allocMap[order.id] = Math.round(alloc * 100) / 100
+      remaining = Math.round((remaining - alloc) * 100) / 100
+    }
+    syncOrderItems()
+    nextTick(() => {
+      for (const order of orderedSelected) {
+        syncOrderRowSelection(order, allocMap[order.id!] ?? 0)
+      }
+    })
+  } finally {
+    nextTick(() => {
+      isBulkAllocating.value = false
+    })
   }
-  syncOrderItems()
 }
 
 /** 客户切换时重新加载订单并清空已选状态 */
@@ -383,23 +398,43 @@ const syncOrderItems = () => {
 }
 
 /**
+ * 根据本次收款金额自动勾选/取消勾选订单行
+ * 输入金额 > 0 时自动选中，便于与「分摊到明细」等统计联动
+ */
+const syncOrderRowSelection = (order: SalesOrder, amount: number) => {
+  if (order.id == null || !orderTableRef.value) return
+  const isSelected = selectedOrders.value.some((o) => o.id === order.id)
+  if (amount > 0 && !isSelected) {
+    orderTableRef.value.toggleRowSelection(order, true)
+  } else if (amount <= 0 && isSelected) {
+    orderTableRef.value.toggleRowSelection(order, false)
+  }
+}
+
+/**
  * 校验单笔订单本次收款：不能超过订单剩余应收（订单金额 - 已收金额）
  * 超出时提示并自动修正为最大可收金额
  */
 const handleAllocAmountChange = (order: SalesOrder, value: number | null | undefined) => {
-  if (order.id == null) return
+  if (order.id == null || isBulkAllocating.value) return
   const maxAmount = getOrderRemainingAmount(order)
-  const amount = value ?? 0
+  let amount = value ?? 0
   if (amount > maxAmount) {
     message.warning(`本次收款不能大于订单金额（剩余 ${maxAmount.toFixed(2)}）`)
+    amount = maxAmount
     allocMap[order.id] = maxAmount
   }
   syncOrderItems()
+  nextTick(() => syncOrderRowSelection(order, amount))
 }
 
-/** 提交前校验分摊明细：每笔本次收款不得超过对应订单剩余应收 */
+/** 提交前校验分摊明细：orderItems 不能为空，且每笔本次收款不得超过对应订单剩余应收 */
 const validateOrderItems = (): boolean => {
   syncOrderItems()
+  if (formData.orderItems.length === 0) {
+    message.warning('请选择收款订单并输入收款金额，或使用「分摊到明细」按钮')
+    return false
+  }
   for (const item of formData.orderItems) {
     const order = orderList.value.find((o) => o.id === item.orderId)
     if (!order) continue
@@ -426,9 +461,12 @@ const formatDate = (val: string | number | undefined) => {
   return dayjs(val).format('YYYY-MM-DD')
 }
 
+/** 订单应收基数：优先 amount，列表未返回时回退 totalAmount */
+const getOrderReceivableAmount = (order: SalesOrder) => order.amount ?? order.totalAmount ?? 0
+
 /** 订单剩余应收金额 = 订单金额 - 已收金额（与分摊逻辑一致，最小为 0） */
 const getOrderRemainingAmount = (order: SalesOrder) =>
-  Math.round(Math.max(0, (order.amount ?? 0) - (order.amountReceived ?? 0)) * 100) / 100
+  Math.round(Math.max(0, getOrderReceivableAmount(order) - (order.amountReceived ?? 0)) * 100) / 100
 
 // ======================== 弹窗控制 ========================
 /**
