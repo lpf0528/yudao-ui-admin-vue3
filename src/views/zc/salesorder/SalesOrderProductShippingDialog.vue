@@ -44,19 +44,19 @@
           >
             <div style="display: flex; align-items: flex-start; margin-bottom: 3px;">
               <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 23px; letter-spacing: 3px; text-align: center; margin-bottom: 2px;">
+                <div style="font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 1px; line-height: 1.3; font-weight: 700;">
                   {{ brandName ? brandName + ' ' : '' }}发货联
                 </div>
-                <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
+                <div style="padding: 1px 0; font-size: 14px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
                 <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">合并发货/共{{ materialPages.length }}套</div>
               </div>
-              <div style="width: 123px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+              <div style="width: 100px; flex-shrink: 0; padding-left: 6px; text-align: center;">
                 <template v-if="mergedQrCode">
-                  <img :src="mergedQrCode.url" width="108" height="108" style="display: block; margin: 0 auto;" />
+                  <img :src="mergedQrCode.url" width="88" height="88" style="display: block; margin: 0 auto;" />
                 </template>
                 <div
                   v-else
-                  style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
+                  style="width: 88px; height: 88px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 12px;"
                 >二维码</div>
               </div>
             </div>
@@ -136,19 +136,19 @@
           <!-- 抬头：左侧标题+面料关键信息，右侧二维码 -->
           <div style="display: flex; align-items: flex-start; margin-bottom: 3px;">
             <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 23px; letter-spacing: 3px; text-align: center; margin-bottom: 2px;">
+              <div style="font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 1px; line-height: 1.3; font-weight: 700;">
                 {{ brandName ? brandName + ' ' : '' }}发货联
               </div>
-              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
+              <div style="padding: 1px 0; font-size: 14px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
               <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">第{{ page.curtainIdx + 1 }}套/共{{ page.totalCurtains }}套</div>
             </div>
-            <div style="width: 123px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+            <div style="width: 100px; flex-shrink: 0; padding-left: 6px; text-align: center;">
               <template v-if="materialQrCodes[page.pageKey]">
-                <img :src="materialQrCodes[page.pageKey].url" width="108" height="108" style="display: block; margin: 0 auto;" />
+                <img :src="materialQrCodes[page.pageKey].url" width="88" height="88" style="display: block; margin: 0 auto;" />
               </template>
               <div
                 v-else
-                style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
+                style="width: 88px; height: 88px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 12px;"
               >二维码</div>
             </div>
           </div>
@@ -311,7 +311,7 @@ const generateMaterialQrCodes = async (data: SalesOrder) => {
       targetRoute: '/pages-curtain/ship/index',
       codeContent
     })
-    const url = await QRCode.toDataURL(codeId, { width: 180, margin: 1 })
+    const url = await QRCode.toDataURL(codeId, { width: 150, margin: 1 })
     mergedShippingQrCode.value = { url, code: codeId }
     return
   }
@@ -329,7 +329,7 @@ const generateMaterialQrCodes = async (data: SalesOrder) => {
       targetRoute: '/pages-curtain/ship/index',
       codeContent
     })
-    const url = await QRCode.toDataURL(codeId, { width: 180, margin: 1 })
+    const url = await QRCode.toDataURL(codeId, { width: 150, margin: 1 })
     materialQrCodes.value[page.pageKey] = { url, code: codeId }
   }
 }
@@ -362,17 +362,17 @@ const handlePrint = () => {
       (page) => {
         const qrEntry = materialQrCodes.value[page.pageKey]
         const qrHtml = qrEntry
-          ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
-          : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
+          ? `<img src="${qrEntry.url}" width="88" height="88" style="display:block;margin:0 auto;" />`
+          : `<div style="width:88px;height:88px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10px;">二维码</div>`
         return `
   <div class="page">
     <div style="display:flex;align-items:flex-start;margin-bottom:2px;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:1px;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
+        <div style="font-size:18pt;letter-spacing:2px;text-align:center;margin-bottom:1px;line-height:1.3;font-weight:700;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
+        <div style="padding:1px 0;font-size:12pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
         <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">第${page.curtainIdx + 1}套/共${page.totalCurtains}套</div>
       </div>
-      <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;">${qrHtml}</div>
+      <div style="width:96px;flex-shrink:0;padding-left:5px;text-align:center;">${qrHtml}</div>
     </div>
     <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;font-size:11pt;">
@@ -405,18 +405,18 @@ const handlePrint = () => {
     .join('')
 
   const mergedQrHtml = mergedQrCode.value
-    ? `<img src="${mergedQrCode.value.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
-    : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
+    ? `<img src="${mergedQrCode.value.url}" width="88" height="88" style="display:block;margin:0 auto;" />`
+    : `<div style="width:88px;height:88px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10px;">二维码</div>`
 
   const mergedPageHtml = `
   <div class="page">
     <div style="display:flex;align-items:flex-start;margin-bottom:2px;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:1px;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
+        <div style="font-size:18pt;letter-spacing:2px;text-align:center;margin-bottom:1px;line-height:1.3;font-weight:700;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
+        <div style="padding:1px 0;font-size:12pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
         <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">合并发货/共${materialPages.value.length}套</div>
       </div>
-      <div style="width:117px;flex-shrink:0;padding-left:5px;text-align:center;">${mergedQrHtml}</div>
+      <div style="width:96px;flex-shrink:0;padding-left:5px;text-align:center;">${mergedQrHtml}</div>
     </div>
     <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;font-size:11pt;">
