@@ -43,27 +43,27 @@
         <div style="display: flex; align-items: flex-start; margin-bottom: 28px; border-bottom: 2px solid #1a1a1a; padding-bottom: 16px;">
           <div style="flex: 1; min-width: 0;">
             <div style="text-align: center;">
-              <div style="font-size: 30px; font-weight: 700; letter-spacing: 2px; margin-top: 4px; line-height: 1.1;">
+              <div style="font-size: 21px; font-weight: 700; letter-spacing: 2px; margin-top: 4px; line-height: 1.1;">
                 发货联
               </div>
-              <div style="font-size: 22px; font-weight: 800; letter-spacing: 3px; line-height: 1.1; margin-top: 4px;">
+              <div style="font-size: 16px; font-weight: 800; letter-spacing: 3px; line-height: 1.1; margin-top: 4px;">
                 {{ slipData.brandName || '-' }}
               </div>
             </div>
           </div>
-          <div style="width: 124px; flex-shrink: 0; padding-left: 8px; text-align: center;">
+          <div style="width: 108px; flex-shrink: 0; padding-left: 8px; text-align: center;">
             <template v-if="shippingQrCode">
-              <img :src="shippingQrCode.url" width="108" height="108" style="display: block; margin: 0 auto;" />
+              <img :src="shippingQrCode.url" width="96" height="96" style="display: block; margin: 0 auto;" />
             </template>
             <div
               v-else
-              style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 11px;"
+              style="width: 96px; height: 96px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 10px;"
             >二维码</div>
           </div>
         </div>
 
         <!-- 信息列表 -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 19px; line-height: 2;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.8;">
           <tbody>
             <tr>
               <td style="color: #666; white-space: nowrap; padding-right: 16px; width: 120px;">客户名称</td>
@@ -163,7 +163,7 @@ const open = async (data: Customer) => {
     targetRoute: '/pages-curtain/ship/index',
     codeContent
   })
-  const url = await QRCode.toDataURL(codeId, { width: 180, margin: 1 })
+  const url = await QRCode.toDataURL(codeId, { width: 160, margin: 1 })
   shippingQrCode.value = { url, code: codeId }
   visible.value = true
 }
@@ -174,8 +174,8 @@ defineExpose({ open })
 const handlePrint = () => {
   const d = slipData.value
   const qrImg = shippingQrCode.value
-    ? `<img src="${shippingQrCode.value.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
-    : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9pt;">二维码</div>`
+    ? `<img src="${shippingQrCode.value.url}" width="96" height="96" style="display:block;margin:0 auto;" />`
+    : `<div style="width:96px;height:96px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:8pt;">二维码</div>`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -186,7 +186,7 @@ const handlePrint = () => {
     @page { size: 100mm 120mm; margin: 0mm; }
     html, body { margin: 0; padding: 0; }
     * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
-    body { color: #1a1a1a; font-size: 18pt; }
+    body { color: #1a1a1a; font-size: 13pt; }
     .page {
       page-break-after: always;
       page-break-inside: avoid;
@@ -207,20 +207,20 @@ const handlePrint = () => {
     .header-main { flex: 1; min-width: 0; }
     .header-title-wrap { text-align: center; }
     .header-brand {
-      font-size: 25pt;
+      font-size: 17pt;
       font-weight: 800;
       letter-spacing: 4pt;
       line-height: 1.1;
     }
     .header-title {
-      font-size: 33pt;
+      font-size: 22pt;
       font-weight: 700;
       letter-spacing: 3pt;
       line-height: 1.1;
       margin-top: 4pt;
     }
-    .header-qr { width: 117pt; flex-shrink: 0; padding-left: 8pt; text-align: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 18pt; line-height: 2.2; }
+    .header-qr { width: 104pt; flex-shrink: 0; padding-left: 8pt; text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 13pt; line-height: 1.9; }
     td.lbl { color: #555; white-space: nowrap; padding-right: 18pt; width: 105pt; }
     td.val { font-weight: 600; word-break: break-all; }
   </style>
