@@ -1,56 +1,39 @@
 <template>
-  <div>
-    <el-card shadow="never">
-      <el-skeleton :loading="loading" animated>
-        <el-row :gutter="16" justify="space-between">
-          <el-col :xl="12" :lg="12" :md="12" :sm="24" :xs="24">
-            <div class="flex items-center">
-              <el-avatar :src="avatar" :size="70" class="mr-16px">
-                <img src="@/assets/imgs/avatar.gif" alt="" />
-              </el-avatar>
-              <div>
-                <div class="text-20px">
-                  {{ t('workplace.welcome') }} {{ username }} {{ t('workplace.happyDay') }}
-                </div>
-                <div class="mt-10px text-14px text-gray-500">
-                  {{ t('workplace.toady') }}，20℃ - 32℃！
-                </div>
-              </div>
-            </div>
-          </el-col>
-        </el-row>
-      </el-skeleton>
-    </el-card>
-  </div>
-
-  <!-- 快捷入口：独占一整行 -->
-  <el-row class="mt-8px" :gutter="8">
-    <el-col :span="24" class="mb-8px">
-      <el-card shadow="never">
+  <!-- 快捷入口 -->
+  <el-row :gutter="8">
+    <el-col :span="24" class="mb-4px">
+      <el-card shadow="never" class="shortcut-card">
         <template #header>
           <div class="flex justify-between items-center">
             <span class="text-16px font-medium">{{ t('workplace.shortcutOperation') }}</span>
           </div>
         </template>
         <el-skeleton :loading="loading" animated>
-          <el-row :gutter="16">
+          <el-row :gutter="12">
             <el-col
               v-for="item in shortcut"
               :key="`shortcut-${item.name}`"
               :xl="4" :lg="4" :md="8" :sm="8" :xs="12"
-              class="mb-8px"
+              class="mb-4px"
             >
               <div
-                class="flex flex-col items-center justify-center py-36px cursor-pointer rounded-8px hover:bg-gray-50 transition-all"
+                class="flex flex-col items-center justify-center py-4px cursor-pointer rounded-8px hover:bg-gray-50 transition-all"
                 @click="handleShortcutClick(item.url)"
               >
-                <Icon :icon="item.icon" :size="72" :style="{ color: item.color }" class="mb-16px" />
-                <span class="text-24px text-gray-700">{{ item.name }}</span>
+                <Icon :icon="item.icon" :size="52" :style="{ color: item.color }" class="mb-2px" />
+                <span class="text-14px text-gray-700">{{ item.name }}</span>
               </div>
             </el-col>
           </el-row>
         </el-skeleton>
       </el-card>
+    </el-col>
+  </el-row>
+
+  <!-- 已确认订单统计（按客户） -->
+  <el-row class="mt-8px" :gutter="8">
+    <el-col :span="24" class="mb-8px">
+      <HomeSalesOrderStatistics />
     </el-col>
   </el-row>
 
@@ -83,20 +66,16 @@
 <script lang="ts" setup>
 import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
-import { useUserStore } from '@/store/modules/user'
 import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
+import HomeSalesOrderStatistics from './HomeSalesOrderStatistics.vue'
 
 defineOptions({ name: 'Index' })
 
 const { t } = useI18n()
 const router = useRouter()
-const userStore = useUserStore()
-// const { setWatermark } = useWatermark()
 const loading = ref(true)
-const avatar = userStore.getUser.avatar
-const username = userStore.getUser.nickname
 const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
 // 获取快捷入口
 let shortcut = reactive<Shortcut[]>([])
@@ -203,3 +182,15 @@ const handleShortcutClick = (url: string) => {
 
 getAllApi()
 </script>
+
+<style lang="scss" scoped>
+.shortcut-card {
+  :deep(.el-card__header) {
+    padding: 6px 16px;
+  }
+
+  :deep(.el-card__body) {
+    padding: 4px 12px 2px;
+  }
+}
+</style>

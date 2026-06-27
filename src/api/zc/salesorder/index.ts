@@ -191,6 +191,16 @@ export interface ZcSalesOrderSubmitReqVO {
   curtains?: ZcSalesOrderCurtainSubmitVO[]
 }
 
+/** 按客户统计已确认订单响应 VO */
+export interface ZcSalesOrderCustomerStatisticsRespVO {
+  customerId: number // 客户编号
+  customerName: string // 客户名称
+  orderCount: number // 订单数
+  totalAmount: number // 订单金额合计（amount 字段求和）
+  totalAmountReceived: number // 已收金额合计（amount_received 字段求和）
+  unpaidAmount: number // 未收金额合计（各订单 amount - amount_received 求和）
+}
+
 // 销售订单 API
 export const SalesOrderApi = {
   // 查询销售订单分页
@@ -299,6 +309,21 @@ export const SalesOrderApi = {
    */
   exportSalesOrderPdf: async (id: number): Promise<Blob> => {
     return await request.download({ url: `/zc/sales-order/export-pdf`, params: { id } })
+  },
+
+  /**
+   * 按客户统计已确认订单（指定确认时间范围内，汇总各客户订单数与订单金额）
+   * 对应后端：GET /zc/sales-order/statistics/customer
+   *
+   * @param confirmTime 确认时间范围 [开始, 结束]，含边界
+   */
+  getCustomerStatistics: async (
+    confirmTime: [string, string]
+  ): Promise<ZcSalesOrderCustomerStatisticsRespVO[]> => {
+    return await request.get({
+      url: `/zc/sales-order/statistics/customer`,
+      params: { confirmTime }
+    })
   }
 }
 
