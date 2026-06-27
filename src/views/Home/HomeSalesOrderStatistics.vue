@@ -6,30 +6,7 @@
 <template>
   <el-card shadow="never">
     <template #header>
-      <div class="flex flex-wrap items-center justify-between gap-8px">
-        <span class="text-16px font-medium">已确认订单统计（按客户）</span>
-        <div class="flex flex-wrap items-center gap-8px">
-          <el-radio-group v-model="timeRangeType" @change="handleTimeRangeTypeChange">
-            <el-radio-button
-              v-for="item in timeRangeOptions"
-              :key="item.value"
-              :value="item.value"
-            >
-              {{ item.label }}
-            </el-radio-button>
-          </el-radio-group>
-          <el-date-picker
-            v-model="customTimes"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            type="daterange"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-            class="!w-260px"
-            @change="handleCustomDateChange"
-          />
-        </div>
-      </div>
+      <span class="text-16px font-medium">已确认订单统计（按客户）</span>
     </template>
 
     <!-- KPI 汇总卡片（带图标） -->
@@ -87,38 +64,22 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs'
 import type { TableColumnCtx } from 'element-plus'
 import {
   SalesOrderApi,
   type ZcSalesOrderCustomerStatisticsRespVO
 } from '@/api/zc/salesorder'
-import { getDateRange } from '@/utils/formatTime'
 
 defineOptions({ name: 'HomeSalesOrderStatistics' })
 
-/** 时间范围快捷选项枚举 */
-enum TimeRangeTypeEnum {
-  TODAY = 'today',
-  WEEK = 'week',
-  MONTH = 'month',
-  LAST_MONTH = 'lastMonth',
-  CUSTOM = 'custom'
-}
-
-/** 快捷时间范围选项 */
-const timeRangeOptions = [
-  { label: '当天', value: TimeRangeTypeEnum.TODAY },
-  { label: '当周', value: TimeRangeTypeEnum.WEEK },
-  { label: '当月', value: TimeRangeTypeEnum.MONTH },
-  { label: '上个月', value: TimeRangeTypeEnum.LAST_MONTH }
-]
+// ======================== Props ========================
+/** 确认时间范围，由父组件 Index.vue 统一筛选后传入 */
+const props = defineProps<{
+  confirmTime: [string, string]
+}>()
 
 // ======================== 响应式状态 ========================
 const loading = ref(false)
-const timeRangeType = ref<TimeRangeTypeEnum>(TimeRangeTypeEnum.TODAY)
-/** 自定义时间范围，与 el-date-picker 双向绑定 */
-const customTimes = ref<[string, string]>(getDateRange(dayjs(), dayjs()))
 const list = ref<ZcSalesOrderCustomerStatisticsRespVO[]>([])
 /** 前端分页参数 */
 const pageNo = ref(1)
@@ -192,62 +153,22 @@ const summaryCards = computed(() => [
   }
 ])
 
-// ======================== 生命周期 ========================
-onMounted(() => {
-  loadData()
-})
-
 // ======================== 数据获取 ========================
-/** 根据快捷选项计算确认时间范围 */
-const resolveConfirmTimeRange = (type: TimeRangeTypeEnum): [string, string] => {
-  const now = dayjs()
-  switch (type) {
-    case TimeRangeTypeEnum.WEEK:
-      return getDateRange(now.startOf('week'), now.endOf('week'))
-    case TimeRangeTypeEnum.MONTH:
-      return getDateRange(now.startOf('month'), now.endOf('month'))
-    case TimeRangeTypeEnum.LAST_MONTH: {
-      const lastMonth = now.subtract(1, 'month')
-      return getDateRange(lastMonth.startOf('month'), lastMonth.endOf('month'))
-    }
-    case TimeRangeTypeEnum.CUSTOM:
-      return customTimes.value
-    case TimeRangeTypeEnum.TODAY:
-    default:
-      return getDateRange(now, now)
-  }
-}
-
 /** 加载按客户统计数据 */
 const loadData = async () => {
   loading.value = true
   try {
-    const confirmTime = resolveConfirmTimeRange(timeRangeType.value)
-    list.value = await SalesOrderApi.getCustomerStatistics(confirmTime)
+    list.value = await SalesOrderApi.getCustomerStatistics(props.confirmTime)
     pageNo.value = 1
   } finally {
     loading.value = false
   }
 }
 
-// ======================== 事件处理 ========================
-/** 快捷时间范围切换：同步日期选择器并刷新数据 */
-const handleTimeRangeTypeChange = () => {
-  if (timeRangeType.value !== TimeRangeTypeEnum.CUSTOM) {
-    customTimes.value = resolveConfirmTimeRange(timeRangeType.value)
-  }
-  loadData()
-}
+// 父组件时间范围变更时同步刷新
+watch(() => props.confirmTime, loadData, { immediate: true, deep: true })
 
-/** 自定义日期范围变更：切换为自定义模式并刷新数据 */
-const handleCustomDateChange = (value: [string, string] | null) => {
-  if (!value || value.length !== 2) {
-    return
-  }
-  timeRangeType.value = TimeRangeTypeEnum.CUSTOM
-  customTimes.value = value
-  loadData()
-}
+// ======================== 事件处理 ========================
 
 /** 表格合计行 */
 const getSummaries = (param: { columns: TableColumnCtx<ZcSalesOrderCustomerStatisticsRespVO>[] }) => {

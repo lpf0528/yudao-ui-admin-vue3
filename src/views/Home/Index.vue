@@ -30,10 +30,39 @@
     </el-col>
   </el-row>
 
-  <!-- 已确认订单统计（按客户） -->
+  <!-- 统计区域：订单统计与用料统计共用时间筛选 -->
   <el-row class="mt-8px" :gutter="8">
     <el-col :span="24" class="mb-8px">
-      <HomeSalesOrderStatistics />
+      <div class="w-full flex justify-end mb-12px">
+        <div class="statistics-time-filter flex flex-wrap items-center justify-end gap-12px">
+          <el-radio-group
+            v-model="timeRangeType"
+            size="large"
+            @change="handleTimeRangeTypeChange"
+          >
+            <el-radio-button
+              v-for="item in homeStatisticsTimeRangeOptions"
+              :key="item.value"
+              :value="item.value"
+            >
+              {{ item.label }}
+            </el-radio-button>
+          </el-radio-group>
+          <el-date-picker
+            v-model="customTimes"
+            size="large"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            type="daterange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+            class="statistics-date-picker"
+            @change="handleCustomDateChange"
+          />
+        </div>
+      </div>
+      <HomeSalesOrderStatistics :confirm-time="confirmTime" class="mb-8px" />
+      <HomeMaterialStatistics :confirm-time="confirmTime" />
     </el-col>
   </el-row>
 
@@ -70,8 +99,22 @@ import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 import HomeSalesOrderStatistics from './HomeSalesOrderStatistics.vue'
+import HomeMaterialStatistics from './HomeMaterialStatistics.vue'
+import {
+  homeStatisticsTimeRangeOptions,
+  useHomeStatisticsTimeRange
+} from './useHomeStatisticsTimeRange'
 
 defineOptions({ name: 'Index' })
+
+// ======================== 统计共用时间筛选 ========================
+const {
+  timeRangeType,
+  customTimes,
+  confirmTime,
+  handleTimeRangeTypeChange,
+  handleCustomDateChange
+} = useHomeStatisticsTimeRange()
 
 const { t } = useI18n()
 const router = useRouter()
@@ -192,5 +235,16 @@ getAllApi()
   :deep(.el-card__body) {
     padding: 4px 12px 2px;
   }
+}
+
+.statistics-time-filter {
+  :deep(.el-radio-button__inner) {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+}
+
+.statistics-date-picker {
+  width: 340px !important;
 }
 </style>

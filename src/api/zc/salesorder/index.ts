@@ -201,6 +201,15 @@ export interface ZcSalesOrderCustomerStatisticsRespVO {
   unpaidAmount: number // 未收金额合计（各订单 amount - amount_received 求和）
 }
 
+/** 按产品规格统计已确认订单用料响应 VO */
+export interface ZcSalesOrderMaterialProductStatisticsRespVO {
+  productId: number // 产品编号（货号）
+  productName: string // 产品名称
+  spec: string // 规格
+  quantity: number // 用料数量合计
+  unitValue: string // 单位
+}
+
 // 销售订单 API
 export const SalesOrderApi = {
   // 查询销售订单分页
@@ -322,6 +331,21 @@ export const SalesOrderApi = {
   ): Promise<ZcSalesOrderCustomerStatisticsRespVO[]> => {
     return await request.get({
       url: `/zc/sales-order/statistics/customer`,
+      params: { confirmTime }
+    })
+  },
+
+  /**
+   * 按产品规格统计已确认订单用料（product_id 不为空，按 product_id + spec 汇总 quantity）
+   * 对应后端：GET /zc/sales-order/statistics/material-product
+   *
+   * @param confirmTime 确认时间范围 [开始, 结束]，含边界
+   */
+  getMaterialProductStatistics: async (
+    confirmTime: [string, string]
+  ): Promise<ZcSalesOrderMaterialProductStatisticsRespVO[]> => {
+    return await request.get({
+      url: `/zc/sales-order/statistics/material-product`,
       params: { confirmTime }
     })
   }
