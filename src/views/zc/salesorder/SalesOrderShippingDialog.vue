@@ -25,42 +25,43 @@
     <!-- 预览区：与打印完全同尺寸（100mm × 120mm） -->
     <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
       <template v-if="shippingPages.length">
-        <div
-          v-for="page in shippingPages"
-          :key="page.pageKey"
-          style="
-            background: white;
-            width: 100mm;
-            height: 120mm;
-            margin: 0 auto 20px;
-            padding: 5.2mm 3mm 3mm;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-            font-size: 13pt;
-            line-height: 1.6;
-            color: #1a1a1a;
-            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-            overflow: hidden;
-            box-sizing: border-box;
-          "
-        >
-          <!-- 抬头：左侧标题+结构关键信息，右侧二维码 -->
-          <div style="display: flex; align-items: flex-start; margin-bottom: 3px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 1px; line-height: 1.3; font-weight: 700;">
-                {{ brandName ? brandName + ' ' : '' }}发货联
-              </div>
-              <div style="padding: 1px 0; font-size: 14px; color: #111; font-weight: 700;">订单号：{{ formData?.orderNo || '-' }}</div>
-              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">{{ page.setNoText }}</div>
-              <div style="padding: 2px 0; font-size: 15px; color: #111; font-weight: 700;">房间：{{ page.room }}</div>
+          <div
+            v-for="page in shippingPages"
+            :key="page.pageKey"
+            style="
+              background: white;
+              width: 100mm;
+              height: 120mm;
+              margin: 0 auto 20px;
+              padding: 3px 14px 12px;
+              box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #f00, 0 2px 12px rgba(0,0,0,0.2);
+              font-size: 17px;
+              color: #1a1a1a;
+              font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+              overflow: hidden;
+              box-sizing: border-box;
+            "
+          >
+          <!-- 抬头：标题单独一行，信息与二维码并排 -->
+          <div style="margin-bottom: 3px;">
+            <div style="font-size: 20px; letter-spacing: 2px; text-align: center; margin-bottom: 3px; line-height: 1.2; font-weight: 700;">
+              {{ brandName ? brandName + ' ' : '' }}发货联
             </div>
-            <div style="width: 100px; flex-shrink: 0; padding-left: 6px; text-align: center;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="padding: 2px 0; font-size: 15px;">订单号：{{ formData?.orderNo || '-' }}</div>
+                <div style="padding: 2px 0; font-size: 15px;">{{ page.setNoText }}</div>
+                <div style="padding: 2px 0; font-size: 15px;">房间：{{ page.room }}</div>
+              </div>
+              <div style="width: 123px; flex-shrink: 0; text-align: center;">
               <template v-if="structureQrCodes[page.pageKey]">
-                <img :src="structureQrCodes[page.pageKey].url" width="88" height="88" style="display: block; margin: 0 auto;" />
+                <img :src="structureQrCodes[page.pageKey].url" width="108" height="108" style="display: block; margin: 0 auto;" />
               </template>
               <div
                 v-else
-                style="width: 88px; height: 88px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 12px;"
+                style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
               >二维码</div>
+              </div>
             </div>
           </div>
 
@@ -70,12 +71,12 @@
           <table style="width: 100%; border-collapse: collapse; border: 2px solid #111827; background: #F9FAFB; color: #374151; margin-bottom: 8px; font-size: 14px;">
             <tbody>
               <tr>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; width: 28%; color: #111; font-size: 16px; font-weight: 700;">收货人</td>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold;">{{ formData?.receiver || '-' }}</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; width: 28%; color: #111; font-size: 16px; font-weight: 700;">客户名称</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold;">{{ customerName }}</td>
               </tr>
               <tr>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700;">联系电话</td>
-                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold;">{{ formData?.mobile || '-' }}</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; width: 32%; color: #111; font-size: 16px; font-weight: 700;">收货人/电话</td>
+                <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold;">{{ formData?.receiver || '-' }}：{{ formData?.mobile || '-' }}</td>
               </tr>
               <tr>
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700;">物流方式</td>
@@ -159,6 +160,12 @@ const logisticsName = computed(() => {
   if (formData.value?.logisticName) return formData.value.logisticName
   if (!formData.value?.logisticId) return '-'
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
+})
+
+const customerName = computed(() => {
+  if (!formData.value?.customerId) return '-'
+  const customer = props.customersList.find((item) => item.id === formData.value!.customerId)
+  return customer?.shortName || customer?.name || '-'
 })
 
 const printDate = computed(() => formatDate(new Date()))
@@ -284,24 +291,26 @@ const handlePrint = () => {
           .map((item) => `${item.structureName} | 备注：${item.structureNote}`)
           .join('<br/>')
         const qrHtml = qrEntry
-          ? `<img src="${qrEntry.url}" width="88" height="88" style="display:block;margin:0 auto;" />`
-          : `<div style="width:88px;height:88px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10px;">二维码</div>`
+          ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
+          : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;">二维码</div>`
         return `
   <div class="page">
-    <div style="display:flex;align-items:flex-start;margin-bottom:2px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:18pt;letter-spacing:2px;text-align:center;margin-bottom:1px;line-height:1.3;font-weight:700;">${brandName.value ? brandName.value + '&nbsp;' : ''}发货联</div>
-        <div style="padding:1px 0;font-size:12pt;color:#111;font-weight:700;">订单号：${data.orderNo || '-'}</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">${page.setNoText}</div>
-        <div style="padding:1px 0;font-size:13pt;color:#111;font-weight:700;">房间：${page.room}</div>
+    <div style="margin-bottom:3px;">
+      <div style="font-size:20px;letter-spacing:2px;text-align:center;margin-bottom:3px;line-height:1.2;font-weight:700;">${brandName.value ? brandName.value + ' ' : ''}发货联</div>
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="padding:2px 0;font-size:15px;">订单号：${data.orderNo || '-'}</div>
+          <div style="padding:2px 0;font-size:15px;">${page.setNoText}</div>
+          <div style="padding:2px 0;font-size:15px;">房间：${page.room}</div>
+        </div>
+        <div style="width:123px;flex-shrink:0;text-align:center;">${qrHtml}</div>
       </div>
-      <div style="width:96px;flex-shrink:0;padding-left:5px;text-align:center;">${qrHtml}</div>
     </div>
     <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     <table style="width:100%;border-collapse:collapse;border:2px solid #111827;background:#F9FAFB;color:#374151;font-size:11pt;">
       <tbody>
-        <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:30%;color:#111;font-size:12pt;font-weight:700;">收货人</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.receiver || '-'}</td></tr>
-        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">联系电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.mobile || '-'}</td></tr>
+        <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:30%;color:#111;font-size:12pt;font-weight:700;">客户名称</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${customerName.value}</td></tr>
+        <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:34%;color:#111;font-size:12pt;font-weight:700;">收货人/电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.receiver || '-'}：${data.mobile || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">物流方式</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${logisticsName.value}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">收货地址</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${data.deliveryAddress || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">结构信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;line-height:1.5;">${structureInfoHtml}</td></tr>
@@ -328,7 +337,7 @@ const handlePrint = () => {
     * { box-sizing: border-box; font-family: 'SimHei', '黑体', 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: normal; }
     body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
     b, strong { font-weight: normal; }
-    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 5.2mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }
+    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 3px 14px 12px; width: 100mm; height: 120mm; box-sizing: border-box; font-size: 17px; box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #f00; }
     .page:last-child { page-break-after: auto; }
   </style>
 </head>

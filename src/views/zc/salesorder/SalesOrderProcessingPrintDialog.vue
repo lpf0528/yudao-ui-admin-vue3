@@ -32,7 +32,7 @@
               height: 120mm;
               margin: 0 auto 20px;
               padding: 3px 14px 12px;
-              box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+              box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #f00, 0 2px 12px rgba(0,0,0,0.2);
               font-size: 17px;
               color: #1a1a1a;
               font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
@@ -40,25 +40,27 @@
               box-sizing: border-box;
             "
           >
-            <!-- 抬头：左侧标题+信息，右侧二维码 -->
-            <div style="display: flex; align-items: flex-start; margin-bottom: 3px;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 23px; letter-spacing: 3px; text-align: center; margin-bottom: 2px;">
-                  {{ brandName ? brandName + ' ' : '' }}加工单
-                </div>
-                <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
-                <div style="padding: 2px 0; font-size: 13px; margin-bottom: 2px;">客户：{{ customerName }}</div>
-                <div style="padding: 2px 0; font-size: 13px;">房间：</div>
-                <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
+            <!-- 抬头：标题单独占第一行，二维码和信息在下方 -->
+            <div style="margin-bottom: 3px;">
+              <div style="font-size: 18px; letter-spacing: 2px; text-align: center; margin-bottom: 3px; line-height: 1.2;">
+                {{ brandName ? brandName + ' ' : '' }}加工单
               </div>
-              <div style="width: 123px; flex-shrink: 0; padding-left: 10px; text-align: center;">
-                <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
-                  <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="108" height="108" style="display: block; margin: 0 auto;" />
-                </template>
-                <div
-                  v-else
-                  style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
-                >二维码</div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="flex: 1; min-width: 0;">
+                  <div style="padding: 2px 0; font-size: 13px;">订单号：{{ formData?.orderNo || '-' }}</div>
+                  <div style="padding: 2px 0; font-size: 13px;">客户：{{ customerName }}</div>
+                  <div style="padding: 2px 0; font-size: 13px;">房间：</div>
+                  <div v-if="formData?.note" style="padding: 2px 0; font-size: 13px;">备注：{{ formData.note }}</div>
+                </div>
+                <div style="width: 123px; flex-shrink: 0; text-align: center;">
+                  <template v-if="structureQrCodes[`${cIdx}-${sIdx}`]">
+                    <img :src="structureQrCodes[`${cIdx}-${sIdx}`].url" width="108" height="108" style="display: block; margin: 0 auto;" />
+                  </template>
+                  <div
+                    v-else
+                    style="width: 108px; height: 108px; border: 1px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px;"
+                  >二维码</div>
+                </div>
               </div>
             </div>
 
@@ -67,7 +69,7 @@
 
             <!-- 结构信息横条：左结构名，中房间，右套数 -->
             <div style="border: 3px solid #1D4ED8; background: #EFF6FF; padding: 4px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap; font-weight: bold;">
+              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap; font-weight: 600;">
                 {{ getStructureName(structure.structureId) || (structure as any).structureName || '-' }}
               </span>
               <span style="font-size: 12px; white-space: nowrap; flex: 1; text-align: center;">
@@ -85,7 +87,7 @@
                       <template v-for="(part, pi) in cell.labeledValues" :key="pi">
                         <span v-if="pi > 0"> | </span>
                         <span style="font-size: 10px; color: #6B7280; white-space: nowrap;">{{ part.label }}：</span>
-                        <span style="font-size: 14px; font-weight: bold">{{ part.value }}</span>
+                        <span style="font-size: 14px; font-weight: 500">{{ part.value }}</span>
                       </template>
                     </template>
                     <template v-else>
@@ -94,7 +96,7 @@
                         :style="cell.isDim ? 'font-size: 13px; color: #000; white-space: nowrap;' : 'font-size: 10px; color: #6B7280; white-space: nowrap;'"
                       >{{ cell.label }}：</span>
                       <span
-                        :style="cell.isDim ? 'font-size: 18px; font-weight: bold; color: #000;' : (cell.smallValue ? 'font-size: 14px; font-weight: bold' : 'font-size: 16px; font-weight: bold')"
+                        :style="cell.isDim ? 'font-size: 18px; font-weight: 500; color: #000;' : (cell.smallValue ? 'font-size: 14px; font-weight: 500' : 'font-size: 16px; font-weight: 500')"
                       >{{ cell.value }}</span>
                     </template>
                   </td>
@@ -121,7 +123,7 @@
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ getElementName(material.elementId) || material.elementName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.productName || '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.spec || '-' }}</td>
-                  <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right; font-weight: bold; font-size: 16px; color: #000;">{{ material.quantity ?? '-' }}</td>
+                  <td style="border: 1px solid #4B5563; padding: 3px 5px; text-align: right; font-weight: 500; font-size: 16px; color: #000;">{{ material.quantity ?? '-' }}</td>
                   <td style="border: 1px solid #4B5563; padding: 3px 5px;">{{ material.note || '' }}</td>
                 </tr>
               </tbody>
@@ -347,15 +349,17 @@ const handlePrint = async () => {
       ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
       : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">二维码</div>`
     return `
-      <div style="display:flex;align-items:flex-start;margin-bottom:2px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:20pt;letter-spacing:3px;text-align:center;margin-bottom:1px;">${bName ? bName + '&nbsp;' : ''}加工单</div>
-          <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
-          <div style="padding:1px 0;font-size:11pt;margin-bottom:1px;">客户：${cName}</div>
-          <div style="padding:1px 0;font-size:11pt;">房间：</div>
-          ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
+      <div style="margin-bottom:2px;">
+        <div style="font-size:16pt;letter-spacing:2px;text-align:center;margin-bottom:3px;line-height:1.2;">${bName ? bName + '&nbsp;' : ''}加工单</div>
+        <div style="display:flex;align-items:flex-start;gap:9px;">
+          <div style="flex:1;min-width:0;">
+            <div style="padding:1px 0;font-size:11pt;">订单号：${fd.orderNo || '-'}</div>
+            <div style="padding:1px 0;font-size:11pt;">客户：${cName}</div>
+            <div style="padding:1px 0;font-size:11pt;">房间：</div>
+            ${fd.note ? `<div style="padding:1px 0;font-size:11pt;">备注：${fd.note}</div>` : ''}
+          </div>
+          <div style="width:117px;flex-shrink:0;text-align:center;">${qrImg}</div>
         </div>
-        <div style="width:117px;flex-shrink:0;padding-left:9px;text-align:center;">${qrImg}</div>
       </div>
       <div style="border-top:1px solid #ccc;margin:3px 0 4px;"></div>
     `
@@ -371,7 +375,7 @@ const handlePrint = async () => {
       const strName = getStructureName(structure.structureId) || structure.structureName || '-'
       const curtainHeaderHtml = `
         <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;font-weight:bold;">${strName}</span>
+          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;font-weight:600;">${strName}</span>
           <span style="font-size:10pt;white-space:nowrap;flex:1;text-align:center;"><span style="${lC}">房间：</span>${curtain.room || '-'}</span>
           <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;">第${cIdx + 1}-${sIdx + 1}套</span>
         </div>
@@ -382,7 +386,7 @@ const handlePrint = async () => {
       const sC = 'border:1px solid #4B5563;padding:4px 5px;width:33.33%;vertical-align:middle;'
       const lS = 'font-size:8pt;color:#6B7280;white-space:nowrap;'
       const dimLabelS = 'font-size:10pt;color:#000;white-space:nowrap;'
-      const dimValS = 'font-size:16pt;font-weight:bold;color:#000;'
+      const dimValS = 'font-size:16pt;font-weight:500;color:#000;'
       const vS = 'font-size:14pt;'
 
       const renderAttrCell = (cell: StructureAttr) => {
@@ -390,7 +394,7 @@ const handlePrint = async () => {
           const parts = cell.labeledValues
             .map(
               (part, pi) =>
-                `${pi > 0 ? '|' : ''}<span style="${lS}">${part.label}：</span><span style="font-size:11pt;font-weight:bold;">${part.value}</span>`
+                `${pi > 0 ? '|' : ''}<span style="${lS}">${part.label}：</span><span style="font-size:11pt;font-weight:500;">${part.value}</span>`
             )
             .join('')
           return parts
@@ -398,7 +402,7 @@ const handlePrint = async () => {
         if (cell.isDim) {
           return `<span style="${dimLabelS}">${cell.label}：</span><span style="${dimValS}">${cell.value}</span>`
         }
-        return `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:bold;' : vS + 'font-weight:bold;'}">${cell.value}</span>`
+        return `${cell.noLabel ? '' : `<span style="${lS}">${cell.label}：</span>`}<span style="${cell.smallValue ? 'font-size:11pt;font-weight:500;' : vS + 'font-weight:500;'}">${cell.value}</span>`
       }
 
       const structureHtml = `
@@ -428,7 +432,7 @@ const handlePrint = async () => {
                   <td style="${tdS}">${getElementName(m.elementId) || m.elementName || '-'}</td>
                   <td style="${tdS}">${m.productName || '-'}</td>
                   <td style="${tdS}">${m.spec || '-'}</td>
-                  <td style="${tdS}text-align:right;font-weight:bold;font-size:14pt;color:#000;">${m.quantity ?? '-'}</td>
+                  <td style="${tdS}text-align:right;font-weight:500;font-size:14pt;color:#000;">${m.quantity ?? '-'}</td>
                   <td style="${tdS}">${m.note || ''}</td>
                 </tr>`
                 )
@@ -452,10 +456,10 @@ const handlePrint = async () => {
   <style>
     @page { size: 100mm 120mm; margin: 0mm; }
     html, body { margin: 0; padding: 0; }
-    * { box-sizing: border-box; font-family: 'SimHei', '黑体', 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: normal; }
-    body { color: #1a1a1a; font-size: 13pt; line-height: 1.6; }
-    b, strong { font-weight: normal; }
-    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.2mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; }
+    * { box-sizing: border-box; font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', Arial, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: geometricPrecision; }
+    body { color: #1a1a1a; font-size: 12pt; line-height: 1.45; }
+    b, strong { font-weight: 500; }
+    .page { page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 0.2mm 3mm 3mm; width: 100mm; height: 120mm; box-sizing: border-box; background: #fff; box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #f00; }
     .page:last-child { page-break-after: auto; }
   </style>
 </head>
