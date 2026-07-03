@@ -420,7 +420,7 @@
               <template v-if="structure.materials.length > 0">
                 <el-row :gutter="12" class="text-xs text-gray-700 font-semibold mb-2px px-4px">
                   <el-col :span="1" />
-                  <el-col :span="3">组件类型</el-col>
+                  <el-col :span="3"><span class="text-red-500">*</span> 组件类型</el-col>
                   <el-col :span="3">货号</el-col>
                   <el-col :span="3">批次</el-col>
                   <el-col :span="2">规格</el-col>
@@ -1652,6 +1652,20 @@ const submitForm = async () => {
   if (emptyCurtainIndex !== -1) {
     message.warning(`第 ${emptyCurtainIndex + 1} 个窗帘明细未选择窗帘，请先选择窗帘`)
     return
+  }
+  // 每条用料明细必须选择组件类型（elementId 不能为空）
+  for (let cIdx = 0; cIdx < formData.value.curtains.length; cIdx++) {
+    const curtain = formData.value.curtains[cIdx]
+    for (let sIdx = 0; sIdx < (curtain.structures?.length ?? 0); sIdx++) {
+      const structure = curtain.structures![sIdx]
+      const emptyMaterialIndex = structure.materials?.findIndex((m) => !m.elementId) ?? -1
+      if (emptyMaterialIndex !== -1) {
+        message.warning(
+          `第 ${cIdx + 1} 个窗帘、第 ${sIdx + 1} 个结构的第 ${emptyMaterialIndex + 1} 条用料未选择组件类型`
+        )
+        return
+      }
+    }
   }
   formLoading.value = true
   try {

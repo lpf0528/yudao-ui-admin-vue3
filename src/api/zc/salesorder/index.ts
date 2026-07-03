@@ -403,6 +403,9 @@ export interface ZcOrderProcessRecordRespVO {
   orderId: number          // 销售订单 ID
   orderNo: string          // 订单号
   curtainName: string      // 窗帘款式名称
+  room: string             // 房间
+  structureName: string    // 结构名称
+  elementName: string      // 组件名称
   curtainId: number        // 窗帘行 ID
   structureId: number      // 结构行 ID
   materialId: number       // 用料明细 ID

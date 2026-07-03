@@ -291,7 +291,7 @@
         <el-timeline-item
           v-for="record in processRecordList"
           :key="record.id"
-          :timestamp="record.createTime"
+          :timestamp="formatProcessRecordTime(record.createTime)"
           placement="top"
           :type="record.status === 2 ? 'danger' : 'success'"
         >
@@ -302,6 +302,9 @@
               </el-tag>
               <span class="font-bold">{{ record.nodeName }}</span>
               <span v-if="record.curtainName" class="text-gray-500 text-sm">· {{ record.curtainName }}</span>
+              <span v-if="record.room" class="text-gray-500 text-sm">· {{ record.room }}</span>
+              <span v-if="record.structureName" class="text-gray-500 text-sm">· {{ record.structureName }}</span>
+              <span v-if="record.elementName" class="text-gray-500 text-sm">· {{ record.elementName }}</span>
             </div>
             <div class="text-sm text-gray-600">
               <span>主操作：{{ record.masterName || '-' }}</span>
@@ -330,7 +333,7 @@
 import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
-import { dateFormatter } from '@/utils/formatTime'
+import { dateFormatter, formatDate } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { SalesOrderApi, SalesOrderProductApi, SalesOrderType, SalesOrder, OrderProcessRecordApi, ZcOrderProcessRecordRespVO } from '@/api/zc/salesorder'
 import type { Customer } from '@/api/zc/customer'
@@ -501,6 +504,11 @@ const handleExport = async () => {
 const processRecordVisible = ref(false)   // 工序记录弹窗是否显示
 const processRecordLoading = ref(false)   // 工序记录加载状态
 const processRecordList = ref<ZcOrderProcessRecordRespVO[]>([]) // 工序记录列表
+
+/** 格式化工序记录时间戳为 YYYY-MM-DD HH:mm:ss */
+const formatProcessRecordTime = (time?: string) => {
+  return time ? formatDate(new Date(time), 'YYYY-MM-DD HH:mm:ss') : ''
+}
 
 /** 打开工序记录弹窗，按订单 ID 查询所有记录 */
 const openProcessRecordDialog = async (orderId: number) => {
