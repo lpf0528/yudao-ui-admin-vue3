@@ -1,27 +1,30 @@
 <!--
   销售订单 - 工序记录弹窗
-  功能：按订单→窗帘行→结构行→用料明细分层展示工序时间线
+  功能：展示完整窗帘结构，各层级挂载 processRecords 横向流程
   使用方：views/zc/salesorder/index.vue
 -->
 <template>
-  <el-dialog v-model="dialogVisible" title="工序记录" width="720px" destroy-on-close>
+  <el-dialog v-model="dialogVisible" title="工序记录" width="900px" destroy-on-close>
     <div v-loading="loading" class="min-h-80px">
-      <el-empty v-if="!loading && !hasProcessRecords" description="暂无工序记录" />
+      <el-empty
+        v-if="!loading && !detail?.orderRecords?.length && !detail?.curtains?.length"
+        description="暂无订单结构数据"
+      />
 
       <div v-else class="flex flex-col gap-4">
         <!-- 订单级记录 -->
-        <section v-if="timeline?.orderRecords?.length" class="process-section">
+        <section v-if="detail?.orderRecords?.length" class="process-section">
           <div class="process-section__title">
             <Icon icon="ep:document" class="mr-1" />
             订单级
           </div>
-          <ProcessRecordTimeline :records="timeline!.orderRecords!" />
+          <ProcessRecordTimeline :records="detail!.orderRecords!" />
         </section>
 
-        <!-- 窗帘行分组 -->
+        <!-- 窗帘行（完整结构，无工序也展示） -->
         <section
-          v-for="curtain in timeline?.curtains"
-          :key="curtain.curtainId"
+          v-for="curtain in detail?.curtains"
+          :key="curtain.id ?? curtain.curtainId"
           class="process-section"
         >
           <div class="process-section__title">
@@ -30,17 +33,17 @@
             <span v-if="curtain.room" class="text-gray-500 font-normal"> · {{ curtain.room }}</span>
           </div>
 
-          <!-- 窗帘级记录 -->
           <ProcessRecordTimeline
-            v-if="curtain.records?.length"
-            :records="curtain.records"
+            v-if="curtain.processRecords?.length"
+            :records="curtain.processRecords"
             class="mb-3"
           />
+          <div v-else class="text-gray-400 text-sm py-1 mb-3">暂无工序记录</div>
 
-          <!-- 结构行分组 -->
+          <!-- 结构行 -->
           <div
             v-for="structure in curtain.structures"
-            :key="structure.structureId"
+            :key="structure.id ?? structure.structureId"
             class="process-subsection"
           >
             <div class="process-subsection__title">
@@ -48,24 +51,28 @@
               {{ structure.structureName || `结构 #${structure.structureId}` }}
             </div>
 
-            <!-- 结构级记录 -->
             <ProcessRecordTimeline
-              v-if="structure.records?.length"
-              :records="structure.records"
+              v-if="structure.processRecords?.length"
+              :records="structure.processRecords"
               class="mb-3"
             />
+            <div v-else class="text-gray-400 text-sm py-1 mb-3">暂无工序记录</div>
 
-            <!-- 用料明细分组 -->
+            <!-- 用料明细 -->
             <div
-              v-for="element in structure.elements"
-              :key="element.elementId"
-              class="process-element"
+              v-for="material in structure.materials"
+              :key="material.id"
+              class="process-material"
             >
-              <div class="process-element__title">
+              <div class="process-material__title">
                 <Icon icon="ep:box" class="mr-1" />
-                {{ element.elementName || `用料 #${element.elementId}` }}
+                {{ formatMaterialTitle(material) }}
               </div>
-              <ProcessRecordTimeline v-if="element.records?.length" :records="element.records" />
+              <ProcessRecordTimeline
+                v-if="material.processRecords?.length"
+                :records="material.processRecords"
+              />
+              <div v-else class="text-gray-400 text-sm py-1">暂无工序记录</div>
             </div>
           </div>
         </section>
@@ -76,11 +83,10 @@
 
 <script setup lang="ts">
 // ======================== 导入与声明 ========================
-import { formatDate } from '@/utils/formatTime'
 import {
-  OrderProcessRecordApi,
-  type ZcOrderProcessRecordRespVO,
-  type ZcOrderProcessRecordTimelineRespVO
+  SalesOrderApi,
+  type ZcSalesOrderMaterialProcessRecordRespVO,
+  type ZcSalesOrderProcessRecordDetailRespVO
 } from '@/api/zc/salesorder'
 import ProcessRecordTimeline from './ProcessRecordTimeline.vue'
 
@@ -91,23 +97,13 @@ const message = useMessage()
 // ======================== 响应式状态 ========================
 const dialogVisible = ref(false)
 const loading = ref(false)
-const timeline = ref<ZcOrderProcessRecordTimelineRespVO | null>(null)
+const detail = ref<ZcSalesOrderProcessRecordDetailRespVO | null>(null)
 
-/** 是否存在任意层级的工序记录 */
-const hasProcessRecords = computed(() => {
-  const data = timeline.value
-  if (!data) return false
-  if (data.orderRecords?.length) return true
-  return data.curtains?.some(
-    (curtain) =>
-      !!curtain.records?.length ||
-      curtain.structures?.some(
-        (structure) =>
-          !!structure.records?.length ||
-          structure.elements?.some((element) => !!element.records?.length)
-      )
-  )
-})
+/** 用料明细标题：组件名称 + 产品名称 */
+const formatMaterialTitle = (material: ZcSalesOrderMaterialProcessRecordRespVO) => {
+  const name = material.elementName || `用料 #${material.id}`
+  return material.productName ? `${name} · ${material.productName}` : name
+}
 
 // ======================== 对外方法 ========================
 /**
@@ -117,11 +113,10 @@ const hasProcessRecords = computed(() => {
 const open = async (orderId: number) => {
   dialogVisible.value = true
   loading.value = true
-  timeline.value = null
+  detail.value = null
   try {
-    // 含系统节点（裁剪、打包、发货）与手工配置节点
-    timeline.value = await OrderProcessRecordApi.getOrderProcessRecordList({
-      orderId,
+    detail.value = await SalesOrderApi.getSalesOrderProcessRecordDetail({
+      id: orderId,
       groups: '0,1'
     })
   } catch (e) {
@@ -170,7 +165,7 @@ defineExpose({ open })
   color: var(--el-text-color-regular);
 }
 
-.process-element {
+.process-material {
   padding: 8px 10px;
   margin-top: 8px;
   margin-left: 8px;
@@ -178,7 +173,7 @@ defineExpose({ open })
   border-radius: 0 4px 4px 0;
 }
 
-.process-element__title {
+.process-material__title {
   display: flex;
   align-items: center;
   margin-bottom: 8px;

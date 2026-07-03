@@ -233,6 +233,20 @@ export const SalesOrderApi = {
     return await request.get({ url: `/zc/sales-order/detail`, params: { id } })
   },
 
+  /**
+   * 获得销售订单工序记录详情（完整窗帘结构 + 各层工序记录）
+   * 对应后端：GET /zc/sales-order/process-record
+   */
+  getSalesOrderProcessRecordDetail: async (
+    params: ZcSalesOrderProcessRecordDetailReqVO
+  ): Promise<ZcSalesOrderProcessRecordDetailRespVO> => {
+    const { groups = '1', ...rest } = params
+    return await request.get({
+      url: `/zc/sales-order/process-record`,
+      params: { ...rest, groups }
+    })
+  },
+
   // 整单新增销售订单（含窗帘行→结构行→用料明细）
   createSalesOrder: async (data: ZcSalesOrderSubmitReqVO) => {
     return await request.post({ url: `/zc/sales-order/create`, data })
@@ -423,61 +437,44 @@ export interface ZcOrderProcessRecordRespVO {
   updateTime: string       // 最后更新时间（撤销时更新）
 }
 
-/** 用料明细分组项 */
-export interface ZcOrderProcessRecordElementItem {
-  elementId: number        // 用料明细 ID
-  productId?: number       // 产品 ID，可为空
-  elementName?: string     // 用料元素名称
-  records?: ZcOrderProcessRecordRespVO[] // 用料级工序记录
+/** 用料明细（含工序记录） */
+export interface ZcSalesOrderMaterialProcessRecordRespVO extends ZCSalesOrderMaterial {
+  cutQuantity?: number       // 裁剪数量
+  barcode?: string           // 批次条码
+  elementIsPrint?: boolean   // 组件是否打印
+  createTime?: string        // 创建时间
+  processRecords?: ZcOrderProcessRecordRespVO[] // 用料级工序记录，按创建时间升序
 }
 
-/** 结构行分组项 */
-export interface ZcOrderProcessRecordStructureItem {
-  structureId: number      // 结构行 ID
-  structureName?: string   // 结构名称
-  records?: ZcOrderProcessRecordRespVO[] // 结构级工序记录
-  elements?: ZcOrderProcessRecordElementItem[] // 用料明细分组列表
+/** 结构行（含工序记录） */
+export interface ZcSalesOrderStructureProcessRecordRespVO extends SalesOrderStructure {
+  createTime?: string        // 创建时间
+  processRecords?: ZcOrderProcessRecordRespVO[] // 结构级工序记录，按创建时间升序
+  materials?: ZcSalesOrderMaterialProcessRecordRespVO[] // 用料明细列表
 }
 
-/** 窗帘行分组项 */
-export interface ZcOrderProcessRecordCurtainItem {
-  curtainId: number        // 窗帘行 ID
-  curtainName: string      // 窗帘款式名称
-  room: string             // 房间
-  records?: ZcOrderProcessRecordRespVO[] // 窗帘级工序记录
-  structures?: ZcOrderProcessRecordStructureItem[] // 结构行分组列表
+/** 窗帘行（含工序记录） */
+export interface ZcSalesOrderCurtainProcessRecordRespVO extends SalesOrderCurtain {
+  status?: string            // 窗帘行状态
+  index?: number             // 序号
+  packTime?: string          // 打包时间
+  shipTime?: string          // 发货时间
+  createTime?: string        // 创建时间
+  processRecords?: ZcOrderProcessRecordRespVO[] // 窗帘级工序记录，按创建时间升序
+  structures?: ZcSalesOrderStructureProcessRecordRespVO[] // 结构行列表
 }
 
-/** 订单工序时间线（分层）响应 VO */
-export interface ZcOrderProcessRecordTimelineRespVO {
+/** 销售订单工序记录详情响应 VO */
+export interface ZcSalesOrderProcessRecordDetailRespVO extends SalesOrder {
   orderRecords?: ZcOrderProcessRecordRespVO[] // 订单级工序记录（未关联窗帘行）
-  curtains?: ZcOrderProcessRecordCurtainItem[] // 窗帘行分组列表
+  curtains?: ZcSalesOrderCurtainProcessRecordRespVO[] // 窗帘行列表（完整结构 + 工序记录）
 }
 
-/** 订单工序时间线查询参数 */
-export interface OrderProcessRecordListReqVO {
-  orderId?: number       // 订单 ID，不传则返回全部
-  masterId?: number      // 主操作人员 ID，不传则返回全部
-  curtainId?: number     // 窗帘行 ID，不传则返回全部
-  structureId?: number   // 结构行 ID，不传则返回全部
-  materialId?: number    // 用料明细 ID，不传则返回全部
-  nodeId?: number        // 工序节点 ID，不传则返回全部
-  groups?: string        // 工序节点分组多选：0=系统配置，1=手工配置，逗号分隔，默认 "1"
-}
-
-// 订单工序记录 API
-export const OrderProcessRecordApi = {
-  // 获取订单工序时间线（窗帘行→结构行→用料明细分层），对应后端：GET /zc/order-process-record/list
-  // 默认 groups=1（手工配置节点），传 groups=0,1 可含系统节点（裁剪、打包、发货）
-  getOrderProcessRecordList: async (
-    params: OrderProcessRecordListReqVO = {}
-  ): Promise<ZcOrderProcessRecordTimelineRespVO> => {
-    const { groups = '1', ...rest } = params
-    return await request.get({
-      url: `/zc/order-process-record/list`,
-      params: { ...rest, groups }
-    })
-  }
+/** 工序记录详情查询参数 */
+export interface ZcSalesOrderProcessRecordDetailReqVO {
+  id?: number                // 销售订单 ID，与 orderNo 二选一
+  orderNo?: string           // 销售订单编号，优先级高于 id
+  groups?: string            // 工序节点分组：0=系统配置，1=手工配置，逗号分隔，默认 "1"
 }
 
 export const SalesOrderProductApi = {
