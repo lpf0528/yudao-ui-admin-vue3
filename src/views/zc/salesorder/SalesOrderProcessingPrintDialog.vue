@@ -75,7 +75,9 @@
               <span style="font-size: 12px; white-space: nowrap; flex: 1; text-align: center;">
                 <span style="font-size: 10px; color: #6B7280;">房间：</span>{{ curtain.room || '-' }}
               </span>
-              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap;">第{{ cIdx + 1 }}-{{ sIdx + 1 }}套</span>
+              <span style="font-size: 12px; color: #1D4ED8; white-space: nowrap;">
+                第{{ cIdx + 1 }}-{{ sIdx + 1 }}套 / 共{{ formData?.curtains?.length || 0 }}套
+              </span>
             </div>
 
             <!-- 结构信息 - 3列表格 -->
@@ -377,7 +379,7 @@ const handlePrint = async () => {
         <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
           <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;font-weight:600;">${strName}</span>
           <span style="font-size:10pt;white-space:nowrap;flex:1;text-align:center;"><span style="${lC}">房间：</span>${curtain.room || '-'}</span>
-          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;">第${cIdx + 1}-${sIdx + 1}套</span>
+          <span style="font-size:10pt;color:#1D4ED8;white-space:nowrap;">第${cIdx + 1}-${sIdx + 1}套 / 共${fd.curtains?.length || 0}套</span>
         </div>
       `
 

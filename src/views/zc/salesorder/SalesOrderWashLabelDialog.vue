@@ -1,6 +1,6 @@
 <!--
   水洗标打印预览弹窗
-  每个结构生成 6 张相同的水洗标，标签尺寸 50mm × 80mm（竖版）
+  每个结构生成 1 张水洗标，标签尺寸 50mm × 80mm（竖版）
   从上到下：单号、客户、位置、套数、结构属性、用料、订单二维码
   父组件通过 open(formData) 方法打开
 -->
@@ -20,17 +20,17 @@
     </template>
 
     <!-- 预览区：三列网格展示（每标签竖版较窄） -->
-    <div style="background: #e8e8e8; padding: 20px; max-height: 78vh; overflow-y: auto;">
+    <div style="background: #e8e8e8; padding: 20px 20px; max-height: 78vh; overflow-y: auto;">
       <div v-loading="loading" element-loading-text="正在生成二维码...">
         <template v-if="labelItems.length">
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 860px; margin: 0 auto;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(50mm, 50mm)); gap: 14px; justify-content: center; max-width: 100%; margin: 0 auto;">
             <div
               v-for="(item, idx) in labelItems"
               :key="idx"
               style="
                 background: white;
-                width: 100%;
-                aspect-ratio: 50/80;
+                width: 50mm;
+                max-width: 50mm;
                 padding: 6px 8px;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.18);
                 font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
@@ -41,61 +41,75 @@
                 border: 1px solid #ddd;
                 font-size: 10px;
                 overflow: hidden;
+                padding-bottom: 20px;
               "
             >
+              <div style="display:flex; flex-direction:column; gap:6px; margin-top:20px; margin-bottom:10px;">
+                <div style="border-top:1px dashed #9a9a9a;"></div>
+                <div style="text-align:center; font-size:18px; font-weight:800; line-height:1.1; color:#111; margin-top:2px;">
+                  {{ brandName || '品牌名称' }}
+                </div>
+              </div>
+
               <!-- 单号 -->
               <div style="display:flex; gap:4px; line-height:1.8;">
-                <span style="color:#888; white-space:nowrap;">单号</span>
-                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ item.orderNo }}</span>
+                <span style="color:#888; white-space:nowrap; font-size:13px;">单号：</span>
+                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px;">{{ item.orderNo }}</span>
               </div>
 
               <!-- 客户 -->
               <div style="display:flex; gap:4px; line-height:1.8;">
-                <span style="color:#888; white-space:nowrap;">客户</span>
-                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ item.customerName }}</span>
+                <span style="color:#888; white-space:nowrap; font-size:13px;">客户：</span>
+                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px;">{{ item.customerName }}</span>
               </div>
 
               <!-- 位置 -->
               <div style="display:flex; gap:4px; line-height:1.8;">
-                <span style="color:#888; white-space:nowrap;">位置</span>
-                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ item.room || '-' }}</span>
+                <span style="color:#888; white-space:nowrap; font-size:13px;">位置：</span>
+                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px;">{{ item.room || '-' }}</span>
               </div>
 
               <!-- 套数 -->
               <div style="display:flex; gap:4px; line-height:1.8; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:3px;">
-                <span style="color:#888; white-space:nowrap;">套数</span>
-                <span style="font-weight:700; white-space:nowrap;">第{{ item.curtainSeq }}套/共{{ item.totalCurtains }}套</span>
-                <span style="color:#888; margin-left:4px; white-space:nowrap;">结构{{ item.structureSeq }}</span>
+                <span style="color:#888; white-space:nowrap; font-size:13px;">套数：</span>
+                <span style="font-weight:700; white-space:nowrap; font-size:13px;">第{{ item.curtainSeq }}套/共{{ item.totalCurtains }}套</span>
+                <!-- <span style="color:#888; margin-left:4px; white-space:nowrap; font-size:11px;">结构：{{ item.structureSeq }}</span> -->
               </div>
 
               <!-- 结构属性 -->
               <div style="flex-shrink:0; margin-bottom:3px;">
-                <div v-for="(attr, aIdx) in item.attrs" :key="aIdx" style="display:flex; gap:4px; line-height:1.6; font-size:9px;">
-                  <span style="color:#888; white-space:nowrap;">{{ attr.label }}</span>
+                <div v-for="(attr, aIdx) in item.attrs" :key="aIdx" style="display:flex; gap:4px; line-height:1.6; font-size:12px;">
+                  <span style="color:#888; white-space:nowrap;">{{ attr.label }}：</span>
                   <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ attr.value }}</span>
                 </div>
               </div>
 
               <!-- 用料 -->
               <div style="flex:1; overflow:hidden; border-top:1px solid #eee; padding-top:3px; margin-bottom:3px;">
-                <div style="font-size:9px; color:#888; margin-bottom:2px;">用料</div>
-                <div
-                  v-for="(m, mIdx) in item.materials"
-                  :key="mIdx"
-                  style="display:flex; gap:4px; line-height:1.5; font-size:9px; overflow:hidden;"
-                >
-                  <span style="color:#555; white-space:nowrap;">{{ m.elementName }}</span>
-                  <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;">{{ m.productName || '-' }}</span>
-                  <span style="white-space:nowrap; color:#333;">× {{ m.quantity ?? '-' }}{{ m.unitValue }}</span>
+                <!-- <div style="font-size:10px; color:#888; margin-bottom:2px;">用料</div> -->
+                <div v-if="item.materials.length" style="width:100%; font-size:11px; border:1px dashed #bdbdbd; border-collapse:collapse;">
+                  <div style="display:grid; grid-template-columns: 1.2fr 1.8fr 0.7fr; background:#f7f7f7; color:#666; font-weight:600; border-bottom:1px dashed #bdbdbd;">
+                    <span style="padding:1px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px;">名称</span>
+                    <span style="padding:1px 3px; white-space:normal; overflow:hidden; word-break:break-all; text-align:center; font-size:11px;">产品</span>
+                    <span style="padding:1px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size:11px;">数量</span>
+                  </div>
+                  <div
+                    v-for="(m, mIdx) in item.materials"
+                    :key="mIdx"
+                    style="display:grid; grid-template-columns: 1.2fr 1.8fr 0.7fr; border-bottom:1px dashed #d9d9d9; color:#333; font-size:11px;"
+                  >
+                    <span style="padding:1px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ m.elementName || '-' }}</span>
+                    <span style="padding:1px 3px; white-space:normal; overflow:hidden; word-break:break-all; font-weight:600; line-height:1.2; text-align:center;">{{ m.productName || '-' }}</span>
+                    <span style="padding:1px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;">{{ m.quantity ?? '-' }}</span>
+                  </div>
                 </div>
-                <div v-if="!item.materials.length" style="font-size:9px; color:#bbb;">（无用料）</div>
+                <div v-else style="font-size:9px; color:#bbb;">（无用料）</div>
               </div>
 
               <!-- 底部二维码 + 序号 -->
               <div style="border-top:1px solid #eee; padding-top:4px; display:flex; flex-direction:column; align-items:center; gap:2px;">
                 <img v-if="item.qrUrl" :src="item.qrUrl" width="40" height="40" style="display:block;" />
-                <div v-else style="width:40px;height:40px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:8px;">二维码</div>
-                <span style="font-size:8px; color:#aaa;">{{ item.copyNo }}/6</span>
+                <div v-else style="width:40px;height:40px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:9px;">二维码</div>
               </div>
             </div>
           </div>
@@ -119,7 +133,7 @@ import type { CurtainSimpleVO } from '@/api/zc/curtain'
 import type { CurtainStructureSimpleVO } from '@/api/zc/curtainstructure'
 import type { SalesOrder, SalesOrderCurtain, SalesOrderStructure, ZCSalesOrderMaterial } from '@/api/zc/salesorder'
 
-/** 水洗标打印预览弹窗（每个结构生成 6 张相同标签，50mm × 80mm） */
+/** 水洗标打印预览弹窗（每个结构生成 1 张标签，50mm × 80mm） */
 defineOptions({ name: 'SalesOrderWashLabelDialog' })
 
 // ======================== 类型定义 ========================
@@ -136,9 +150,8 @@ interface LabelItem {
   totalCurtains: number // 总窗帘数
   structureSeq: number  // 结构序号
   attrs: { label: string; value: string }[] // 结构属性列表
-  materials: { elementName: string; productName: string; quantity?: number; unitValue?: string }[]
+  materials: { elementName: string; productName: string; quantity?: number }[]
   qrUrl: string         // 订单二维码 DataURL
-  copyNo: number        // 副本编号 1-6
 }
 
 // ======================== Props ========================
@@ -153,7 +166,7 @@ const props = defineProps<{
 const visible = ref(false)
 const loading = ref(false)
 const formData = ref<FormDataType | null>(null)
-/** 展开后的所有标签项（每个结构 6 张） */
+/** 展开后的所有标签项（每个结构 1 张） */
 const labelItems = ref<LabelItem[]>([])
 
 // ======================== 计算属性 ========================
@@ -185,7 +198,7 @@ const buildAttrs = (structure: any): { label: string; value: string }[] => {
   const strName = getStructureName(structure.structureId) || structure.structureName
   if (strName) attrs.push({ label: '结构', value: strName })
   if (structure.height != null && structure.width != null) {
-    attrs.push({ label: '高×宽', value: `${structure.height}×${structure.width}` })
+    attrs.push({ label: '宽×高', value: `${structure.width}×${structure.height}` })
   } else {
     if (structure.height != null) attrs.push({ label: '高', value: String(structure.height) })
     if (structure.width != null) attrs.push({ label: '宽', value: String(structure.width) })
@@ -196,7 +209,7 @@ const buildAttrs = (structure: any): { label: string; value: string }[] => {
   if (structure.pleatsNum != null) attrs.push({ label: '总褶数', value: String(structure.pleatsNum) })
   if (structure.pleatsDistance != null) attrs.push({ label: '褶距', value: String(structure.pleatsDistance) })
   if (structure.skirtHeight != null) attrs.push({ label: '裙摆高度', value: String(structure.skirtHeight) })
-  if (structure.isShaping) attrs.push({ label: '定型', value: structure.isShaping })
+  if (structure.isShaping) attrs.push({ label: '定型', value: '是' })
   if (structure.leftCorner) attrs.push({ label: '左转角', value: structure.leftCorner })
   if (structure.rightCorner) attrs.push({ label: '右转角', value: structure.rightCorner })
   if (structure.installProcessName) attrs.push({ label: '安装工艺', value: structure.installProcessName })
@@ -230,24 +243,19 @@ const open = async (data: FormDataType) => {
           elementName: m.elementName || '',
           productName: m.productName || '',
           quantity: m.quantity,
-          unitValue: m.unitValue || ''
         }))
 
-        // 每个结构生成 6 张相同标签
-        for (let copy = 1; copy <= 6; copy++) {
-          items.push({
-            orderNo,
-            customerName,
-            room,
-            curtainSeq,
-            totalCurtains,
-            structureSeq: sIdx + 1,
-            attrs,
-            materials,
-            qrUrl,
-            copyNo: copy
-          })
-        }
+        items.push({
+          orderNo,
+          customerName,
+          room,
+          curtainSeq,
+          totalCurtains,
+          structureSeq: sIdx + 1,
+          attrs,
+          materials,
+          qrUrl
+        })
       }
     }
     labelItems.value = items
@@ -260,7 +268,7 @@ defineExpose({ open })
 
 // ======================== 打印 ========================
 /**
- * 在新窗口生成水洗标 HTML，每个结构 6 张（50mm × 80mm），自动触发打印对话框。
+ * 在新窗口生成水洗标 HTML，每个结构 1 张（50mm × 80mm），自动触发打印对话框。
  * 布局从上到下：单号、客户、位置、套数、结构属性、用料、订单二维码。
  */
 const handlePrint = () => {
@@ -270,13 +278,29 @@ const handlePrint = () => {
 
   const labelHtmlList = labelItems.value.map((item) => {
     const attrsHtml = item.attrs
-      .map((a) => `<div class="info-row"><span class="lbl">${a.label}</span><span class="val">${a.value}</span></div>`)
+      .map((a) => `<div class="info-row"><span class="lbl">${a.label}：</span><span class="val">${a.value}</span></div>`)
       .join('')
 
     const materialsHtml = item.materials.length
-      ? item.materials
-          .map((m) => `<div class="mat-row"><span class="mat-el">${m.elementName}</span><span class="mat-pn">${m.productName || '-'}</span><span class="mat-qty">×${m.quantity ?? '-'}${m.unitValue}</span></div>`)
-          .join('')
+      ? `
+        <div class="mat-table">
+          <div class="mat-head">
+            <span>名称</span>
+            <span>产品</span>
+            <span class="right">数量</span>
+          </div>
+          ${item.materials
+            .map(
+              (m) => `
+                <div class="mat-row">
+                  <span>${m.elementName || '-'}</span>
+                  <span class="mat-pn">${m.productName || '-'}</span>
+                  <span class="right">${m.quantity ?? '-'}</span>
+                </div>
+              `
+            )
+            .join('')}
+        </div>`
       : '<div style="font-size:7pt;color:#bbb;">（无用料）</div>'
 
     const qrImg = item.qrUrl
@@ -285,18 +309,21 @@ const handlePrint = () => {
 
     return `
       <div class="label">
-        <div class="info-row"><span class="lbl">单号</span><span class="val">${item.orderNo}</span></div>
-        <div class="info-row"><span class="lbl">客户</span><span class="val">${item.customerName}</span></div>
-        <div class="info-row"><span class="lbl">位置</span><span class="val">${item.room}</span></div>
-        <div class="info-row sep"><span class="lbl">套数</span><span class="val">第${item.curtainSeq}套/共${item.totalCurtains}套</span><span class="lbl" style="margin-left:5px;">结构</span><span class="val">${item.structureSeq}</span></div>
+        <div class="brand">
+          <div class="brand-line"></div>
+          <div class="brand-name">${bName || '品牌名称'}</div>
+          <div class="brand-line"></div>
+        </div>
+        <div class="info-row"><span class="lbl">单号：</span><span class="val">${item.orderNo}</span></div>
+        <div class="info-row"><span class="lbl">客户：</span><span class="val">${item.customerName}</span></div>
+        <div class="info-row"><span class="lbl">位置：</span><span class="val">${item.room}</span></div>
+        <div class="info-row sep"><span class="lbl">套数：</span><span class="val">第${item.curtainSeq}套/共${item.totalCurtains}套</span>
         <div class="attrs">${attrsHtml}</div>
         <div class="mats">
-          <div class="sec-title">用料</div>
           ${materialsHtml}
         </div>
         <div class="qr-row">
           ${qrImg}
-          <span class="copy-no">${item.copyNo}/6</span>
         </div>
       </div>`
   })
@@ -307,19 +334,38 @@ const handlePrint = () => {
   <meta charset="utf-8">
   <title>${bName ? bName + ' ' : ''}水洗标 - ${formData.value.orderNo || ''}</title>
   <style>
-    @page { size: 50mm 80mm; margin: 1.5mm; }
+    @page { size: 50mm 80mm; margin: 0; }
     * { box-sizing: border-box; font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif; }
-    body { margin: 0; padding: 0; color: #1a1a1a; font-size: 8.5pt; }
+    body { margin: 0; padding: 20px 20px; color: #1a1a1a; font-size: 8.5pt; }
     .label {
-      width: 47mm;
-      height: 77mm;
+      width: 50mm;
+      min-height: 80mm;
+      height: auto;
       padding: 2mm 2.5mm;
       page-break-after: always;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      padding-bottom: 20px;
     }
     .label:last-child { page-break-after: auto; }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8mm;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    .brand-line {
+      border-top: 0.5pt dashed #9a9a9a;
+    }
+    .brand-name {
+      text-align: center;
+      font-size: 15pt;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #111;
+    }
     .info-row {
       display: flex;
       align-items: baseline;
@@ -331,10 +377,10 @@ const handlePrint = () => {
       padding-bottom: 1mm;
       margin-bottom: 1mm;
     }
-    .lbl { color: #777; white-space: nowrap; font-size: 7.5pt; }
-    .val { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lbl { color: #777; white-space: nowrap; font-size: 11pt; }
+    .val { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11pt; }
     .attrs { flex-shrink: 0; }
-    .attrs .info-row { font-size: 7.5pt; line-height: 1.55; }
+    .attrs .info-row { font-size: 11pt; line-height: 1.55; }
     .mats {
       flex: 1;
       overflow: hidden;
@@ -342,11 +388,16 @@ const handlePrint = () => {
       padding-top: 1mm;
       margin-top: 1mm;
     }
-    .sec-title { font-size: 7pt; color: #888; margin-bottom: 0.5mm; }
-    .mat-row { display: flex; gap: 3px; font-size: 7.5pt; line-height: 1.55; overflow: hidden; }
-    .mat-el { color: #666; white-space: nowrap; }
-    .mat-pn { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    .mat-qty { white-space: nowrap; color: #333; }
+    .sec-title { font-size: 10.5pt; color: #888; margin-bottom: 0.5mm; }
+    .mat-table { width: 100%; border: 0.5pt dashed #bdbdbd; font-size: 10.5pt; }
+    .mat-head, .mat-row { display: grid; grid-template-columns: 1.2fr 1.8fr 0.7fr; }
+    .mat-head { background: #f7f7f7; color: #666; font-weight: 600; border-bottom: 0.5pt dashed #bdbdbd; }
+    .mat-row { color: #333; border-bottom: 0.5pt dashed #d9d9d9; }
+    .mat-row:last-child { border-bottom: 0; }
+    .mat-head span, .mat-row span { padding: 0.4mm 0.7mm; overflow: hidden; text-overflow: ellipsis; }
+    .mat-head .mat-pn, .mat-row .mat-pn { white-space: normal; word-break: break-all; }
+    .mat-pn { font-weight: 600; }
+    .right { text-align: center; justify-self: center; }
     .qr-row {
       border-top: 0.5pt solid #ddd;
       padding-top: 1.5mm;
@@ -356,7 +407,6 @@ const handlePrint = () => {
       align-items: center;
       gap: 1.5px;
     }
-    .copy-no { font-size: 7pt; color: #aaa; }
   </style>
 </head>
 <body>
