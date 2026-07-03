@@ -284,58 +284,16 @@
   <CustomerSearchDialog ref="customerSearchDialogRef" @select="handleSelectCustomerFromSearch" />
 
   <!-- 工序记录弹窗 -->
-  <el-dialog v-model="processRecordVisible" title="工序记录" width="600px" destroy-on-close>
-    <div v-loading="processRecordLoading" style="min-height: 80px;">
-      <el-empty v-if="!processRecordLoading && processRecordList.length === 0" description="暂无工序记录" />
-      <el-timeline v-else>
-        <el-timeline-item
-          v-for="record in processRecordList"
-          :key="record.id"
-          :timestamp="formatProcessRecordTime(record.createTime)"
-          placement="top"
-          :type="record.status === 2 ? 'danger' : 'success'"
-        >
-          <el-card shadow="never" class="!border-gray-200">
-            <div class="flex items-center gap-2 mb-1">
-              <el-tag :type="record.status === 2 ? 'danger' : 'success'" size="small">
-                {{ record.status === 2 ? '已撤销' : '已完成' }}
-              </el-tag>
-              <span class="font-bold">{{ record.nodeName }}</span>
-              <span v-if="record.curtainName" class="text-gray-500 text-sm">· {{ record.curtainName }}</span>
-              <span v-if="record.room" class="text-gray-500 text-sm">· {{ record.room }}</span>
-              <span v-if="record.structureName" class="text-gray-500 text-sm">· {{ record.structureName }}</span>
-              <span v-if="record.elementName" class="text-gray-500 text-sm">· {{ record.elementName }}</span>
-            </div>
-            <div class="text-sm text-gray-600">
-              <span>主操作：{{ record.masterName || '-' }}</span>
-              <span v-if="record.assistantName" class="ml-3">副操作：{{ record.assistantName }}</span>
-            </div>
-            <div v-if="record.note" class="text-sm text-gray-500 mt-1">备注：{{ record.note }}</div>
-            <div v-if="record.imageUrls && record.imageUrls.length > 0" class="mt-2 flex gap-2 flex-wrap">
-              <el-image
-                v-for="(url, idx) in record.imageUrls"
-                :key="idx"
-                :src="url"
-                :preview-src-list="record.imageUrls"
-                :initial-index="idx"
-                fit="cover"
-                style="width: 60px; height: 60px; border-radius: 4px;"
-              />
-            </div>
-          </el-card>
-        </el-timeline-item>
-      </el-timeline>
-    </div>
-  </el-dialog>
+  <SalesOrderProcessRecordDialog ref="processRecordDialogRef" />
 </template>
 
 <script setup lang="ts">
 import { Search as SearchIcon } from '@element-plus/icons-vue'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { isEmpty } from '@/utils/is'
-import { dateFormatter, formatDate } from '@/utils/formatTime'
+import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { SalesOrderApi, SalesOrderProductApi, SalesOrderType, SalesOrder, OrderProcessRecordApi, ZcOrderProcessRecordRespVO } from '@/api/zc/salesorder'
+import { SalesOrderApi, SalesOrderProductApi, SalesOrderType, SalesOrder } from '@/api/zc/salesorder'
 import type { Customer } from '@/api/zc/customer'
 import { BrandApi, BrandSimpleVO } from '@/api/zc/brand'
 import { LogisticsApi, LogisticsSimpleVO } from '@/api/zc/logistics'
@@ -344,6 +302,7 @@ import SalesOrderForm from './SalesOrderForm.vue'
 import SalesOrderProductForm from './SalesOrderProductForm.vue'
 import CollectionDialog from './CollectionDialog.vue'
 import CustomerSearchDialog from './CustomerSearchDialog.vue'
+import SalesOrderProcessRecordDialog from './SalesOrderProcessRecordDialog.vue'
 import { checkPermi } from '@/utils/permission'
 
 /** 销售订单 列表 */
@@ -501,28 +460,11 @@ const handleExport = async () => {
 }
 
 // ======================== 工序记录 ========================
-const processRecordVisible = ref(false)   // 工序记录弹窗是否显示
-const processRecordLoading = ref(false)   // 工序记录加载状态
-const processRecordList = ref<ZcOrderProcessRecordRespVO[]>([]) // 工序记录列表
+const processRecordDialogRef = ref<InstanceType<typeof SalesOrderProcessRecordDialog>>()
 
-/** 格式化工序记录时间戳为 YYYY-MM-DD HH:mm:ss */
-const formatProcessRecordTime = (time?: string) => {
-  return time ? formatDate(new Date(time), 'YYYY-MM-DD HH:mm:ss') : ''
-}
-
-/** 打开工序记录弹窗，按订单 ID 查询所有记录 */
-const openProcessRecordDialog = async (orderId: number) => {
-  processRecordVisible.value = true
-  processRecordLoading.value = true
-  processRecordList.value = []
-  try {
-    processRecordList.value = await OrderProcessRecordApi.getOrderProcessRecordList({ orderId })
-  } catch (e) {
-    message.error('获取工序记录失败')
-    console.error('[工序记录]', e)
-  } finally {
-    processRecordLoading.value = false
-  }
+/** 打开工序记录弹窗 */
+const openProcessRecordDialog = (orderId: number) => {
+  processRecordDialogRef.value?.open(orderId)
 }
 
 /** 初始化 **/

@@ -405,7 +405,7 @@ export interface ZcOrderProcessRecordRespVO {
   curtainName: string      // 窗帘款式名称
   room: string             // 房间
   structureName: string    // 结构名称
-  elementName: string      // 组件名称
+  elementName: string      // 用料元素名称
   curtainId: number        // 窗帘行 ID
   structureId: number      // 结构行 ID
   materialId: number       // 用料明细 ID
@@ -423,6 +423,37 @@ export interface ZcOrderProcessRecordRespVO {
   updateTime: string       // 最后更新时间（撤销时更新）
 }
 
+/** 用料明细分组项 */
+export interface ZcOrderProcessRecordElementItem {
+  elementId: number        // 用料明细 ID
+  productId?: number       // 产品 ID，可为空
+  elementName?: string     // 用料元素名称
+  records?: ZcOrderProcessRecordRespVO[] // 用料级工序记录
+}
+
+/** 结构行分组项 */
+export interface ZcOrderProcessRecordStructureItem {
+  structureId: number      // 结构行 ID
+  structureName?: string   // 结构名称
+  records?: ZcOrderProcessRecordRespVO[] // 结构级工序记录
+  elements?: ZcOrderProcessRecordElementItem[] // 用料明细分组列表
+}
+
+/** 窗帘行分组项 */
+export interface ZcOrderProcessRecordCurtainItem {
+  curtainId: number        // 窗帘行 ID
+  curtainName: string      // 窗帘款式名称
+  room: string             // 房间
+  records?: ZcOrderProcessRecordRespVO[] // 窗帘级工序记录
+  structures?: ZcOrderProcessRecordStructureItem[] // 结构行分组列表
+}
+
+/** 订单工序时间线（分层）响应 VO */
+export interface ZcOrderProcessRecordTimelineRespVO {
+  orderRecords?: ZcOrderProcessRecordRespVO[] // 订单级工序记录（未关联窗帘行）
+  curtains?: ZcOrderProcessRecordCurtainItem[] // 窗帘行分组列表
+}
+
 /** 订单工序时间线查询参数 */
 export interface OrderProcessRecordListReqVO {
   orderId?: number       // 订单 ID，不传则返回全部
@@ -431,17 +462,17 @@ export interface OrderProcessRecordListReqVO {
   structureId?: number   // 结构行 ID，不传则返回全部
   materialId?: number    // 用料明细 ID，不传则返回全部
   nodeId?: number        // 工序节点 ID，不传则返回全部
-  groups?: string        // 工序节点分组多选：0=系统配置，1=手工配置，逗号分隔，默认 "0,1"
+  groups?: string        // 工序节点分组多选：0=系统配置，1=手工配置，逗号分隔，默认 "1"
 }
 
 // 订单工序记录 API
 export const OrderProcessRecordApi = {
-  // 获取订单工序时间线（按时间降序），对应后端：GET /zc/order-process-record/list
-  // 默认查询 groups=0,1（系统节点 + 手工配置节点）
+  // 获取订单工序时间线（窗帘行→结构行→用料明细分层），对应后端：GET /zc/order-process-record/list
+  // 默认 groups=1（手工配置节点），传 groups=0,1 可含系统节点（裁剪、打包、发货）
   getOrderProcessRecordList: async (
     params: OrderProcessRecordListReqVO = {}
-  ): Promise<ZcOrderProcessRecordRespVO[]> => {
-    const { groups = '0,1', ...rest } = params
+  ): Promise<ZcOrderProcessRecordTimelineRespVO> => {
+    const { groups = '1', ...rest } = params
     return await request.get({
       url: `/zc/order-process-record/list`,
       params: { ...rest, groups }
