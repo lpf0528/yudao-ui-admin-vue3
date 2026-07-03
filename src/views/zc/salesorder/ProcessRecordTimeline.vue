@@ -1,40 +1,46 @@
 <!--
   销售订单 - 工序记录横向流程
-  功能：同层级工序记录横向排列，箭头依次连接
+  功能：同层级工序记录横向排列，展示为「操作人 "状态" 工序名」
   使用方：SalesOrderProcessRecordDialog.vue
 -->
 <template>
   <div class="process-record-flow">
     <template v-for="(record, index) in records" :key="record.id">
       <div v-if="index > 0" class="process-record-flow__arrow" aria-hidden="true">
-        <Icon icon="ep:right" :size="18" />
+        <Icon icon="ep:right" :size="16" />
       </div>
 
-      <el-popover
-        v-if="hasDetail(record)"
-        placement="bottom"
-        :width="280"
-        trigger="hover"
-      >
+      <el-popover placement="bottom" :width="280" trigger="hover">
         <template #reference>
           <div
-            class="process-record-card"
+            class="process-record-item"
             :class="{
-              'process-record-card--revoked': record.status === 2,
-              'process-record-card--system': record.nodeGroup === 0
+              'process-record-item--revoked': record.status === 2,
+              'process-record-item--system': record.nodeGroup === 0
             }"
           >
-            <div class="process-record-card__header">
-              <el-tag :type="record.status === 2 ? 'danger' : 'success'" size="small">
-                {{ record.status === 2 ? '已撤销' : '已完成' }}
-              </el-tag>
-              <el-tag v-if="record.nodeGroup === 0" type="info" size="small" effect="plain">系统</el-tag>
-            </div>
-            <div class="process-record-card__node">{{ record.nodeName }}</div>
-            <div class="process-record-card__time">{{ formatProcessRecordTime(record.createTime) }}</div>
-            <div class="process-record-card__operator">{{ record.masterName || '-' }}</div>
+            <span class="process-record-item__operator">{{ record.masterName || '-' }}</span>
+            <span
+              class="process-record-item__status"
+              :class="record.status === 2 ? 'is-revoked' : 'is-done'"
+            >
+              "{{ getStatusLabel(record.status) }}"
+            </span>
+            <span class="process-record-item__node">{{ record.nodeName }}</span>
+            <el-tag
+              v-if="record.nodeGroup === 0"
+              type="info"
+              size="small"
+              effect="plain"
+              class="process-record-item__tag"
+            >
+              系统
+            </el-tag>
           </div>
         </template>
+        <div class="text-sm text-gray-500 mb-2">
+          {{ formatProcessRecordTime(record.createTime) }}
+        </div>
         <div class="text-sm text-gray-600">
           <span>主操作：{{ record.masterName || '-' }}</span>
           <span v-if="record.assistantName" class="ml-3">副操作：{{ record.assistantName }}</span>
@@ -51,26 +57,13 @@
             class="w-60px h-60px rounded-4px"
           />
         </div>
-      </el-popover>
-
-      <div
-        v-else
-        class="process-record-card"
-        :class="{
-          'process-record-card--revoked': record.status === 2,
-          'process-record-card--system': record.nodeGroup === 0
-        }"
-      >
-        <div class="process-record-card__header">
-          <el-tag :type="record.status === 2 ? 'danger' : 'success'" size="small">
-            {{ record.status === 2 ? '已撤销' : '已完成' }}
-          </el-tag>
-          <el-tag v-if="record.nodeGroup === 0" type="info" size="small" effect="plain">系统</el-tag>
+        <div
+          v-if="!record.note && !record.imageUrls?.length && !record.assistantName"
+          class="text-sm text-gray-400"
+        >
+          暂无更多详情
         </div>
-        <div class="process-record-card__node">{{ record.nodeName }}</div>
-        <div class="process-record-card__time">{{ formatProcessRecordTime(record.createTime) }}</div>
-        <div class="process-record-card__operator">{{ record.masterName || '-' }}</div>
-      </div>
+      </el-popover>
     </template>
   </div>
 </template>
@@ -92,9 +85,9 @@ const formatProcessRecordTime = (time?: string) => {
   return time ? formatDate(new Date(time), 'YYYY-MM-DD HH:mm:ss') : ''
 }
 
-/** 是否有备注、副操作或图片等扩展信息 */
-const hasDetail = (record: ZcOrderProcessRecordRespVO) => {
-  return !!record.note || !!record.imageUrls?.length || !!record.assistantName
+/** 状态文案：1=完成，2=撤销 */
+const getStatusLabel = (status: number) => {
+  return status === 2 ? '撤销' : '完成'
 }
 </script>
 
@@ -103,7 +96,7 @@ const hasDetail = (record: ZcOrderProcessRecordRespVO) => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 4px 0;
   overflow-x: auto;
 }
@@ -113,24 +106,28 @@ const hasDetail = (record: ZcOrderProcessRecordRespVO) => {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 24px;
   color: var(--el-text-color-placeholder);
 }
 
-.process-record-card {
+.process-record-item {
+  display: inline-flex;
   flex-shrink: 0;
-  min-width: 120px;
-  max-width: 160px;
-  padding: 10px 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.4;
   border: 1px solid var(--el-border-color-lighter);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--el-fill-color-blank);
   cursor: default;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, background-color 0.2s;
 
   &:hover {
     border-color: var(--el-color-primary-light-5);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
+    background: var(--el-color-primary-light-9);
   }
 
   &--revoked {
@@ -143,34 +140,28 @@ const hasDetail = (record: ZcOrderProcessRecordRespVO) => {
   }
 }
 
-.process-record-card__header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-
-.process-record-card__node {
-  margin-bottom: 4px;
-  font-size: 14px;
+.process-record-item__operator {
   font-weight: 600;
-  line-height: 1.3;
   color: var(--el-text-color-primary);
-  word-break: break-all;
 }
 
-.process-record-card__time {
-  margin-bottom: 2px;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--el-text-color-secondary);
+.process-record-item__status {
+  font-weight: 500;
+
+  &.is-done {
+    color: var(--el-color-success);
+  }
+
+  &.is-revoked {
+    color: var(--el-color-danger);
+  }
 }
 
-.process-record-card__operator {
-  font-size: 12px;
+.process-record-item__node {
   color: var(--el-text-color-regular);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.process-record-item__tag {
+  margin-left: 2px;
 }
 </style>
