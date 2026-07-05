@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas'
 import download from '@/utils/download'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 /** 预览区最小缩放比例 */
 export const MIN_PREVIEW_SCALE = 0.5
@@ -70,7 +71,7 @@ export function usePrintPreviewTools(getFileName: () => string) {
     }
   }
 
-  /** 截图：复制预览内容为 PNG 到剪贴板 */
+  /** 截图：复制预览内容为 PNG 到剪贴板，若不支持则弹窗引导右键复制 */
   const handleScreenshot = async () => {
     if (screenshotLoading.value || downloadLoading.value) return
 
@@ -84,14 +85,40 @@ export function usePrintPreviewTools(getFileName: () => string) {
         throw new Error('截图生成失败')
       }
 
-      if (!navigator.clipboard?.write) {
-        ElMessage.warning('当前浏览器不支持复制图片到剪贴板')
-        return
+      let clipboardWritten = false
+      if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          clipboardWritten = true
+          ElMessage.success('已复制到剪贴板')
+        } catch (err) {
+          console.warn('Clipboard write failed:', err)
+        }
       }
 
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-      ElMessage.success('已复制到剪贴板')
-    } catch {
+      if (!clipboardWritten) {
+        // 剪贴板不可用或写入失败，弹窗展示图片并引导用户右键或长按进行复制
+        const dataUrl = canvas.toDataURL('image/png')
+        ElMessageBox.alert(
+          `<div style="text-align: center;">
+            <p style="margin-bottom: 12px; color: #E6A23C; font-weight: bold; font-size: 14px; line-height: 1.5;">
+              当前浏览器或连接环境（非 HTTPS）不支持直接复制到剪贴板。<br>
+              请<b>右键（或长按）</b>下方图片并选择<b>“复制图片”</b>：
+            </p>
+            <div style="border: 1px dashed #dcdfe6; padding: 8px; background: #fafafa; border-radius: 4px;">
+              <img src="${dataUrl}" style="max-width: 100%; max-height: 45vh; display: block; margin: 0 auto; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" />
+            </div>
+          </div>`,
+          '复制图片提示',
+          {
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: '关闭',
+            callback: () => {}
+          }
+        )
+      }
+    } catch (err) {
+      console.error(err)
       ElMessage.error('截图失败，请重试')
     } finally {
       screenshotLoading.value = false
