@@ -9,9 +9,9 @@
       <div class="flex items-center justify-between w-full">
         <span class="text-base font-semibold">发货联预览</span>
         <div class="flex items-center gap-8px mr-24px">
-          <el-radio-group v-model="mergeStructureShipping" size="small">
-            <el-radio-button :label="false">按结构发货</el-radio-button>
-            <el-radio-button :label="true">合并结构发货</el-radio-button>
+          <el-radio-group v-model="shippingType" size="small">
+            <el-radio-button label="curtain">合并结构发货</el-radio-button>
+            <el-radio-button label="order">合并发货</el-radio-button>
           </el-radio-group>
           <el-tooltip content="打印 / 选择打印机 / 另存为PDF" placement="top">
             <el-button type="primary" @click="handlePrint">
@@ -50,8 +50,9 @@
             <div style="display: flex; align-items: flex-start; gap: 10px;">
               <div style="flex: 1; min-width: 0;">
                 <div style="padding: 2px 0; font-size: 15px;">订单号：{{ formData?.orderNo || '-' }}</div>
-                <div style="padding: 2px 0; font-size: 15px;">{{ page.setNoText }}</div>
-                <div style="padding: 2px 0; font-size: 15px;">房间：{{ page.room }}</div>
+                <div v-if="shippingType !== 'order'" style="padding: 2px 0; font-size: 15px;">{{ page.setNoText }}</div>
+                <div v-if="shippingType !== 'order'" style="padding: 2px 0; font-size: 15px;">房间：{{ page.room }}</div>
+                <div v-else style="padding: 2px 0; font-size: 15px;">合并发货/共{{ page.totalCurtains }}套</div>
               </div>
               <div style="width: 123px; flex-shrink: 0; text-align: center;">
               <template v-if="structureQrCodes[page.pageKey]">
@@ -86,7 +87,7 @@
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">收货地址</td>
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">{{ formData?.deliveryAddress || '-' }}</td>
               </tr>
-              <tr>
+              <tr v-if="shippingType !== 'order'">
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">结构信息</td>
                 <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">
                   <div
@@ -145,9 +146,9 @@ const props = defineProps<{
 // ======================== 响应式状态 ========================
 const visible = ref(false)
 const formData = ref<SalesOrder | null>(null)
-/** 是否合并同一窗帘下的结构到一张发货联 */
-const mergeStructureShipping = ref(false)
-/** 每个结构页的二维码信息，key 为 `${curtainIdx}-${structureIdx}` */
+/** 发货模式：'curtain' = 合并结构发货, 'order' = 合并发货 */
+const shippingType = ref<'curtain' | 'order'>('order')
+/** 每个结构页的二维码信息，key 为 `${curtainIdx}-${structureIdx}` 或 `order-merged` */
 const structureQrCodes = ref<Record<string, { url: string; code: string }>>({})
 
 // ======================== 计算属性 ========================
@@ -188,10 +189,26 @@ type ShippingPageItem = {
   structureInfos: StructureInfoItem[]
 }
 
-/** 结构发货页：支持按结构逐页或按窗帘合并结构 */
+/** 结构发货页：支持按窗帘合并结构或整单合并发货 */
 const shippingPages = computed<ShippingPageItem[]>(() => {
   const curtains = (formData.value as (SalesOrder & { curtains?: any[] }) | null)?.curtains || []
   const pages: ShippingPageItem[] = []
+
+  if (shippingType.value === 'order') {
+    pages.push({
+      pageKey: 'order-merged',
+      curtainIdx: 0,
+      totalCurtains: curtains.length,
+      curtainId: null,
+      structureId: null,
+      structureIds: [],
+      setNoText: '',
+      room: '',
+      structureInfos: []
+    })
+    return pages
+  }
+
   curtains.forEach((curtain, curtainIdx) => {
     const structures = curtain?.structures || []
     const structureInfos: StructureInfoItem[] = structures.map((structure: any) => ({
@@ -199,34 +216,17 @@ const shippingPages = computed<ShippingPageItem[]>(() => {
       structureName: structure?.structureName || '-',
       structureNote: structure?.note || '-'
     }))
-    if (mergeStructureShipping.value) {
-      if (!structureInfos.length) return
-      pages.push({
-        pageKey: `curtain-${curtainIdx}`,
-        curtainIdx,
-        totalCurtains: curtains.length,
-        curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
-        structureId: null,
-        structureIds: structureInfos.filter((item) => item.structureId !== null).map((item) => item.structureId as number),
-        setNoText: `第${curtainIdx + 1}套/共${curtains.length}套`,
-        room: curtain?.room || '-',
-        structureInfos
-      })
-      return
-    }
-
-    structureInfos.forEach((structureInfo, structureIdx) => {
-      pages.push({
-        pageKey: `${curtainIdx}-${structureIdx}`,
-        curtainIdx,
-        totalCurtains: curtains.length,
-        curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
-        structureId: structureInfo.structureId,
-        structureIds: structureInfo.structureId !== null ? [structureInfo.structureId] : [],
-        setNoText: `第${curtainIdx + 1}-${structureIdx + 1}套/共${curtains.length}套`,
-        room: curtain?.room || '-',
-        structureInfos: [structureInfo]
-      })
+    if (!structureInfos.length) return
+    pages.push({
+      pageKey: `curtain-${curtainIdx}`,
+      curtainIdx,
+      totalCurtains: curtains.length,
+      curtainId: typeof curtain?.id === 'number' ? curtain.id : null,
+      structureId: null,
+      structureIds: structureInfos.filter((item) => item.structureId !== null).map((item) => item.structureId as number),
+      setNoText: `第${curtainIdx + 1}套/共${curtains.length}套`,
+      room: curtain?.room || '-',
+      structureInfos
     })
   })
   return pages
@@ -242,13 +242,20 @@ const formatDate = (date: Date): string => {
 const generateStructureQrCodes = async (data: SalesOrder) => {
   structureQrCodes.value = {}
   for (const page of shippingPages.value) {
-    const codeContent = JSON.stringify({
-      orderId: data.id ?? null,
-      customerId: data.customerId ?? null,
-      curtainId: page.curtainId,
-      structureId: page.structureId,
-      structureIds: page.structureIds
-    })
+    const codeContent = JSON.stringify(
+      shippingType.value === 'order'
+        ? {
+            orderId: data.id ?? null,
+            customerId: data.customerId ?? null
+          }
+        : {
+            orderId: data.id ?? null,
+            customerId: data.customerId ?? null,
+            curtainId: page.curtainId,
+            structureId: page.structureId,
+            structureIds: page.structureIds
+          }
+    )
     const codeId = await BarcodeRegistryApi.create({
       codeType: 'ORDER_CURTAIN_SHIP_QR',
       targetRoute: '/pages-curtain/ship/index',
@@ -265,7 +272,7 @@ const generateStructureQrCodes = async (data: SalesOrder) => {
  * 二维码内容保留订单维度信息，便于后续按单追溯发货记录
  */
 const open = async (data: SalesOrder) => {
-  mergeStructureShipping.value = false
+  shippingType.value = 'order'
   formData.value = data
   visible.value = true
   await generateStructureQrCodes(data)
@@ -273,7 +280,7 @@ const open = async (data: SalesOrder) => {
 
 defineExpose({ open })
 
-watch(mergeStructureShipping, async () => {
+watch(shippingType, async () => {
   if (!visible.value || !formData.value) return
   await generateStructureQrCodes(formData.value)
 })
@@ -293,6 +300,12 @@ const handlePrint = () => {
         const qrHtml = qrEntry
           ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
           : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;">二维码</div>`
+        const setNoHtml = shippingType.value !== 'order' ? `<div style="padding:2px 0;font-size:15px;">${page.setNoText}</div>` : ''
+        const roomHtml = shippingType.value !== 'order' ? `<div style="padding:2px 0;font-size:15px;">房间：${page.room}</div>` : ''
+        const statusHtml = shippingType.value === 'order' ? `<div style="padding:2px 0;font-size:15px;">合并发货/共${page.totalCurtains}套</div>` : ''
+        const structureRowHtml = shippingType.value !== 'order'
+          ? `<tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">结构信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;line-height:1.5;">${structureInfoHtml}</td></tr>`
+          : ''
         return `
   <div class="page">
     <div style="margin-bottom:3px;">
@@ -300,8 +313,9 @@ const handlePrint = () => {
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <div style="flex:1;min-width:0;">
           <div style="padding:2px 0;font-size:15px;">订单号：${data.orderNo || '-'}</div>
-          <div style="padding:2px 0;font-size:15px;">${page.setNoText}</div>
-          <div style="padding:2px 0;font-size:15px;">房间：${page.room}</div>
+          ${setNoHtml}
+          ${roomHtml}
+          ${statusHtml}
         </div>
         <div style="width:123px;flex-shrink:0;text-align:center;">${qrHtml}</div>
       </div>
@@ -313,7 +327,7 @@ const handlePrint = () => {
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:34%;color:#111;font-size:12pt;font-weight:700;">收货人/电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.receiver || '-'}：${data.mobile || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">物流方式</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${logisticsName.value}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">收货地址</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${data.deliveryAddress || '-'}</td></tr>
-        <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">结构信息</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;line-height:1.5;">${structureInfoHtml}</td></tr>
+        ${structureRowHtml}
       </tbody>
     </table>
     ${data.note ? `<div style="margin-top:4px;padding:4px 8px;font-size:11pt;border:1px solid #D1D5DB;background:#FFFBEB;"><span style="color:#111;font-weight:700;font-size:12pt;">订单备注：</span>${data.note}</div>` : ''}

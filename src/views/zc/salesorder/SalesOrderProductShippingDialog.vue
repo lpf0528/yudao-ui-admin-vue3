@@ -49,7 +49,6 @@
                 <div style="flex: 1; min-width: 0;">
                   <div style="padding: 2px 0; font-size: 13px; white-space: nowrap;">订单号：{{ formData?.orderNo || '-' }}</div>
                   <div style="padding: 2px 0; font-size: 13px; white-space: nowrap;">合并发货/共{{ materialPages.length }}套</div>
-                  <div style="padding: 2px 0; font-size: 13px; white-space: nowrap;">房间：</div>
                 </div>
                 <div style="width: 123px; flex-shrink: 0; text-align: center;">
                   <template v-if="mergedQrCode">
@@ -82,23 +81,6 @@
                 <tr>
                   <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">收货地址</td>
                   <td style="border: 1px solid #4B5563; padding: 6px 8px; font-weight: bold; word-break: break-all;">{{ formData?.deliveryAddress || '-' }}</td>
-                </tr>
-                <tr>
-                  <td style="border: 1px solid #4B5563; padding: 6px 8px; color: #111; font-size: 16px; font-weight: 700; vertical-align: top;">面料信息</td>
-                  <td style="border: 1px solid #4B5563; padding: 0;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                      <tbody>
-                        <tr v-for="(page, idx) in materialPages" :key="`merged-${page.pageKey}`">
-                          <td style="border-bottom: 1px solid #D1D5DB; padding: 4px 0 4px 2px; width: 1%; white-space: nowrap; color: #111; font-weight: 700; text-align: left;">
-                            {{ idx + 1 }}、
-                          </td>
-                          <td style="border-bottom: 1px solid #D1D5DB; padding: 4px 6px 4px 0; font-weight: 700; word-break: break-all;">
-                            {{ formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote) }}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
                 </tr>
               </tbody>
             </table>
@@ -232,7 +214,7 @@ const props = defineProps<{
 const visible = ref(false)
 const formData = ref<SalesOrder | null>(null)
 /** 是否合并发货：true=所有面料信息合并为一个表格 */
-const isMergedShipping = ref(false)
+const isMergedShipping = ref(true)
 /** 合并发货二维码（仅需订单 id、客户 id，整单只注册一次） */
 const mergedShippingQrCode = ref<{ url: string; code: string } | null>(null)
 /** 分开发货：每个面料页的二维码信息，key 为 `curtain-${curtainIdx}` */
@@ -248,6 +230,12 @@ const logisticsName = computed(() => {
   if (formData.value?.logisticName) return formData.value.logisticName
   if (!formData.value?.logisticId) return '-'
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
+})
+
+const customerName = computed(() => {
+  if (!formData.value?.customerId) return '-'
+  const customer = props.customersList.find((item) => item.id === formData.value!.customerId)
+  return customer?.shortName || customer?.name || '-'
 })
 
 const printDate = computed(() => formatDate(new Date()))
@@ -362,7 +350,7 @@ const generateMaterialQrCodes = async (data: SalesOrder) => {
  * 打开预览弹窗，按发货模式注册并生成发货二维码
  */
 const open = async (data: SalesOrder) => {
-  isMergedShipping.value = false
+  isMergedShipping.value = true
   formData.value = data
   visible.value = true
   await generateMaterialQrCodes(data)
@@ -384,7 +372,7 @@ const handlePrint = () => {
     .map(
       (page) => {
         const qrEntry = materialQrCodes.value[page.pageKey]
-  const qrHtml = qrEntry
+        const qrHtml = qrEntry
           ? `<img src="${qrEntry.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
           : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;">二维码</div>`
         return `
@@ -420,16 +408,6 @@ const handlePrint = () => {
     )
     .join('')
 
-  const mergedMaterialRowsHtml = materialPages.value
-    .map(
-      (page, idx) => `
-        <tr>
-          <td style="border-bottom:1px solid #D1D5DB;padding:4px 0 4px 2px;width:1%;white-space:nowrap;color:#111;font-weight:700;text-align:left;">${idx + 1}、</td>
-          <td style="border-bottom:1px solid #D1D5DB;padding:4px 6px 4px 0;font-weight:700;word-break:break-all;">${formatMaterialDisplay(page.materialNameWithVersion, page.materialQuantity, page.materialNote)}</td>
-        </tr>`
-    )
-    .join('')
-
   const mergedQrHtml = mergedQrCode.value
     ? `<img src="${mergedQrCode.value.url}" width="108" height="108" style="display:block;margin:0 auto;" />`
     : `<div style="width:108px;height:108px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;">二维码</div>`
@@ -442,7 +420,6 @@ const handlePrint = () => {
         <div style="flex:1;min-width:0;">
           <div style="padding:2px 0;font-size:13px;white-space:nowrap;">订单号：${data.orderNo || '-'}</div>
           <div style="padding:2px 0;font-size:13px;white-space:nowrap;">合并发货/共${materialPages.value.length}套</div>
-          <div style="padding:2px 0;font-size:13px;white-space:nowrap;">房间：</div>
         </div>
         <div style="width:123px;flex-shrink:0;text-align:center;">${mergedQrHtml}</div>
       </div>
@@ -454,12 +431,6 @@ const handlePrint = () => {
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;width:34%;color:#111;font-size:12pt;font-weight:700;">收货人/电话</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${data.receiver || '-'}：${data.mobile || '-'}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;">物流方式</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;">${logisticsName.value}</td></tr>
         <tr><td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">收货地址</td><td style="border:1px solid #4B5563;padding:5px 7px;font-weight:bold;word-break:break-all;">${data.deliveryAddress || '-'}</td></tr>
-        <tr>
-          <td style="border:1px solid #4B5563;padding:5px 7px;color:#111;font-size:12pt;font-weight:700;vertical-align:top;">面料信息</td>
-          <td style="border:1px solid #4B5563;padding:0;">
-            <table style="width:100%;border-collapse:collapse;font-size:10pt;"><tbody>${mergedMaterialRowsHtml}</tbody></table>
-          </td>
-        </tr>
       </tbody>
     </table>
     <div style="border:3px solid #1D4ED8;background:#EFF6FF;padding:4px 8px;margin-bottom:4px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
