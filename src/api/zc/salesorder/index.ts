@@ -29,6 +29,7 @@ export interface ZCSalesOrderMaterial {
   elementName?: string      // 组件类型名称
   productName?: string      // 货号名称
   batchNo?: string          // 批次号
+  classify?: string         // 产品版本分类（用于统计窗帘布用料合计，chuanglianbu=窗帘布）
 }
 
 /** 窗帘行信息 */

@@ -456,6 +456,7 @@ interface BatchRow {
   quantity?: number        // 数量
   amount?: number          // 金额（数量 × 单价，自动计算）
   note?: string            // 备注
+  classify?: string        // 产品版本分类（用于统计窗帘布用料合计，chuanglianbu=窗帘布）
 }
 
 // ======================== 表单数据 ========================
@@ -844,6 +845,7 @@ const mapCurtainsToBatchRows = (curtains: SalesOrderDetailCurtain[]): BatchRow[]
       quantity: m.quantity,
       amount: m.amount,
       note: m.note,
+      classify: (m as any).classify,
     }
   })
 

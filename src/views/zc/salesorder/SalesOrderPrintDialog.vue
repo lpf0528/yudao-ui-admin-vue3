@@ -208,6 +208,9 @@
               <b>运费：</b>{{ formatMoney(formData.freight) }}
             </div>
             <div><b>本单总金额：</b>{{ formatTotalAmount(formData?.totalAmount) }}</div>
+            <div v-if="totalClothQuantity.total">
+              <b>合计用料：</b>{{ totalClothQuantity.total }}{{ totalClothQuantity.unit }}
+            </div>
             <div v-if="formData?.discountAmount">
               <b>优惠金额：</b>
               <span style="color: #16A34A;">{{ hidePrices ? '***' : `-¥${formData.discountAmount}` }}</span>
@@ -323,6 +326,25 @@ const logisticName = computed(() => {
   if (formData.value?.logisticName) return formData.value.logisticName
   if (!formData.value?.logisticId) return '-'
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
+})
+
+/** 合计用料：汇总所有 classify === 'chuanglianbu'（窗帘布）的用料 quantity，取第一条记录的单位展示 */
+const totalClothQuantity = computed(() => {
+  let total = 0
+  let unit = ''
+  for (const curtain of formData.value?.curtains || []) {
+    for (const structure of (curtain as any).structures || []) {
+      for (const material of (structure as any).materials || []) {
+        if (material.classify === 'chuanglianbu' && material.quantity != null) {
+          total += Number(material.quantity) || 0
+          if (!unit && material.unitValue) {
+            unit = getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, material.unitValue) || material.unitValue
+          }
+        }
+      }
+    }
+  }
+  return { total, unit }
 })
 
 // ======================== 查找辅助函数 ========================
@@ -517,12 +539,16 @@ const handlePrint = () => {
     balanceLog.value && !hidePrices.value
       ? `<div><b>账户余额：</b>${formatBalance(balanceLog.value.balanceAfter)}</div>`
       : ''
+  const totalClothHtml = totalClothQuantity.value.total
+    ? `<div><b>合计用料：</b>${totalClothQuantity.value.total}${totalClothQuantity.value.unit}</div>`
+    : ''
   const summaryHtml = `
     <div style="border-top:1px solid #000;margin-top:20px;padding-top:12px;">
       <div style="display:flex;justify-content:flex-end;gap:32px;font-size:14px;align-items:center;flex-wrap:wrap;">
         ${balanceBeforeHtml}
         ${fd.freight ? `<div><b>运费：</b>${formatMoney(fd.freight)}</div>` : ''}
         <div><b>本单总金额：</b>${formatTotalAmount(fd.totalAmount)}</div>
+        ${totalClothHtml}
         ${fd.discountAmount ? `<div><b>优惠金额：</b><span style="color:#16A34A;">${hidePrices.value ? '***' : `-¥${fd.discountAmount}`}</span></div>` : ''}
         <div style="font-size:17px;font-weight:bold;">合计：<span style="color:#DC2626;">${formatMoney(fd.amount ?? 0)}</span></div>
         ${balanceAfterHtml}
