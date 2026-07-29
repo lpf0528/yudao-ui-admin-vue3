@@ -92,6 +92,11 @@
         </template>
       </el-table-column>
       <el-table-column label="工序描述/操作说明" align="center" prop="description" />
+      <el-table-column label="关联组件" align="center" prop="elementNames">
+        <template #default="scope">
+          {{ scope.row.elementNames?.join('、') }}
+        </template>
+      </el-table-column>
       <el-table-column label="创建者" align="center" prop="creator" />
       <el-table-column
         label="创建时间"

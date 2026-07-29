@@ -14,6 +14,8 @@ export interface ProcessNode {
   sort?: number;       // 排序号，数字越小越靠前
   description: string; // 工序描述/操作说明
   group?: number;      // 分组，字典 zc_process_node_group
+  elementIds?: number[];   // 关联组件编号列表
+  elementNames?: string[]; // 关联组件名称列表
 }
 
 // 工序节点配置 API
@@ -62,4 +64,4 @@ export const ProcessNodeApi = {
   getSimpleProcessNodeList: async (params?: { group?: number }) => {
     return await request.get<ProcessNodeSimpleVO[]>({ url: `/zc/process-node/simple-list`, params })
   }
-}
+}
