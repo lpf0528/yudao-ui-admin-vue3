@@ -70,6 +70,11 @@
           <el-switch :model-value="scope.row.isPrint" disabled />
         </template>
       </el-table-column>
+      <el-table-column label="计算用料" align="center" prop="isCalMaterial" width="100px">
+        <template #default="scope">
+          <el-switch :model-value="scope.row.isCalMaterial" disabled />
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="note" />
 
       <!-- <el-table-column label="创建者" align="center" prop="creator" /> -->

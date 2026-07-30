@@ -16,6 +16,7 @@ export interface CurtainStructureElement {
   name?: string;   // 组件名称
   note: string;    // 备注
   isPrint?: boolean; // 是否打印
+  isCalMaterial?: boolean; // 是否计算用料
 }
 
 // 窗帘结构组件 API

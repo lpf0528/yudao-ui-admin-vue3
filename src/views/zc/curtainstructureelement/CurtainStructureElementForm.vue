@@ -13,6 +13,9 @@
       <el-form-item label="是否打印" prop="isPrint">
         <el-switch v-model="formData.isPrint" />
       </el-form-item>
+      <el-form-item label="计算用料" prop="isCalMaterial">
+        <el-switch v-model="formData.isCalMaterial" />
+      </el-form-item>
         <el-form-item label="备注" prop="note">
         <el-input v-model="formData.note" placeholder="请输入备注" />
       </el-form-item>
@@ -40,7 +43,8 @@ const formData = ref({
   id: undefined,
   name: undefined,
   note: undefined,
-  isPrint: false // 是否打印，默认不打印
+  isPrint: false, // 是否打印，默认不打印
+  isCalMaterial: false // 是否计算用料，默认不计算
 })
 const formRules = reactive({
   name: [{ required: true, message: '组件名称不能为空', trigger: 'blur' }]
@@ -95,7 +99,8 @@ const resetForm = () => {
     id: undefined,
     name: undefined,
     note: undefined,
-    isPrint: false
+    isPrint: false,
+    isCalMaterial: false
   }
   formRef.value?.resetFields()
 }

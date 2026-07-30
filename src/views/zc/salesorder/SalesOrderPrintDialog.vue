@@ -328,14 +328,14 @@ const logisticName = computed(() => {
   return props.logisticsList.find((item) => item.id === formData.value!.logisticId)?.name || '-'
 })
 
-/** 合计用料：汇总所有 classify === 'chuanglianbu'（窗帘布）的用料 quantity，取第一条记录的单位展示 */
+/** 合计用料：汇总所有 elementIsCalMaterial === true（需计算用料）的用料 quantity，取第一条记录的单位展示 */
 const totalClothQuantity = computed(() => {
   let total = 0
   let unit = ''
   for (const curtain of formData.value?.curtains || []) {
     for (const structure of (curtain as any).structures || []) {
       for (const material of (structure as any).materials || []) {
-        if (material.classify === 'chuanglianbu' && material.quantity != null) {
+        if (material.elementIsCalMaterial === true && material.quantity != null) {
           total += Number(material.quantity) || 0
           if (!unit && material.unitValue) {
             unit = getDictLabel(DICT_TYPE.ZC_PRODUCT_UNIT, material.unitValue) || material.unitValue
