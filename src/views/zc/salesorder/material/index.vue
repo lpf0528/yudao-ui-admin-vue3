@@ -1,3 +1,7 @@
+<!--
+  成品订单-用料明细列表页
+  功能：按客户/产品版本/创建时间查询用料明细，展示用料合计与金额合计，支持导出
+-->
 <template>
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -6,23 +10,48 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="80px"
     >
-      <el-form-item label="销售单" prop="orderId">
-        <el-input
-          v-model="queryParams.orderId"
-          placeholder="请输入销售单"
+      <el-form-item label="客户" prop="customerId">
+        <el-select
+          v-model="queryParams.customerId"
+          placeholder="请选择客户"
           clearable
-          @keyup.enter="handleQuery"
+          filterable
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in customerList"
+            :key="item.id"
+            :label="item.shortName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="结构行" prop="orderStructureId">
-        <el-input
-          v-model="queryParams.orderStructureId"
-          placeholder="请输入结构行"
+      <el-form-item label="产品版本" prop="versionId">
+        <el-select
+          v-model="queryParams.versionId"
+          placeholder="请选择产品版本"
           clearable
-          @keyup.enter="handleQuery"
+          filterable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="item in versionList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建时间" prop="createTime">
+        <el-date-picker
+          v-model="queryParams.createTime"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-240px"
         />
       </el-form-item>
@@ -45,30 +74,25 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table
-        row-key="id"
-        v-loading="loading"
-        :data="list"
-        :stripe="true"
-        :show-overflow-tooltip="true"
+      row-key="id"
+      v-loading="loading"
+      :data="list"
+      :stripe="true"
+      :show-overflow-tooltip="true"
+      show-summary
+      :summary-method="getSummaries"
     >
-      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="序号" align="center" type="index" width="60" />
       <el-table-column label="销售单号" align="center" prop="orderNo" min-width="120px" />
-      <el-table-column label="结构行" align="center" prop="orderStructureId" />
-      <el-table-column label="组件类型" align="center" prop="elementId" />
-      <el-table-column label="货号" align="center" prop="productId" />
+      <el-table-column label="客户名称" align="center" prop="customerName" min-width="120px" />
+      <el-table-column label="组件类型" align="center" prop="elementName" min-width="100px" />
       <el-table-column label="产品名称" align="center" prop="productName" min-width="120px" />
-      <el-table-column label="产品版本分类" align="center" prop="classify">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ZC_PRODUCT_CLASSIFY" :value="scope.row.classify" />
-        </template>
-      </el-table-column>
       <el-table-column label="批次号" align="center" prop="batchNo" min-width="120px" />
       <el-table-column label="规格" align="center" prop="spec" />
       <el-table-column label="单价" align="center" prop="price" />
       <el-table-column label="用料" align="center" prop="quantity" />
       <el-table-column label="单位" align="center" prop="unitValue" />
-      <el-table-column label="折扣率" align="center" prop="discountRate" />
-      <el-table-column label="小计" align="center" prop="amount" />
+      <el-table-column label="小计" align="center" prop="amount" min-width="120px" />
       <el-table-column label="裁剪数量" align="center" prop="cutQuantity" />
       <el-table-column label="配料状态" align="center" prop="status">
         <template #default="scope">
@@ -101,45 +125,98 @@
       @pagination="getList"
     />
   </ContentWrap>
-
 </template>
 
 <script setup lang="ts">
+// ======================== 导入与声明 ========================
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { DICT_TYPE } from '@/utils/dict'
-import { ZCSalesOrderMaterialApi, ZCSalesOrderMaterial } from '@/api/zc/salesorder/material'
+import type { TableColumnCtx } from 'element-plus'
+import {
+  ZCSalesOrderMaterialApi,
+  ZCSalesOrderMaterial,
+  ZCSalesOrderMaterialPageRespVO
+} from '@/api/zc/salesorder/material'
+import { CustomerApi, CustomerSimpleVO } from '@/api/zc/customer'
+import { ProductVersionApi, ProductVersionSimpleVO } from '@/api/zc/productversion'
 
 /** 成品订单-用料明细 列表 */
 defineOptions({ name: 'ZCSalesOrderMaterial' })
 
 const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
 
+// ======================== 响应式状态 ========================
 const loading = ref(true) // 列表的加载中
 const list = ref<ZCSalesOrderMaterial[]>([]) // 列表的数据
-const total = ref(0) // 列表的总页数
+const total = ref(0) // 列表的总记录数
+/** 用料合计（当前筛选条件下全量求和） */
+const totalQuantity = ref(0)
+/** 金额合计（当前筛选条件下全量求和） */
+const totalAmount = ref(0)
+/** 客户下拉选项 */
+const customerList = ref<CustomerSimpleVO[]>([])
+/** 产品版本下拉选项 */
+const versionList = ref<ProductVersionSimpleVO[]>([])
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  orderId: undefined,
-  orderStructureId: undefined
+  customerId: undefined,
+  versionId: undefined,
+  createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
-/** 查询列表 */
+// ======================== 生命周期 ========================
+/** 初始化：先加载筛选项，再查列表 */
+onMounted(async () => {
+  customerList.value = await CustomerApi.getCustomerSimpleList()
+  versionList.value = await ProductVersionApi.getProductVersionSimpleList()
+  await getList()
+})
+
+// ======================== 数据获取 ========================
+/**
+ * 表格合计行：最左显示「合计」，用料/小计列仅展示数值
+ * （使用接口全量合计，非当前页求和）
+ */
+const getSummaries = (param: { columns: TableColumnCtx<ZCSalesOrderMaterial>[] }) => {
+  const { columns } = param
+  const sums: string[] = []
+  columns.forEach((column, index) => {
+    if (index === 0) {
+      sums[index] = '合计'
+      return
+    }
+    if (column.property === 'quantity') {
+      sums[index] = String(totalQuantity.value ?? 0)
+      return
+    }
+    if (column.property === 'amount') {
+      sums[index] = String(totalAmount.value ?? 0)
+      return
+    }
+    sums[index] = ''
+  })
+  return sums
+}
+
+/** 查询列表，并同步用料/金额合计 */
 const getList = async () => {
   loading.value = true
   try {
-    const data = await ZCSalesOrderMaterialApi.getZCSalesOrderMaterialPage(queryParams)
+    const data: ZCSalesOrderMaterialPageRespVO =
+      await ZCSalesOrderMaterialApi.getZCSalesOrderMaterialPage(queryParams)
     list.value = data.list
     total.value = data.total
+    totalQuantity.value = data.totalQuantity ?? 0
+    totalAmount.value = data.totalAmount ?? 0
   } finally {
     loading.value = false
   }
 }
 
+// ======================== 事件处理 ========================
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.pageNo = 1
@@ -166,9 +243,4 @@ const handleExport = async () => {
     exportLoading.value = false
   }
 }
-
-/** 初始化 **/
-onMounted(() => {
-  getList()
-})
 </script>
