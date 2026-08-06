@@ -344,7 +344,8 @@ const totalClothQuantity = computed(() => {
       }
     }
   }
-  return { total, unit }
+  // JS 浮点累加会产生 13.7999... 这类误差，统一保留两位小数
+  return { total: Math.round(total * 100) / 100, unit }
 })
 
 // ======================== 查找辅助函数 ========================
